@@ -500,6 +500,32 @@ code, pre, .mono {
   flex-shrink: 0;
 }
 
+.demo-list li a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color var(--transition);
+}
+
+.demo-list li a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+
+.demo-list li.muted {
+  opacity: 0.45;
+}
+
+.coming-soon {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--warn);
+  background: rgba(210,153,34,0.1);
+  border: 1px solid rgba(210,153,34,0.2);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+  margin-left: 0.3rem;
+}
+
 /* Tags */
 .tag-list {
   display: flex;
