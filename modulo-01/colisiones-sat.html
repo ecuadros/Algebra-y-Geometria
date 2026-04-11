@@ -1,0 +1,1233 @@
+---
+layout: default
+title: Detección de Colisiones (SAT)
+---
+
+<style>
+  /* ============================================================
+     DEMO PAGE — DETECCIÓN DE COLISIONES (SAT)
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: var(--accent); margin: 0 0.4rem; }
+
+  /* Header */
+  .demo-header { margin-bottom: 2.5rem; }
+  .module-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .demo-header h1 {
+    font-size: clamp(2rem, 5vw, 2.5rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+  .demo-lead {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* Two-column layout */
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Theory section */
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .theory-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-block h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.85rem;
+  }
+  .theory-block p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.65rem;
+  }
+  .theory-block p:last-child { margin-bottom: 0; }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 8px;
+    padding: 0.9rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--accent);
+    line-height: 1.8;
+    margin: 0.75rem 0;
+    white-space: pre;
+  }
+  .formula-box.violet { color: var(--accent2); border-color: rgba(188, 140, 255, 0.35); }
+
+  .steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+  .steps-list li {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .step-num {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(88, 166, 255, 0.15);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.05rem;
+  }
+
+  /* Live panel */
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-top: 1.25rem;
+  }
+  .live-panel-header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 1.8s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .live-panel-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+  }
+  .live-result {
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    font-weight: 700;
+    text-align: center;
+    padding: 0.6rem;
+    border-radius: 8px;
+    letter-spacing: 0.04em;
+    transition: all 0.2s ease;
+  }
+  .live-result.collision {
+    color: var(--danger);
+    background: rgba(248, 81, 73, 0.1);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+  }
+  .live-result.no-collision {
+    color: var(--accent3);
+    background: rgba(63, 185, 80, 0.1);
+    border: 1px solid rgba(63, 185, 80, 0.3);
+  }
+  .live-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    gap: 0.5rem;
+  }
+  .live-label { color: var(--muted); }
+  .live-value {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text);
+    background: rgba(255,255,255,0.04);
+    padding: 0.15rem 0.5rem;
+    border-radius: 5px;
+    text-align: right;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Interactive (right column) */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  #satCanvas {
+    display: block;
+    cursor: grab;
+  }
+  #satCanvas:active { cursor: grabbing; }
+
+  .controls-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+  .ctrl-group {
+    flex: 1;
+    min-width: 140px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+  }
+  .ctrl-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .ctrl-dot-a { width: 8px; height: 8px; border-radius: 50%; background: #58a6ff; display: inline-block; }
+  .ctrl-dot-b { width: 8px; height: 8px; border-radius: 50%; background: #bc8cff; display: inline-block; }
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .ctrl-val {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-align: right;
+    margin-top: 0.25rem;
+  }
+
+  /* Application section */
+  .demo-application {
+    margin-top: 3rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+  .app-header {
+    margin-bottom: 1.75rem;
+  }
+  .app-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    background: rgba(63, 185, 80, 0.1);
+    border: 1px solid rgba(63, 185, 80, 0.25);
+    border-radius: 20px;
+    padding: 0.2rem 0.65rem;
+    margin-bottom: 0.6rem;
+  }
+  .app-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0 0 0.6rem;
+    color: var(--text);
+  }
+  .app-header p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 640px;
+    margin: 0;
+  }
+  .app-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .app-body { grid-template-columns: 1fr; }
+  }
+  .app-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .engine-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .engine-list li {
+    font-size: 0.87rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    line-height: 1.5;
+  }
+  .engine-list li::before {
+    content: '';
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--accent3);
+    flex-shrink: 0;
+  }
+  .collision-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    text-align: center;
+  }
+  .badge-num {
+    font-family: var(--font-mono);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent3);
+    display: block;
+    line-height: 1;
+  }
+  .badge-label {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-top: 0.3rem;
+    display: block;
+  }
+  .game-wrapper {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: center;
+  }
+  #gameCanvas { display: block; }
+</style>
+
+<div class="demo-page">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a>
+    <span class="sep">&gt;</span>
+    <a href="/modulo-01/">Módulo 01</a>
+    <span class="sep">&gt;</span>
+    Detección de Colisiones (SAT)
+  </nav>
+
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="module-eyebrow">Módulo 01 · Álgebra Vectorial</div>
+    <h1>Detección de Colisiones (SAT)</h1>
+    <p class="demo-lead">
+      El Teorema del Eje Separador (Separating Axis Theorem) determina si dos polígonos convexos colisionan
+      proyectando sus vértices sobre ejes candidatos. Fundamento de los motores de física en Ciencia de la Computación.
+    </p>
+  </header>
+
+  <!-- Main two-column layout -->
+  <div class="demo-layout">
+
+    <!-- Left: Theory -->
+    <div class="demo-theory">
+
+      <!-- Block 1 -->
+      <div class="theory-block">
+        <h3>El Teorema del Eje Separador (SAT)</h3>
+        <p>
+          Dos formas convexas <strong>no colisionan</strong> si y solo si existe un <em>eje separador</em> —
+          una dirección sobre la cual las proyecciones de las dos figuras no se solapan.
+        </p>
+        <div class="formula-box">proyección de v sobre eje n̂:
+  p = v · n̂  (producto punto)
+
+Separación existe si:
+  max(proj A) &lt; min(proj B)
+  ó
+  max(proj B) &lt; min(proj A)</div>
+        <p>
+          Si no existe ningún eje separador en ninguna dirección candidata, las figuras están colisionando.
+        </p>
+      </div>
+
+      <!-- Block 2 -->
+      <div class="theory-block">
+        <h3>Algoritmo SAT</h3>
+        <ul class="steps-list">
+          <li><span class="step-num">1</span>Para cada arista de ambos polígonos, obtener la normal perpendicular (el eje candidato).</li>
+          <li><span class="step-num">2</span>Proyectar todos los vértices de ambas figuras sobre ese eje usando el producto punto.</li>
+          <li><span class="step-num">3</span>Si los intervalos de proyección <strong>no se solapan</strong> → hay separación → no hay colisión.</li>
+          <li><span class="step-num">4</span>Si <strong>todos</strong> los ejes solapan → hay colisión. El MTV (vector de traslación mínima) es el eje con menor solapamiento.</li>
+        </ul>
+      </div>
+
+      <!-- Block 3 -->
+      <div class="theory-block">
+        <h3>¿Por qué el producto punto?</h3>
+        <p>
+          La proyección escalar de un vector <strong>v</strong> sobre un eje unitario <strong>n̂</strong>
+          se calcula directamente con el producto punto:
+        </p>
+        <div class="formula-box violet">p = v · n̂ = vₓ·n̂ₓ + vᵧ·n̂ᵧ</div>
+        <p>
+          El SAT proyecta todos los vértices sobre cada eje para obtener el intervalo
+          [min, max] de cada figura. Si los intervalos no se tocan, ese eje es separador.
+          La complejidad es O(n·m) donde n, m son el número de aristas de cada polígono.
+        </p>
+      </div>
+
+      <!-- Block 4: Live panel -->
+      <div class="live-panel">
+        <div class="live-panel-header">
+          <span class="live-dot"></span>
+          Estado en tiempo real
+        </div>
+        <div class="live-panel-body">
+          <div class="live-result no-collision" id="liveStatus">SIN COLISIÓN</div>
+          <div class="live-row">
+            <span class="live-label">Eje separador actual</span>
+            <span class="live-value" id="liveSepAxis">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Ejes verificados</span>
+            <span class="live-value" id="liveAxesCount">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Solapamiento mínimo (MTV)</span>
+            <span class="live-value" id="liveMTV">—</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /demo-theory -->
+
+    <!-- Right: Interactive -->
+    <div class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="satCanvas" width="500" height="440"></canvas>
+      </div>
+
+      <!-- Rotation controls -->
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span class="ctrl-dot-a"></span> Rotar A</div>
+          <input type="range" id="rotA" min="0" max="360" value="0">
+          <div class="ctrl-val" id="rotAVal">0°</div>
+        </div>
+        <div class="ctrl-group">
+          <div class="ctrl-label"><span class="ctrl-dot-b"></span> Rotar B</div>
+          <input type="range" id="rotB" min="0" max="360" value="0">
+          <div class="ctrl-val" id="rotBVal">0°</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /demo-layout -->
+
+  <!-- Application section -->
+  <section class="demo-application">
+    <div class="app-header">
+      <div class="app-eyebrow">Aplicación CS</div>
+      <h2>Motor de Física para Videojuegos</h2>
+      <p>
+        SAT es utilizado en motores de juego (Unity, Godot, Box2D) para detección de colisiones
+        entre objetos convexos en tiempo real. Es eficiente porque detiene la búsqueda
+        tan pronto como encuentra un eje separador (<em>early exit</em>). Controla el jugador
+        con <strong>WASD</strong> o las teclas de flecha y observa la respuesta a colisiones con MTV.
+      </p>
+    </div>
+
+    <div class="app-info">
+      <ul class="engine-list">
+        <li>Unity usa GJK + EPA para formas arbitrarias, pero SAT internamente para polígonos convexos simples.</li>
+        <li>Box2D emplea SAT con manifold de contacto para resolver penetraciones y fricciones.</li>
+        <li>Godot 4 implementa SAT en su <em>physics server</em> 2D para <code>CollisionShape2D</code>.</li>
+        <li>La respuesta por deslizamiento (sliding) proyecta la velocidad sobre el plano de colisión usando el MTV.</li>
+      </ul>
+    </div>
+
+    <div style="display:flex; gap:1.5rem; align-items:flex-start; flex-wrap:wrap; margin-top:1rem;">
+      <div class="collision-badge">
+        <span class="badge-num" id="collisionCount">0</span>
+        <span class="badge-label">Colisiones detectadas</span>
+      </div>
+      <div class="collision-badge">
+        <span class="badge-num" id="frameCount">0</span>
+        <span class="badge-label">Frames / seg</span>
+      </div>
+    </div>
+
+    <div class="game-wrapper">
+      <canvas id="gameCanvas" width="600" height="320"></canvas>
+    </div>
+  </section>
+
+</div><!-- /demo-page -->
+
+<script>
+/* ================================================================
+   SAT COLLISION DETECTION DEMO
+   Módulo 01 — Álgebra Vectorial · Ciencia de la Computación
+================================================================ */
+
+// ── Utilities ────────────────────────────────────────────────────
+
+function dot(a, b) { return a.x * b.x + a.y * b.y; }
+function sub(a, b) { return { x: a.x - b.x, y: a.y - b.y }; }
+function add(a, b) { return { x: a.x + b.x, y: a.y + b.y }; }
+function scale(v, s) { return { x: v.x * s, y: v.y * s }; }
+function len(v) { return Math.sqrt(v.x * v.x + v.y * v.y); }
+function normalize(v) { const l = len(v) || 1; return { x: v.x / l, y: v.y / l }; }
+function perp(v) { return { x: -v.y, y: v.x }; }
+
+function centroid(verts) {
+  let cx = 0, cy = 0;
+  verts.forEach(v => { cx += v.x; cy += v.y; });
+  return { x: cx / verts.length, y: cy / verts.length };
+}
+
+function rotatePoly(verts, center, angleDeg) {
+  const a = (angleDeg * Math.PI) / 180;
+  const cos = Math.cos(a), sin = Math.sin(a);
+  return verts.map(v => {
+    const dx = v.x - center.x, dy = v.y - center.y;
+    return { x: center.x + dx * cos - dy * sin, y: center.y + dx * sin + dy * cos };
+  });
+}
+
+function getAxes(verts) {
+  const axes = [];
+  for (let i = 0; i < verts.length; i++) {
+    const a = verts[i], b = verts[(i + 1) % verts.length];
+    const edge = sub(b, a);
+    axes.push(normalize(perp(edge)));
+  }
+  return axes;
+}
+
+function project(verts, axis) {
+  let mn = Infinity, mx = -Infinity;
+  verts.forEach(v => {
+    const p = dot(v, axis);
+    if (p < mn) mn = p;
+    if (p > mx) mx = p;
+  });
+  return { min: mn, max: mx };
+}
+
+function overlapAmount(pa, pb) {
+  if (pa.max < pb.min || pb.max < pa.min) return null;
+  return Math.min(pa.max, pb.max) - Math.max(pa.min, pb.min);
+}
+
+function checkSAT(vertsA, vertsB) {
+  const axesA = getAxes(vertsA);
+  const axesB = getAxes(vertsB);
+  const allAxes = [...axesA, ...axesB];
+
+  let minOverlap = Infinity;
+  let mtvAxis = null;
+  let separatingAxis = null;
+
+  for (let i = 0; i < allAxes.length; i++) {
+    const axis = allAxes[i];
+    const pa = project(vertsA, axis);
+    const pb = project(vertsB, axis);
+    const ov = overlapAmount(pa, pb);
+
+    if (ov === null) {
+      // Found a separating axis → no collision
+      return {
+        colliding: false,
+        separatingAxis: axis,
+        separatingAxisIndex: i,
+        totalAxes: allAxes.length,
+        mtv: null,
+        projA: pa,
+        projB: pb
+      };
+    }
+
+    if (ov < minOverlap) {
+      minOverlap = ov;
+      mtvAxis = axis;
+    }
+  }
+
+  // All axes overlap → collision
+  return {
+    colliding: true,
+    separatingAxis: null,
+    totalAxes: allAxes.length,
+    mtv: { axis: mtvAxis, depth: minOverlap },
+    projA: null,
+    projB: null
+  };
+}
+
+function pointInPoly(pt, verts) {
+  let inside = false;
+  for (let i = 0, j = verts.length - 1; i < verts.length; j = i++) {
+    const xi = verts[i].x, yi = verts[i].y;
+    const xj = verts[j].x, yj = verts[j].y;
+    const intersect = ((yi > pt.y) !== (yj > pt.y)) &&
+      (pt.x < (xj - xi) * (pt.y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function drawArrow(ctx, from, to, color, width = 2) {
+  const headLen = 12, headAngle = Math.PI / 7;
+  const angle = Math.atan2(to.y - from.y, to.x - from.x);
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle = color;
+  ctx.lineWidth = width;
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(to.x, to.y);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(to.x, to.y);
+  ctx.lineTo(to.x - headLen * Math.cos(angle - headAngle), to.y - headLen * Math.sin(angle - headAngle));
+  ctx.lineTo(to.x - headLen * Math.cos(angle + headAngle), to.y - headLen * Math.sin(angle + headAngle));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawPoly(ctx, verts, fillColor, strokeColor, lineWidth = 2) {
+  if (!verts.length) return;
+  ctx.beginPath();
+  ctx.moveTo(verts[0].x, verts[0].y);
+  verts.forEach((v, i) => { if (i > 0) ctx.lineTo(v.x, v.y); });
+  ctx.closePath();
+  ctx.fillStyle = fillColor;
+  ctx.fill();
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = lineWidth;
+  ctx.stroke();
+}
+
+// ── Main Canvas Setup ─────────────────────────────────────────────
+
+const satCanvas = document.getElementById('satCanvas');
+const satCtx = satCanvas.getContext('2d');
+const W = satCanvas.width, H = satCanvas.height;
+
+// Base shapes (relative to centroid)
+const rectOffsets = [
+  { x: -60, y: -40 }, { x: 60, y: -40 },
+  { x: 60, y:  40 }, { x: -60, y:  40 }
+];
+const triOffsets = [
+  { x: 0,   y: -55 },
+  { x: 55,  y:  40 },
+  { x: -55, y:  40 }
+];
+
+let centerA = { x: 155, y: 210 };
+let centerB = { x: 345, y: 210 };
+let rotAngleA = 0, rotAngleB = 0;
+
+function getVertsA() {
+  const base = rectOffsets.map(o => add(centerA, o));
+  return rotatePoly(base, centerA, rotAngleA);
+}
+function getVertsB() {
+  const base = triOffsets.map(o => add(centerB, o));
+  return rotatePoly(base, centerB, rotAngleB);
+}
+
+// Drag state
+let dragging = null; // null | 'A' | 'B'
+let dragOffset = { x: 0, y: 0 };
+
+satCanvas.addEventListener('mousedown', (e) => {
+  const rect = satCanvas.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  const pt = {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+  if (pointInPoly(pt, getVertsA())) {
+    dragging = 'A';
+    dragOffset = sub(centerA, pt);
+  } else if (pointInPoly(pt, getVertsB())) {
+    dragging = 'B';
+    dragOffset = sub(centerB, pt);
+  }
+});
+satCanvas.addEventListener('mousemove', (e) => {
+  if (!dragging) return;
+  const rect = satCanvas.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  const pt = {
+    x: (e.clientX - rect.left) * scaleX,
+    y: (e.clientY - rect.top) * scaleY
+  };
+  if (dragging === 'A') centerA = add(pt, dragOffset);
+  else centerB = add(pt, dragOffset);
+  drawScene();
+});
+satCanvas.addEventListener('mouseup', () => { dragging = null; });
+satCanvas.addEventListener('mouseleave', () => { dragging = null; });
+
+// Touch support
+satCanvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const rect = satCanvas.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  const t = e.touches[0];
+  const pt = { x: (t.clientX - rect.left) * scaleX, y: (t.clientY - rect.top) * scaleY };
+  if (pointInPoly(pt, getVertsA())) { dragging = 'A'; dragOffset = sub(centerA, pt); }
+  else if (pointInPoly(pt, getVertsB())) { dragging = 'B'; dragOffset = sub(centerB, pt); }
+}, { passive: false });
+satCanvas.addEventListener('touchmove', (e) => {
+  e.preventDefault();
+  if (!dragging) return;
+  const rect = satCanvas.getBoundingClientRect();
+  const scaleX = W / rect.width, scaleY = H / rect.height;
+  const t = e.touches[0];
+  const pt = { x: (t.clientX - rect.left) * scaleX, y: (t.clientY - rect.top) * scaleY };
+  if (dragging === 'A') centerA = add(pt, dragOffset);
+  else centerB = add(pt, dragOffset);
+  drawScene();
+}, { passive: false });
+satCanvas.addEventListener('touchend', () => { dragging = null; });
+
+// Rotation sliders
+const rotASlider = document.getElementById('rotA');
+const rotBSlider = document.getElementById('rotB');
+const rotAVal = document.getElementById('rotAVal');
+const rotBVal = document.getElementById('rotBVal');
+
+rotASlider.addEventListener('input', () => {
+  rotAngleA = parseInt(rotASlider.value);
+  rotAVal.textContent = rotAngleA + '°';
+  drawScene();
+});
+rotBSlider.addEventListener('input', () => {
+  rotAngleB = parseInt(rotBSlider.value);
+  rotBVal.textContent = rotAngleB + '°';
+  drawScene();
+});
+
+// ── Draw Scene ────────────────────────────────────────────────────
+
+let flashTimer = 0;
+
+function drawScene() {
+  const vertsA = getVertsA();
+  const vertsB = getVertsB();
+  const result = checkSAT(vertsA, vertsB);
+
+  satCtx.clearRect(0, 0, W, H);
+
+  // Background
+  satCtx.fillStyle = '#0d1117';
+  satCtx.fillRect(0, 0, W, H);
+
+  // Grid (subtle)
+  satCtx.strokeStyle = 'rgba(48, 54, 61, 0.5)';
+  satCtx.lineWidth = 1;
+  for (let x = 0; x < W; x += 40) {
+    satCtx.beginPath(); satCtx.moveTo(x, 0); satCtx.lineTo(x, H - 60); satCtx.stroke();
+  }
+  for (let y = 0; y < H - 60; y += 40) {
+    satCtx.beginPath(); satCtx.moveTo(0, y); satCtx.lineTo(W, y); satCtx.stroke();
+  }
+
+  const projStripY = H - 50; // Y position for projection strip
+
+  if (result.colliding) {
+    flashTimer++;
+    const flash = (Math.sin(flashTimer * 0.3) + 1) / 2;
+    const alpha = 0.15 + flash * 0.25;
+    const fillA = `rgba(248, 81, 73, ${alpha})`;
+    const fillB = `rgba(248, 81, 73, ${alpha})`;
+    drawPoly(satCtx, vertsA, fillA, '#f85149', 2.5);
+    drawPoly(satCtx, vertsB, fillB, '#f85149', 2.5);
+
+    // Draw MTV arrow
+    if (result.mtv) {
+      const cA = centroid(vertsA);
+      const cB = centroid(vertsB);
+      const dir = normalize(sub(cB, cA));
+      const mid = { x: (cA.x + cB.x) / 2, y: (cA.y + cB.y) / 2 };
+      const arrowLen = result.mtv.depth + 20;
+      drawArrow(satCtx, sub(mid, scale(dir, arrowLen / 2)), add(mid, scale(dir, arrowLen / 2)), '#f85149', 3);
+
+      // MTV label
+      satCtx.fillStyle = 'rgba(248, 81, 73, 0.85)';
+      satCtx.font = 'bold 11px JetBrains Mono, monospace';
+      satCtx.textAlign = 'center';
+      satCtx.fillText(`MTV: ${result.mtv.depth.toFixed(1)}px`, mid.x, mid.y - 18);
+    }
+
+    // "COLISIÓN" text
+    satCtx.save();
+    satCtx.font = 'bold 32px Inter, system-ui';
+    satCtx.textAlign = 'center';
+    satCtx.textBaseline = 'middle';
+    const grd = satCtx.createLinearGradient(W / 2 - 80, 0, W / 2 + 80, 0);
+    grd.addColorStop(0, '#f85149');
+    grd.addColorStop(1, '#d29922');
+    satCtx.fillStyle = grd;
+    satCtx.globalAlpha = 0.85 + flash * 0.15;
+    satCtx.fillText('COLISIÓN', W / 2, 30);
+    satCtx.restore();
+
+    // Projection strip: just show "overlap" zone
+    drawProjectionStrip(satCtx, vertsA, vertsB, result, projStripY, W);
+
+    // Update live panel
+    updateLivePanel(result);
+
+  } else {
+    flashTimer = 0;
+    drawPoly(satCtx, vertsA, 'rgba(88, 166, 255, 0.15)', '#58a6ff', 2);
+    drawPoly(satCtx, vertsB, 'rgba(188, 140, 255, 0.15)', '#bc8cff', 2);
+
+    // Draw centroids
+    [{ c: centroid(vertsA), col: '#58a6ff' }, { c: centroid(vertsB), col: '#bc8cff' }].forEach(({ c, col }) => {
+      satCtx.beginPath();
+      satCtx.arc(c.x, c.y, 4, 0, Math.PI * 2);
+      satCtx.fillStyle = col;
+      satCtx.fill();
+    });
+
+    // Separating axis line
+    if (result.separatingAxis) {
+      const ax = result.separatingAxis;
+      const cx = W / 2, cy = (H - 60) / 2;
+      const len = 600;
+      // Line perpendicular to ax passes through canvas center
+      const lineDir = perp(ax);
+      const p1 = { x: cx - lineDir.x * len, y: cy - lineDir.y * len };
+      const p2 = { x: cx + lineDir.x * len, y: cy + lineDir.y * len };
+      satCtx.save();
+      satCtx.setLineDash([8, 5]);
+      satCtx.strokeStyle = 'rgba(210, 153, 34, 0.55)';
+      satCtx.lineWidth = 1.5;
+      satCtx.beginPath();
+      satCtx.moveTo(p1.x, p1.y);
+      satCtx.lineTo(p2.x, p2.y);
+      satCtx.stroke();
+      satCtx.setLineDash([]);
+      satCtx.restore();
+
+      // Axis direction arrow
+      const mid = { x: cx, y: cy };
+      drawArrow(satCtx, mid, add(mid, scale(ax, 45)), 'rgba(210, 153, 34, 0.9)', 1.5);
+
+      // Label
+      satCtx.font = '10px JetBrains Mono, monospace';
+      satCtx.fillStyle = '#d29922';
+      satCtx.textAlign = 'center';
+      satCtx.fillText('eje separador', cx + ax.x * 60, cy + ax.y * 60 - 8);
+    }
+
+    // Projection strip
+    drawProjectionStrip(satCtx, vertsA, vertsB, result, projStripY, W);
+
+    updateLivePanel(result);
+  }
+
+  // Label shapes
+  satCtx.font = 'bold 13px Inter, system-ui';
+  satCtx.textAlign = 'center';
+  satCtx.textBaseline = 'middle';
+  const cA = centroid(vertsA), cB = centroid(vertsB);
+  satCtx.fillStyle = '#58a6ff';
+  satCtx.fillText('A', cA.x, cA.y);
+  satCtx.fillStyle = '#bc8cff';
+  satCtx.fillText('B', cB.x, cB.y);
+
+  // Drag hint
+  satCtx.font = '10px Inter, system-ui';
+  satCtx.fillStyle = 'rgba(139, 148, 158, 0.6)';
+  satCtx.textAlign = 'right';
+  satCtx.textBaseline = 'bottom';
+  satCtx.fillText('Arrastra A o B · Usa los sliders para rotar', W - 8, H - 55);
+}
+
+function drawProjectionStrip(ctx, vertsA, vertsB, result, stripY, W) {
+  // Background strip
+  ctx.fillStyle = 'rgba(22, 27, 34, 0.9)';
+  ctx.fillRect(0, stripY - 20, W, 50);
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, stripY - 20); ctx.lineTo(W, stripY - 20); ctx.stroke();
+
+  // Choose axis to display
+  let axis;
+  if (result.colliding && result.mtv) axis = result.mtv.axis;
+  else if (!result.colliding && result.separatingAxis) axis = result.separatingAxis;
+  else return;
+
+  const projA = project(vertsA, axis);
+  const projB = project(vertsB, axis);
+
+  // Map projection values to canvas X range [20, W-20]
+  const allVals = [projA.min, projA.max, projB.min, projB.max];
+  const globalMin = Math.min(...allVals), globalMax = Math.max(...allVals);
+  const range = globalMax - globalMin || 1;
+  const mapX = v => 20 + ((v - globalMin) / range) * (W - 40);
+
+  const axA = mapX(projA.min), bxA = mapX(projA.max);
+  const axB = mapX(projB.min), bxB = mapX(projB.max);
+
+  // Axis line
+  ctx.strokeStyle = '#30363d';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(10, stripY); ctx.lineTo(W - 10, stripY); ctx.stroke();
+
+  // Projection of A
+  ctx.strokeStyle = '#58a6ff';
+  ctx.lineWidth = 5;
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(axA, stripY); ctx.lineTo(bxA, stripY); ctx.stroke();
+
+  // Projection of B
+  ctx.strokeStyle = '#bc8cff';
+  ctx.lineWidth = 5;
+  ctx.beginPath(); ctx.moveTo(axB, stripY); ctx.lineTo(bxB, stripY); ctx.stroke();
+
+  ctx.lineCap = 'butt';
+
+  // Gap or overlap highlight
+  const overlapStart = Math.max(axA, axB);
+  const overlapEnd = Math.min(bxA, bxB);
+  if (overlapEnd > overlapStart) {
+    ctx.fillStyle = 'rgba(248, 81, 73, 0.35)';
+    ctx.fillRect(overlapStart, stripY - 5, overlapEnd - overlapStart, 10);
+  } else {
+    // Gap
+    ctx.fillStyle = 'rgba(63, 185, 80, 0.25)';
+    ctx.fillRect(overlapEnd + 2, stripY - 4, overlapStart - overlapEnd - 4, 8);
+    ctx.fillStyle = '#3fb950';
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('GAP', (overlapStart + overlapEnd) / 2, stripY - 9);
+  }
+
+  // Labels
+  ctx.font = '9px JetBrains Mono, monospace';
+  ctx.fillStyle = '#58a6ff';
+  ctx.textAlign = 'center';
+  ctx.fillText('A', (axA + bxA) / 2, stripY - 9);
+  ctx.fillStyle = '#bc8cff';
+  ctx.fillText('B', (axB + bxB) / 2, stripY + 14);
+
+  // Strip label
+  ctx.fillStyle = 'rgba(139, 148, 158, 0.7)';
+  ctx.textAlign = 'left';
+  ctx.fillText('proyección sobre eje:', 12, stripY - 9);
+}
+
+function updateLivePanel(result) {
+  const statusEl = document.getElementById('liveStatus');
+  const sepAxisEl = document.getElementById('liveSepAxis');
+  const axesCountEl = document.getElementById('liveAxesCount');
+  const mtvEl = document.getElementById('liveMTV');
+
+  if (result.colliding) {
+    statusEl.textContent = 'COLISIÓN DETECTADA';
+    statusEl.className = 'live-result collision';
+    sepAxisEl.textContent = '— (ninguno)';
+    axesCountEl.textContent = `${result.totalAxes} (todos solapan)`;
+    mtvEl.textContent = result.mtv ? `${result.mtv.depth.toFixed(2)} px` : '—';
+  } else {
+    statusEl.textContent = 'SIN COLISIÓN';
+    statusEl.className = 'live-result no-collision';
+    const ax = result.separatingAxis;
+    if (ax) {
+      sepAxisEl.textContent = `(${ax.x.toFixed(2)}, ${ax.y.toFixed(2)})`;
+    } else {
+      sepAxisEl.textContent = '—';
+    }
+    axesCountEl.textContent = `${result.totalAxes}`;
+    mtvEl.textContent = '—';
+  }
+}
+
+// Initial draw
+drawScene();
+
+// ── Game Canvas ───────────────────────────────────────────────────
+
+const gameCanvas = document.getElementById('gameCanvas');
+const gameCtx = gameCanvas.getContext('2d');
+const GW = gameCanvas.width, GH = gameCanvas.height;
+
+// Player
+const player = {
+  x: 60, y: GH / 2,
+  w: 24, h: 24,
+  vx: 0, vy: 0,
+  speed: 2.8,
+  collisionCount: 0
+};
+
+// Obstacles (convex polygons as vertex lists)
+const obstacles = [
+  {
+    base: [{ x: 180, y: 60 }, { x: 240, y: 80 }, { x: 230, y: 145 }, { x: 170, y: 135 }],
+    color: '#58a6ff', touching: false
+  },
+  {
+    base: [{ x: 320, y: 30 }, { x: 390, y: 50 }, { x: 370, y: 120 }, { x: 290, y: 100 }],
+    color: '#bc8cff', touching: false
+  },
+  {
+    base: [{ x: 130, y: 185 }, { x: 215, y: 195 }, { x: 200, y: 260 }, { x: 120, y: 255 }],
+    color: '#58a6ff', touching: false
+  },
+  {
+    base: [{ x: 330, y: 170 }, { x: 400, y: 155 }, { x: 430, y: 230 }, { x: 350, y: 250 }],
+    color: '#bc8cff', touching: false
+  },
+  {
+    base: [{ x: 470, y: 60 }, { x: 530, y: 75 }, { x: 545, y: 160 }, { x: 455, y: 145 }],
+    color: '#3fb950', touching: false
+  }
+];
+
+// Keys
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  // Prevent page scroll with arrow keys when game is in view
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) {
+    const rect = gameCanvas.getBoundingClientRect();
+    if (rect.top < window.innerHeight && rect.bottom > 0) e.preventDefault();
+  }
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+function getPlayerVerts() {
+  const { x, y, w, h } = player;
+  return [
+    { x: x, y: y },
+    { x: x + w, y: y },
+    { x: x + w, y: y + h },
+    { x: x, y: y + h }
+  ];
+}
+
+let totalCollisions = 0;
+let lastFrameTime = performance.now();
+let frameSamples = [];
+
+function gameLoop(now) {
+  const dt = Math.min(now - lastFrameTime, 50);
+  lastFrameTime = now;
+
+  // FPS sampling
+  frameSamples.push(1000 / dt);
+  if (frameSamples.length > 30) frameSamples.shift();
+  const fps = Math.round(frameSamples.reduce((a, b) => a + b, 0) / frameSamples.length);
+  document.getElementById('frameCount').textContent = fps;
+
+  // Input
+  player.vx = 0; player.vy = 0;
+  if (keys['ArrowLeft'] || keys['a'] || keys['A'])  player.vx = -player.speed;
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) player.vx =  player.speed;
+  if (keys['ArrowUp'] || keys['w'] || keys['W'])    player.vy = -player.speed;
+  if (keys['ArrowDown'] || keys['s'] || keys['S'])  player.vy =  player.speed;
+
+  // Move X, resolve collisions, then Y
+  player.x += player.vx;
+  let anyCollision = false;
+
+  obstacles.forEach(obs => {
+    obs.touching = false;
+    const res = checkSAT(getPlayerVerts(), obs.base);
+    if (res.colliding && res.mtv) {
+      obs.touching = true;
+      anyCollision = true;
+      const mtv = res.mtv;
+      const pVerts = getPlayerVerts();
+      const pC = centroid(pVerts);
+      const oC = centroid(obs.base);
+      const dir = sub(pC, oC);
+      const side = dot(dir, mtv.axis) >= 0 ? 1 : -1;
+      // Push player out along MTV axis (X only in this pass)
+      player.x += mtv.axis.x * mtv.depth * side;
+    }
+  });
+
+  player.y += player.vy;
+  obstacles.forEach(obs => {
+    const res = checkSAT(getPlayerVerts(), obs.base);
+    if (res.colliding && res.mtv) {
+      obs.touching = true;
+      anyCollision = true;
+      const mtv = res.mtv;
+      const pVerts = getPlayerVerts();
+      const pC = centroid(pVerts);
+      const oC = centroid(obs.base);
+      const dir = sub(pC, oC);
+      const side = dot(dir, mtv.axis) >= 0 ? 1 : -1;
+      player.y += mtv.axis.y * mtv.depth * side;
+    }
+  });
+
+  // Clamp to canvas
+  player.x = Math.max(0, Math.min(GW - player.w, player.x));
+  player.y = Math.max(0, Math.min(GH - player.h, player.y));
+
+  if (anyCollision) {
+    totalCollisions++;
+    document.getElementById('collisionCount').textContent = Math.floor(totalCollisions / 4);
+  }
+
+  // Draw game
+  gameCtx.clearRect(0, 0, GW, GH);
+  gameCtx.fillStyle = '#0d1117';
+  gameCtx.fillRect(0, 0, GW, GH);
+
+  // Grid
+  gameCtx.strokeStyle = 'rgba(48, 54, 61, 0.4)';
+  gameCtx.lineWidth = 1;
+  for (let x = 0; x < GW; x += 40) {
+    gameCtx.beginPath(); gameCtx.moveTo(x, 0); gameCtx.lineTo(x, GH); gameCtx.stroke();
+  }
+  for (let y = 0; y < GH; y += 40) {
+    gameCtx.beginPath(); gameCtx.moveTo(0, y); gameCtx.lineTo(GW, y); gameCtx.stroke();
+  }
+
+  // Draw obstacles
+  obstacles.forEach(obs => {
+    const fillColor = obs.touching
+      ? 'rgba(248, 81, 73, 0.35)'
+      : `${obs.color}22`;
+    const strokeColor = obs.touching ? '#f85149' : obs.color;
+    drawPoly(gameCtx, obs.base, fillColor, strokeColor, obs.touching ? 2.5 : 1.5);
+  });
+
+  // Draw player
+  const pVerts = getPlayerVerts();
+  const isColliding = obstacles.some(o => o.touching);
+  const pFill = isColliding ? 'rgba(248, 81, 73, 0.4)' : 'rgba(88, 166, 255, 0.35)';
+  const pStroke = isColliding ? '#f85149' : '#58a6ff';
+  drawPoly(gameCtx, pVerts, pFill, pStroke, 2.5);
+
+  // Player label
+  const pC = centroid(pVerts);
+  gameCtx.font = 'bold 10px Inter, system-ui';
+  gameCtx.fillStyle = isColliding ? '#f85149' : '#58a6ff';
+  gameCtx.textAlign = 'center';
+  gameCtx.textBaseline = 'middle';
+  gameCtx.fillText('P', pC.x, pC.y);
+
+  // Instructions overlay
+  gameCtx.font = '11px Inter, system-ui';
+  gameCtx.fillStyle = 'rgba(139, 148, 158, 0.7)';
+  gameCtx.textAlign = 'center';
+  gameCtx.textBaseline = 'bottom';
+  gameCtx.fillText('Mueve con WASD o ↑↓←→', GW / 2, GH - 8);
+
+  requestAnimationFrame(gameLoop);
+}
+
+requestAnimationFrame(gameLoop);
+</script>
