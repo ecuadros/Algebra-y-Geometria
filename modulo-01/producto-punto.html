@@ -1,0 +1,1339 @@
+---
+layout: default
+title: Producto Punto
+---
+
+<style>
+  /* ============================================================
+     DEMO PAGE — PRODUCTO PUNTO
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 4rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+
+  /* Header */
+  .demo-header {
+    margin-bottom: 2.5rem;
+  }
+  .module-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .demo-header h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+  .demo-lead {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 600px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Two-column layout */
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Theory aside */
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .theory-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-card h3 {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 1rem;
+  }
+  .theory-card p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.5rem;
+  }
+  .theory-card p:last-child { margin-bottom: 0; }
+
+  /* Formula box */
+  .formula-box {
+    background: var(--surface2);
+    border: 1px solid rgba(88, 166, 255, 0.3);
+    border-radius: 8px;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--accent);
+    text-align: center;
+    margin: 0.75rem 0;
+    letter-spacing: 0.03em;
+  }
+  .formula-box.violet { color: var(--accent2); border-color: rgba(188, 140, 255, 0.3); }
+  .formula-box.green  { color: var(--accent3); border-color: rgba(63, 185, 80, 0.3); }
+
+  /* Interpretation bullets */
+  .interp-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .interp-list li {
+    font-size: 0.88rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 7px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    line-height: 1.5;
+  }
+  .interp-list li.pos { background: rgba(63, 185, 80, 0.1);  color: #3fb950; border-left: 3px solid #3fb950; }
+  .interp-list li.zer { background: rgba(88, 166, 255, 0.1); color: var(--accent); border-left: 3px solid var(--accent); }
+  .interp-list li.neg { background: rgba(248, 81, 73, 0.1);  color: var(--danger); border-left: 3px solid var(--danger); }
+  .interp-list li .cond { font-weight: 700; font-family: var(--font-mono); font-size: 0.82rem; white-space: nowrap; }
+
+  /* Properties */
+  .prop-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .prop-list li {
+    font-size: 0.88rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .prop-list li::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent2);
+    flex-shrink: 0;
+  }
+  .prop-list code {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--accent2);
+    background: rgba(188, 140, 255, 0.1);
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+  }
+
+  /* Live values panel */
+  .live-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .live-panel-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+  .live-panel-body {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .live-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .live-label {
+    font-size: 0.82rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .live-value {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+  }
+  .live-value.accent  { color: var(--accent); }
+  .live-value.violet  { color: var(--accent2); }
+  .live-value.result  {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent3);
+    transition: color 0.3s;
+  }
+  .live-value.result.neg { color: var(--danger); }
+  .live-value.result.zero { color: var(--accent); }
+  .live-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0.15rem 0;
+  }
+
+  /* ---- Interactive panel ---- */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  #dotCanvas {
+    border-radius: 8px;
+    cursor: crosshair;
+    display: block;
+    touch-action: none;
+  }
+
+  /* Slider controls */
+  .sliders-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
+    width: 100%;
+  }
+  .slider-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .slider-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .slider-label span:last-child {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--text);
+  }
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range].accent-a::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px rgba(88,166,255,0.5);
+    cursor: grab;
+  }
+  input[type=range].accent-b::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent2);
+    box-shadow: 0 0 6px rgba(188,140,255,0.5);
+    cursor: grab;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    cursor: grab;
+  }
+  .canvas-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .legend-swatch {
+    width: 20px;
+    height: 3px;
+    border-radius: 2px;
+  }
+  .legend-swatch.dashed {
+    background: repeating-linear-gradient(90deg, #3fb950 0, #3fb950 4px, transparent 4px, transparent 8px);
+    height: 2px;
+  }
+
+  /* ============================================================
+     CS APPLICATION SECTION
+  ============================================================ */
+  .demo-application {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    margin-top: 1rem;
+  }
+  .app-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .app-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(63,185,80,0.2), rgba(88,166,255,0.2));
+    border: 1px solid rgba(63,185,80,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+  .app-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: var(--text);
+  }
+  .app-header p {
+    font-size: 0.88rem;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.5;
+  }
+  .app-body {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 800px) {
+    .app-body { grid-template-columns: 1fr; }
+  }
+  .app-explanation {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .app-explanation p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0;
+  }
+  .intensity-display {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin-top: 0.5rem;
+  }
+  .intensity-display .label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+  .intensity-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.86rem;
+  }
+  .intensity-row .key { color: var(--muted); font-family: var(--font-mono); }
+  .intensity-row .val { color: var(--text);  font-family: var(--font-mono); font-weight: 600; }
+  .intensity-bar-track {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    margin-top: 0.75rem;
+    overflow: hidden;
+  }
+  .intensity-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, #3fb950, #e3f850);
+    transition: width 0.05s;
+  }
+
+  .light-canvas-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  #lightCanvas {
+    border-radius: 10px;
+    cursor: move;
+    display: block;
+    border: 1px solid var(--border);
+  }
+  .light-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  /* Animate on load */
+  .animate-fade-up {
+    animation: fade-up 0.5s ease both;
+  }
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .delay-1 { animation-delay: 0.1s; }
+  .delay-2 { animation-delay: 0.2s; }
+  .delay-3 { animation-delay: 0.3s; }
+  .delay-4 { animation-delay: 0.4s; }
+</style>
+
+<div class="demo-page">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a> &rsaquo; <a href="#">Módulo 1: Vectores</a> &rsaquo; Producto Punto
+  </nav>
+
+  <!-- Page header -->
+  <header class="demo-header animate-fade-up">
+    <span class="module-eyebrow">Módulo 1 &middot; Vectores</span>
+    <h1>Producto Punto</h1>
+    <p class="demo-lead">El producto punto mide cuánto apuntan dos vectores en la misma dirección. Es una operación fundamental en gráficos, machine learning e iluminación 3D.</p>
+  </header>
+
+  <!-- Two-column layout -->
+  <div class="demo-layout">
+
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory animate-fade-up delay-1">
+
+      <!-- Definición -->
+      <div class="theory-card">
+        <h3>Definición</h3>
+        <p>Dados los vectores <strong style="color:var(--accent)">a</strong> = (a₁, a₂) y <strong style="color:var(--accent2)">b</strong> = (b₁, b₂), su producto punto es:</p>
+        <div class="formula-box">a · b = a₁b₁ + a₂b₂</div>
+        <p>El resultado es un <strong>escalar</strong> (un número), no un vector.</p>
+      </div>
+
+      <!-- Interpretación geométrica -->
+      <div class="theory-card">
+        <h3>Interpretación Geométrica</h3>
+        <p>Equivalentemente, usando el ángulo θ entre los vectores:</p>
+        <div class="formula-box violet">a · b = |a| · |b| · cos(θ)</div>
+        <p>El signo del producto punto revela la relación angular:</p>
+        <ul class="interp-list">
+          <li class="pos">
+            <span class="cond">a · b &gt; 0</span>
+            <span>Ángulo &lt; 90° &mdash; apuntan en la misma dirección general</span>
+          </li>
+          <li class="zer">
+            <span class="cond">a · b = 0</span>
+            <span>Vectores <strong>perpendiculares</strong> (ortogonales)</span>
+          </li>
+          <li class="neg">
+            <span class="cond">a · b &lt; 0</span>
+            <span>Ángulo &gt; 90° &mdash; apuntan en direcciones opuestas</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Propiedades -->
+      <div class="theory-card">
+        <h3>Propiedades</h3>
+        <ul class="prop-list">
+          <li><strong>Conmutativo:</strong> <code>a · b = b · a</code></li>
+          <li><strong>Distributivo:</strong> <code>a · (b + c) = a·b + a·c</code></li>
+          <li><strong>Escalar:</strong> <code>(λa) · b = λ(a · b)</code></li>
+          <li><strong>Auto-producto:</strong> <code>a · a = |a|²</code></li>
+        </ul>
+      </div>
+
+      <!-- Live values panel -->
+      <div class="live-panel">
+        <div class="live-panel-header">
+          <div class="live-dot"></div>
+          Valores en Tiempo Real
+        </div>
+        <div class="live-panel-body">
+          <div class="live-row">
+            <span class="live-label">Vector <strong style="color:var(--accent)">a</strong></span>
+            <span class="live-value accent" id="liveA">(1.00, 0.00)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">|<strong style="color:var(--accent)">a</strong>|</span>
+            <span class="live-value accent" id="liveMagA">1.00</span>
+          </div>
+          <div class="live-divider"></div>
+          <div class="live-row">
+            <span class="live-label">Vector <strong style="color:var(--accent2)">b</strong></span>
+            <span class="live-value violet" id="liveB">(0.00, 1.00)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">|<strong style="color:var(--accent2)">b</strong>|</span>
+            <span class="live-value violet" id="liveMagB">1.00</span>
+          </div>
+          <div class="live-divider"></div>
+          <div class="live-row">
+            <span class="live-label"><strong>a · b</strong></span>
+            <span class="live-value result" id="liveDot">0.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Ángulo θ</span>
+            <span class="live-value" id="liveAngle">90.0°</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">cos(θ)</span>
+            <span class="live-value" id="liveCos">0.000</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive animate-fade-up delay-2">
+
+      <div class="canvas-wrapper">
+        <canvas id="dotCanvas" width="400" height="400"></canvas>
+
+        <div class="canvas-legend">
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#58a6ff"></div>
+            <span>Vector <strong>a</strong></span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#bc8cff"></div>
+            <span>Vector <strong>b</strong></span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch dashed"></div>
+            <span>Proyección de <strong>a</strong> sobre <strong>b</strong></span>
+          </div>
+        </div>
+
+        <!-- Sliders -->
+        <div class="sliders-grid" style="max-width:400px">
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>|<strong style="color:var(--accent)">a</strong>| magnitud</span>
+              <span id="valMagA">2.0</span>
+            </div>
+            <input type="range" id="sliderMagA" class="accent-a" min="0.5" max="5" step="0.1" value="2">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Ángulo <strong style="color:var(--accent)">a</strong></span>
+              <span id="valAngA">30°</span>
+            </div>
+            <input type="range" id="sliderAngA" class="accent-a" min="0" max="360" step="1" value="30">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>|<strong style="color:var(--accent2)">b</strong>| magnitud</span>
+              <span id="valMagB">2.0</span>
+            </div>
+            <input type="range" id="sliderMagB" class="accent-b" min="0.5" max="5" step="0.1" value="2">
+          </div>
+          <div class="slider-group">
+            <div class="slider-label">
+              <span>Ángulo <strong style="color:var(--accent2)">b</strong></span>
+              <span id="valAngB">120°</span>
+            </div>
+            <input type="range" id="sliderAngB" class="accent-b" min="0" max="360" step="1" value="120">
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- CS Application Section -->
+  <section class="demo-application animate-fade-up delay-3">
+    <div class="app-header">
+      <div class="app-icon">&#127774;</div>
+      <div>
+        <h2>Aplicación en CS: Iluminación Difusa (Modelo de Lambert)</h2>
+        <p>En gráficos 3D, el producto punto determina qué tan brillante se ve un punto de una superficie según el ángulo de incidencia de la luz.</p>
+      </div>
+    </div>
+
+    <div class="app-body">
+      <div class="app-explanation">
+        <p>
+          Para cada punto de una superficie con normal <strong style="color:var(--accent)">N</strong> y
+          una fuente de luz en dirección <strong style="color:var(--accent3)">L</strong>,
+          el modelo de Lambert calcula la intensidad difusa como:
+        </p>
+        <div class="formula-box green" style="text-align:center; font-size:1.05rem;">
+          Intensidad = max(0,&nbsp; N&#770; &middot; L&#770;)
+        </div>
+        <p>
+          Cuando la normal y la luz apuntan en la misma dirección (cos θ = 1), la superficie recibe
+          luz máxima. Cuando son perpendiculares (cos θ = 0) o la luz viene de atrás (cos θ &lt; 0),
+          el punto está en sombra.
+        </p>
+        <p>
+          <strong style="color:var(--text)">Arrastra la fuente de luz</strong> para ver cómo cambia
+          el sombreado en tiempo real. Observa cómo los puntos más cercanos al ángulo de incidencia
+          directa son más brillantes.
+        </p>
+
+        <div class="intensity-display">
+          <div class="label">Valores en el punto central</div>
+          <div class="intensity-row">
+            <span class="key">N&#770; (normal)</span>
+            <span class="val" id="lightNormal">(0.00, 1.00)</span>
+          </div>
+          <div class="intensity-row">
+            <span class="key">L&#770; (luz, normalizado)</span>
+            <span class="val" id="lightDir">--</span>
+          </div>
+          <div class="intensity-row">
+            <span class="key">N&#770; · L&#770;</span>
+            <span class="val" id="lightDotVal">--</span>
+          </div>
+          <div class="intensity-row">
+            <span class="key">Intensidad = max(0, N·L)</span>
+            <span class="val" id="lightIntensity" style="color:var(--accent3)">--</span>
+          </div>
+          <div class="intensity-bar-track">
+            <div class="intensity-bar-fill" id="intensityBar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="light-canvas-wrap">
+        <canvas id="lightCanvas" width="480" height="320"></canvas>
+        <p class="light-hint">Arrastra la fuente de luz &#9728;</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ============================================================
+     UTILITIES
+  ============================================================ */
+  const TWO_PI = Math.PI * 2;
+  const DEG = Math.PI / 180;
+  const RAD = 180 / Math.PI;
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  /* ============================================================
+     DOT PRODUCT CANVAS
+  ============================================================ */
+  const canvas = document.getElementById("dotCanvas");
+  const ctx    = canvas.getContext("2d");
+
+  const CX = 200, CY = 200, SCALE = 40;
+
+  // State
+  const state = {
+    magA: 2, angA: 30 * DEG,
+    magB: 2, angB: 120 * DEG,
+  };
+
+  function vecA() {
+    return {
+      x:  state.magA * Math.cos(state.angA),
+      y:  state.magA * Math.sin(state.angA),
+    };
+  }
+  function vecB() {
+    return {
+      x:  state.magB * Math.cos(state.angB),
+      y:  state.magB * Math.sin(state.angB),
+    };
+  }
+
+  // Canvas coords
+  function toCanvas(mx, my) {
+    return { x: CX + mx * SCALE, y: CY - my * SCALE };
+  }
+  function toMath(cx, cy) {
+    return { x: (cx - CX) / SCALE, y: -(cy - CY) / SCALE };
+  }
+
+  /* ---- Drawing helpers ---- */
+  function drawArrow(x1, y1, x2, y2, color, lineWidth, headLen) {
+    headLen = headLen || 12;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.fillStyle   = color;
+    ctx.lineWidth   = lineWidth || 2.5;
+    ctx.lineCap     = "round";
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    // Arrow head
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(
+      x2 - headLen * Math.cos(angle - Math.PI / 7),
+      y2 - headLen * Math.sin(angle - Math.PI / 7)
+    );
+    ctx.lineTo(
+      x2 - headLen * Math.cos(angle + Math.PI / 7),
+      y2 - headLen * Math.sin(angle + Math.PI / 7)
+    );
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawDashedLine(x1, y1, x2, y2, color, dash) {
+    ctx.save();
+    ctx.setLineDash(dash || [5, 5]);
+    ctx.strokeStyle = color;
+    ctx.lineWidth   = 1.5;
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawGrid() {
+    ctx.save();
+    ctx.strokeStyle = "#1c2330";
+    ctx.lineWidth   = 1;
+    // Vertical
+    for (let i = 0; i <= 400; i += SCALE) {
+      ctx.beginPath();
+      ctx.moveTo(i, 0); ctx.lineTo(i, 400);
+      ctx.stroke();
+    }
+    // Horizontal
+    for (let j = 0; j <= 400; j += SCALE) {
+      ctx.beginPath();
+      ctx.moveTo(0, j); ctx.lineTo(400, j);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawAxes() {
+    ctx.save();
+    ctx.strokeStyle = "#30363d";
+    ctx.lineWidth   = 1.5;
+    // X axis
+    ctx.beginPath();
+    ctx.moveTo(0, CY); ctx.lineTo(400, CY);
+    ctx.stroke();
+    // Y axis
+    ctx.beginPath();
+    ctx.moveTo(CX, 0); ctx.lineTo(CX, 400);
+    ctx.stroke();
+
+    // Tick marks & labels
+    ctx.fillStyle   = "#8b949e";
+    ctx.font        = "11px 'JetBrains Mono', monospace";
+    ctx.textAlign   = "center";
+    for (let i = -4; i <= 4; i++) {
+      if (i === 0) continue;
+      const px = CX + i * SCALE;
+      const py = CY + i * SCALE;
+      ctx.fillText(i, px, CY + 14);
+      ctx.fillText(-i, CX - 14, py + 4);
+    }
+    ctx.textAlign   = "left";
+    ctx.fillStyle   = "#58a6ff";
+    ctx.font        = "bold 12px 'JetBrains Mono', monospace";
+    ctx.fillText("x", 390, CY - 6);
+    ctx.fillText("y", CX + 5, 12);
+    ctx.restore();
+  }
+
+  function drawAngleArc(a, b) {
+    const angA = Math.atan2(-a.y, a.x); // canvas angle (y flipped)
+    const angB = Math.atan2(-b.y, b.x);
+    const r    = 28;
+
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.25)";
+    ctx.lineWidth   = 1.5;
+    // Determine arc direction
+    let start = angA, end = angB;
+    ctx.beginPath();
+    ctx.arc(CX, CY, r, start, end);
+    ctx.stroke();
+
+    // θ label at midpoint of arc
+    const mid = (start + end) / 2;
+    const lx  = CX + (r + 10) * Math.cos(mid);
+    const ly  = CY + (r + 10) * Math.sin(mid);
+    ctx.fillStyle = "rgba(255,255,255,0.5)";
+    ctx.font      = "12px 'JetBrains Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("θ", lx, ly + 4);
+    ctx.restore();
+  }
+
+  function drawProjection(a, b) {
+    // Projection of a onto b: proj = (a·b / |b|²) * b
+    const dot   = a.x * b.x + a.y * b.y;
+    const magB2 = b.x * b.x + b.y * b.y;
+    if (magB2 < 0.0001) return;
+    const t  = dot / magB2;
+    const px = t * b.x;
+    const py = t * b.y;
+
+    const cpx = CX + px * SCALE;
+    const cpy = CY - py * SCALE;
+    const cax = CX + a.x * SCALE;
+    const cay = CY - a.y * SCALE;
+
+    // Foot of projection from tip of a to b line
+    drawDashedLine(cax, cay, cpx, cpy, "#3fb950", [4, 4]);
+
+    // Small square at foot
+    const bUx = b.x / Math.sqrt(magB2);
+    const bUy = b.y / Math.sqrt(magB2);
+    const sqSize = 5;
+    const perx = -bUy * sqSize;
+    const pery =  bUx * sqSize;
+    ctx.save();
+    ctx.strokeStyle = "rgba(63,185,80,0.6)";
+    ctx.lineWidth   = 1;
+    ctx.beginPath();
+    ctx.moveTo(cpx, cpy);
+    ctx.lineTo(cpx + perx, cpy - pery);
+    ctx.lineTo(cpx + perx + bUx * sqSize, cpy - pery - bUy * sqSize);
+    ctx.lineTo(cpx + bUx * sqSize, cpy - bUy * sqSize);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, 400, 400);
+
+    // Background
+    ctx.fillStyle = "#0d1117";
+    ctx.fillRect(0, 0, 400, 400);
+
+    drawGrid();
+    drawAxes();
+
+    const a = vecA();
+    const b = vecB();
+
+    const cax = CX + a.x * SCALE, cay = CY - a.y * SCALE;
+    const cbx = CX + b.x * SCALE, cby = CY - b.y * SCALE;
+
+    // Projection
+    drawProjection(a, b);
+
+    // Angle arc
+    drawAngleArc(a, b);
+
+    // Vector A (blue)
+    drawArrow(CX, CY, cax, cay, "#58a6ff", 2.5, 13);
+    // Label A
+    ctx.save();
+    ctx.fillStyle   = "#58a6ff";
+    ctx.font        = "bold 13px 'Inter', sans-serif";
+    ctx.textAlign   = "center";
+    ctx.fillText("a", cax + 12 * Math.cos(state.angA), cay - 12 * Math.sin(state.angA));
+    ctx.restore();
+
+    // Vector B (violet)
+    drawArrow(CX, CY, cbx, cby, "#bc8cff", 2.5, 13);
+    // Label B
+    ctx.save();
+    ctx.fillStyle   = "#bc8cff";
+    ctx.font        = "bold 13px 'Inter', sans-serif";
+    ctx.textAlign   = "center";
+    ctx.fillText("b", cbx + 12 * Math.cos(state.angB), cby - 12 * Math.sin(state.angB));
+    ctx.restore();
+
+    // Drag handles — glowing circles at tips
+    [{ x: cax, y: cay, c: "#58a6ff" }, { x: cbx, y: cby, c: "#bc8cff" }].forEach(h => {
+      ctx.save();
+      ctx.shadowColor  = h.c;
+      ctx.shadowBlur   = 10;
+      ctx.fillStyle    = h.c;
+      ctx.beginPath();
+      ctx.arc(h.x, h.y, 5, 0, TWO_PI);
+      ctx.fill();
+      ctx.restore();
+    });
+
+    updateLivePanel(a, b);
+  }
+
+  function updateLivePanel(a, b) {
+    const dot    = a.x * b.x + a.y * b.y;
+    const magA   = Math.hypot(a.x, a.y);
+    const magB   = Math.hypot(b.x, b.y);
+    const cosT   = (magA * magB) > 0.0001 ? dot / (magA * magB) : 0;
+    const thetaD = Math.acos(clamp(cosT, -1, 1)) * RAD;
+
+    document.getElementById("liveA").textContent     = `(${a.x.toFixed(2)}, ${a.y.toFixed(2)})`;
+    document.getElementById("liveMagA").textContent  = magA.toFixed(2);
+    document.getElementById("liveB").textContent     = `(${b.x.toFixed(2)}, ${b.y.toFixed(2)})`;
+    document.getElementById("liveMagB").textContent  = magB.toFixed(2);
+    document.getElementById("liveAngle").textContent = thetaD.toFixed(1) + "°";
+    document.getElementById("liveCos").textContent   = cosT.toFixed(3);
+
+    const dotEl = document.getElementById("liveDot");
+    dotEl.textContent = dot.toFixed(2);
+    dotEl.className   = "live-value result" + (dot < -0.005 ? " neg" : dot < 0.005 ? " zero" : "");
+  }
+
+  /* ---- Slider sync ---- */
+  function syncSliders() {
+    document.getElementById("sliderMagA").value = state.magA;
+    document.getElementById("sliderAngA").value = Math.round(state.angA * RAD);
+    document.getElementById("sliderMagB").value = state.magB;
+    document.getElementById("sliderAngB").value = Math.round(state.angB * RAD);
+    document.getElementById("valMagA").textContent = state.magA.toFixed(1);
+    document.getElementById("valAngA").textContent = Math.round(state.angA * RAD) + "°";
+    document.getElementById("valMagB").textContent = state.magB.toFixed(1);
+    document.getElementById("valAngB").textContent = Math.round(state.angB * RAD) + "°";
+  }
+
+  document.getElementById("sliderMagA").addEventListener("input", function () {
+    state.magA = parseFloat(this.value);
+    document.getElementById("valMagA").textContent = state.magA.toFixed(1);
+    render();
+  });
+  document.getElementById("sliderAngA").addEventListener("input", function () {
+    state.angA = parseInt(this.value) * DEG;
+    document.getElementById("valAngA").textContent = this.value + "°";
+    render();
+  });
+  document.getElementById("sliderMagB").addEventListener("input", function () {
+    state.magB = parseFloat(this.value);
+    document.getElementById("valMagB").textContent = state.magB.toFixed(1);
+    render();
+  });
+  document.getElementById("sliderAngB").addEventListener("input", function () {
+    state.angB = parseInt(this.value) * DEG;
+    document.getElementById("valAngB").textContent = this.value + "°";
+    render();
+  });
+
+  /* ---- Canvas dragging ---- */
+  let dragging = null; // "a" | "b" | null
+
+  function canvasPointerDown(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const cx = (e.clientX - rect.left) * scaleX;
+    const cy = (e.clientY - rect.top)  * scaleY;
+    const a  = vecA(), b = vecB();
+    const cax = CX + a.x * SCALE, cay = CY - a.y * SCALE;
+    const cbx = CX + b.x * SCALE, cby = CY - b.y * SCALE;
+
+    if (Math.hypot(cx - cax, cy - cay) < 14) { dragging = "a"; canvas.style.cursor = "grabbing"; }
+    else if (Math.hypot(cx - cbx, cy - cby) < 14) { dragging = "b"; canvas.style.cursor = "grabbing"; }
+  }
+
+  function canvasPointerMove(e) {
+    if (!dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width  / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const cx = (e.clientX - rect.left) * scaleX;
+    const cy = (e.clientY - rect.top)  * scaleY;
+    const m  = toMath(cx, cy);
+    const mag = clamp(Math.hypot(m.x, m.y), 0.5, 5);
+    const ang = Math.atan2(m.y, m.x);
+
+    if (dragging === "a") { state.magA = mag; state.angA = ang; }
+    else                  { state.magB = mag; state.angB = ang; }
+
+    syncSliders();
+    render();
+  }
+
+  function canvasPointerUp() {
+    dragging = null;
+    canvas.style.cursor = "crosshair";
+  }
+
+  canvas.addEventListener("mousedown",  canvasPointerDown);
+  canvas.addEventListener("mousemove",  canvasPointerMove);
+  canvas.addEventListener("mouseup",    canvasPointerUp);
+  canvas.addEventListener("mouseleave", canvasPointerUp);
+
+  canvas.addEventListener("touchstart",  e => { e.preventDefault(); canvasPointerDown(e.touches[0]); }, { passive: false });
+  canvas.addEventListener("touchmove",   e => { e.preventDefault(); canvasPointerMove(e.touches[0]); }, { passive: false });
+  canvas.addEventListener("touchend",    canvasPointerUp);
+
+  // Initial render
+  render();
+
+  /* ============================================================
+     LIGHT / LAMBERT CANVAS
+  ============================================================ */
+  const lc      = document.getElementById("lightCanvas");
+  const lctx    = lc.getContext("2d");
+  const LW      = 480, LH = 320;
+  const SPHERE_CX = 240, SPHERE_CY = 160, SPHERE_R = 110;
+
+  let lightPos = { x: 100, y: 80 }; // canvas coords of light source
+  let draggingLight = false;
+
+  function computeIntensity(nx, ny, lx, ly) {
+    // nx,ny: surface normal (already normalized)
+    // lx,ly: direction TO light from surface point (canvas coords, y-flipped)
+    const len = Math.hypot(lx, ly);
+    if (len < 0.001) return 0;
+    const lu = lx / len, lv = ly / len;
+    const dot = nx * lu + ny * lv;
+    return Math.max(0, dot);
+  }
+
+  function renderLight() {
+    lctx.clearRect(0, 0, LW, LH);
+
+    // Background
+    lctx.fillStyle = "#0d1117";
+    lctx.fillRect(0, 0, LW, LH);
+
+    // ---- Sphere shading ----
+    // Sample many points on the sphere, compute intensity per pixel
+    // Use ImageData for performance
+    const imgData = lctx.createImageData(LW, LH);
+    const data    = imgData.data;
+
+    const lx = lightPos.x;
+    const ly = lightPos.y;
+
+    for (let py = 0; py < LH; py++) {
+      for (let px = 0; px < LW; px++) {
+        const dx = px - SPHERE_CX;
+        const dy = py - SPHERE_CY;
+        const dist2 = dx * dx + dy * dy;
+        if (dist2 > SPHERE_R * SPHERE_R) continue;
+
+        const idx = (py * LW + px) * 4;
+
+        // 3D sphere: z = sqrt(R² - x² - y²)  (normalized normal)
+        const z  = Math.sqrt(SPHERE_R * SPHERE_R - dist2);
+        const len = SPHERE_R;
+        const nx = dx / len;
+        const ny = dy / len; // canvas y  (down = positive)
+        const nz = z  / len; // out of screen
+
+        // Light direction from surface to light (canvas space + z=0 for 2D light)
+        const tlx = lx - px;
+        const tly = ly - py;
+        const tlen = Math.hypot(tlx, tly);
+        const lux = tlx / tlen;
+        const luy = tly / tlen;
+        // 3D dot product: include z component
+        // Normal: (nx, -ny, nz) — flip y for math coords
+        // Light:  (lux, -luy, 0)
+        const dotVal = nx * lux + (-ny) * (-luy) + nz * 0;
+        const intensity = Math.max(0, dotVal);
+
+        // Ambient term
+        const ambient = 0.08;
+        const I = ambient + (1 - ambient) * intensity;
+
+        // Color: from deep indigo (shadow) to bright warm white (lit)
+        const r = Math.round(clamp(I * 255 + 20, 0, 255));
+        const g = Math.round(clamp(I * 230,       0, 255));
+        const b = Math.round(clamp(I * 180 + 15,  0, 255));
+
+        data[idx]     = r;
+        data[idx + 1] = g;
+        data[idx + 2] = b;
+        data[idx + 3] = 255;
+      }
+    }
+
+    lctx.putImageData(imgData, 0, 0);
+
+    // Sphere border
+    lctx.save();
+    lctx.strokeStyle = "rgba(255,255,255,0.08)";
+    lctx.lineWidth   = 1;
+    lctx.beginPath();
+    lctx.arc(SPHERE_CX, SPHERE_CY, SPHERE_R, 0, TWO_PI);
+    lctx.stroke();
+    lctx.restore();
+
+    // Normal arrow at center (pointing up in math = up in canvas minus)
+    const nEndX = SPHERE_CX;
+    const nEndY = SPHERE_CY - 55;
+    drawLightArrow(SPHERE_CX, SPHERE_CY, nEndX, nEndY, "#58a6ff", 2, 9);
+    lctx.save();
+    lctx.fillStyle  = "#58a6ff";
+    lctx.font       = "bold 12px 'Inter', sans-serif";
+    lctx.textAlign  = "center";
+    lctx.fillText("N", nEndX, nEndY - 7);
+    lctx.restore();
+
+    // Light direction arrow (from sphere center toward light)
+    const toLx = lightPos.x - SPHERE_CX;
+    const toLy = lightPos.y - SPHERE_CY;
+    const toLLen = Math.hypot(toLx, toLy);
+    if (toLLen > 0) {
+      const arrow = 50;
+      const lArrEndX = SPHERE_CX + (toLx / toLLen) * arrow;
+      const lArrEndY = SPHERE_CY + (toLy / toLLen) * arrow;
+      drawLightArrow(SPHERE_CX, SPHERE_CY, lArrEndX, lArrEndY, "#3fb950", 2, 9);
+      lctx.save();
+      lctx.fillStyle  = "#3fb950";
+      lctx.font       = "bold 12px 'Inter', sans-serif";
+      lctx.textAlign  = "center";
+      lctx.fillText("L", lArrEndX + 10 * (toLx / toLLen), lArrEndY + 10 * (toLy / toLLen));
+      lctx.restore();
+    }
+
+    // Light source — sun
+    drawSun(lightPos.x, lightPos.y);
+
+    // Update side panel
+    updateLightPanel();
+  }
+
+  function drawLightArrow(x1, y1, x2, y2, color, lw, hl) {
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    lctx.save();
+    lctx.strokeStyle = color;
+    lctx.fillStyle   = color;
+    lctx.lineWidth   = lw || 2;
+    lctx.lineCap     = "round";
+    lctx.beginPath();
+    lctx.moveTo(x1, y1); lctx.lineTo(x2, y2);
+    lctx.stroke();
+    lctx.beginPath();
+    lctx.moveTo(x2, y2);
+    lctx.lineTo(x2 - hl * Math.cos(angle - Math.PI / 7), y2 - hl * Math.sin(angle - Math.PI / 7));
+    lctx.lineTo(x2 - hl * Math.cos(angle + Math.PI / 7), y2 - hl * Math.sin(angle + Math.PI / 7));
+    lctx.closePath();
+    lctx.fill();
+    lctx.restore();
+  }
+
+  function drawSun(cx, cy) {
+    const r    = 14;
+    const rays  = 8;
+    const rInner = r + 4;
+    const rOuter = r + 12;
+
+    lctx.save();
+    // Glow
+    const grd = lctx.createRadialGradient(cx, cy, 0, cx, cy, r * 2.5);
+    grd.addColorStop(0,   "rgba(255, 230, 100, 0.35)");
+    grd.addColorStop(1,   "rgba(255, 230, 100, 0)");
+    lctx.fillStyle = grd;
+    lctx.beginPath();
+    lctx.arc(cx, cy, r * 2.5, 0, TWO_PI);
+    lctx.fill();
+
+    // Sun disk
+    lctx.fillStyle   = "#ffe064";
+    lctx.shadowColor = "#ffcc00";
+    lctx.shadowBlur  = 12;
+    lctx.beginPath();
+    lctx.arc(cx, cy, r, 0, TWO_PI);
+    lctx.fill();
+
+    // Rays
+    lctx.shadowBlur  = 0;
+    lctx.strokeStyle = "#ffe064";
+    lctx.lineWidth   = 2.5;
+    lctx.lineCap     = "round";
+    for (let i = 0; i < rays; i++) {
+      const a = (i / rays) * TWO_PI;
+      lctx.beginPath();
+      lctx.moveTo(cx + rInner * Math.cos(a), cy + rInner * Math.sin(a));
+      lctx.lineTo(cx + rOuter * Math.cos(a), cy + rOuter * Math.sin(a));
+      lctx.stroke();
+    }
+
+    // Drag indicator ring
+    lctx.strokeStyle = "rgba(255, 224, 100, 0.4)";
+    lctx.lineWidth   = 1.5;
+    lctx.setLineDash([3, 3]);
+    lctx.beginPath();
+    lctx.arc(cx, cy, r + 18, 0, TWO_PI);
+    lctx.stroke();
+    lctx.restore();
+  }
+
+  function updateLightPanel() {
+    // Normal at center = (0, 1, 0) in math (up)
+    // In canvas: normal points "up" = (0, -1) canvas
+    const nx_math = 0, ny_math = 1;
+
+    // Light direction in math space (y flipped from canvas)
+    const toLx_c = lightPos.x - SPHERE_CX;
+    const toLy_c = lightPos.y - SPHERE_CY;
+    const toLLen  = Math.hypot(toLx_c, toLy_c);
+    if (toLLen < 0.001) return;
+    const lux_math =  toLx_c / toLLen;
+    const luy_math = -toLy_c / toLLen; // flip y
+
+    const dotVal   = nx_math * lux_math + ny_math * luy_math;
+    const intensity = Math.max(0, dotVal);
+
+    document.getElementById("lightNormal").textContent   = "(0.00, 1.00)";
+    document.getElementById("lightDir").textContent      = `(${lux_math.toFixed(2)}, ${luy_math.toFixed(2)})`;
+    document.getElementById("lightDotVal").textContent   = dotVal.toFixed(3);
+    document.getElementById("lightIntensity").textContent = intensity.toFixed(3);
+    document.getElementById("intensityBar").style.width  = Math.round(intensity * 100) + "%";
+  }
+
+  /* ---- Light dragging ---- */
+  lc.addEventListener("mousedown", function (e) {
+    const rect = lc.getBoundingClientRect();
+    const sx = lc.width / rect.width, sy = lc.height / rect.height;
+    const cx = (e.clientX - rect.left) * sx;
+    const cy = (e.clientY - rect.top)  * sy;
+    if (Math.hypot(cx - lightPos.x, cy - lightPos.y) < 30) {
+      draggingLight = true;
+      lc.style.cursor = "grabbing";
+    }
+  });
+
+  window.addEventListener("mousemove", function (e) {
+    if (!draggingLight) return;
+    const rect = lc.getBoundingClientRect();
+    const sx = lc.width / rect.width, sy = lc.height / rect.height;
+    lightPos.x = clamp((e.clientX - rect.left) * sx, 5, LW - 5);
+    lightPos.y = clamp((e.clientY - rect.top)  * sy, 5, LH - 5);
+    renderLight();
+  });
+
+  window.addEventListener("mouseup", function () {
+    if (draggingLight) { draggingLight = false; lc.style.cursor = "move"; }
+  });
+
+  lc.addEventListener("touchstart", function (e) {
+    e.preventDefault();
+    const rect = lc.getBoundingClientRect();
+    const sx = lc.width / rect.width, sy = lc.height / rect.height;
+    const t  = e.touches[0];
+    const cx = (t.clientX - rect.left) * sx;
+    const cy = (t.clientY - rect.top)  * sy;
+    if (Math.hypot(cx - lightPos.x, cy - lightPos.y) < 35) draggingLight = true;
+  }, { passive: false });
+
+  lc.addEventListener("touchmove", function (e) {
+    e.preventDefault();
+    if (!draggingLight) return;
+    const rect = lc.getBoundingClientRect();
+    const sx = lc.width / rect.width, sy = lc.height / rect.height;
+    const t  = e.touches[0];
+    lightPos.x = clamp((t.clientX - rect.left) * sx, 5, LW - 5);
+    lightPos.y = clamp((t.clientY - rect.top)  * sy, 5, LH - 5);
+    renderLight();
+  }, { passive: false });
+
+  lc.addEventListener("touchend", function () { draggingLight = false; });
+
+  renderLight();
+
+})();
+</script>
