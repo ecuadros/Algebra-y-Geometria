@@ -1,0 +1,1209 @@
+---
+layout: default
+title: Similitud Coseno
+---
+
+<style>
+  /* ============================================================
+     DEMO PAGE — SIMILITUD COSENO
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-size: 0.8rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: var(--accent); margin: 0 0.4rem; }
+
+  /* Header */
+  .demo-header { margin-bottom: 2.5rem; }
+  .module-eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+    font-family: var(--font-mono);
+  }
+  .demo-header h1 {
+    font-size: clamp(2rem, 5vw, 2.5rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+  }
+  .demo-lead {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Two-column layout */
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Theory column */
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .theory-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-block h3 {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.85rem;
+  }
+  .theory-block p {
+    font-size: 0.9rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.5rem;
+  }
+  .theory-block p:last-child { margin-bottom: 0; }
+
+  /* Formula box */
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 8px;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    color: var(--accent);
+    text-align: center;
+    margin: 0.75rem 0;
+    letter-spacing: 0.02em;
+  }
+
+  /* Interpretation list */
+  .interp-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .interp-list li {
+    font-size: 0.86rem;
+    padding: 0.45rem 0.75rem;
+    border-radius: 7px;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    line-height: 1.5;
+  }
+  .interp-list li.pos { background: rgba(63, 185, 80, 0.1);  color: #3fb950; border-left: 3px solid #3fb950; }
+  .interp-list li.zer { background: rgba(88, 166, 255, 0.1); color: var(--accent); border-left: 3px solid var(--accent); }
+  .interp-list li.neg { background: rgba(248, 81, 73, 0.1);  color: var(--danger); border-left: 3px solid var(--danger); }
+  .interp-list .cond { font-weight: 700; font-family: var(--font-mono); font-size: 0.8rem; white-space: nowrap; }
+
+  /* Live panel */
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+  .live-panel-header {
+    background: rgba(0,0,0,0.3);
+    border-bottom: 1px solid var(--border);
+    padding: 0.55rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-family: var(--font-mono);
+  }
+  .live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .live-panel-body {
+    padding: 0.9rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .live-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .live-label {
+    font-size: 0.82rem;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .live-value {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: right;
+  }
+  .live-value.accent { color: var(--accent); }
+  .live-value.violet { color: var(--accent2); }
+  .live-value.result {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent3);
+    transition: color 0.25s;
+  }
+  .live-value.result.neg  { color: var(--danger); }
+  .live-value.result.zero { color: var(--accent); }
+  .live-divider { height: 1px; background: var(--border); margin: 0.1rem 0; }
+  .live-interp {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    transition: background 0.25s, color 0.25s;
+  }
+
+  /* Interactive (right column) */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    overflow: hidden;
+  }
+  #simCanvas {
+    display: block;
+    border-radius: 6px;
+    cursor: crosshair;
+    max-width: 100%;
+  }
+
+  /* Sliders */
+  .controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem 1.5rem;
+  }
+  .slider-group label {
+    display: block;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    margin-bottom: 0.35rem;
+    letter-spacing: 0.03em;
+  }
+  .slider-group label span {
+    color: var(--text);
+    font-weight: 600;
+    float: right;
+  }
+  .slider-group input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .slider-group.violet input[type=range] { accent-color: var(--accent2); }
+
+  /* Similarity bar */
+  .sim-bar-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1.25rem;
+  }
+  .sim-bar-label {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+  }
+  .sim-bar-track {
+    width: 100%;
+    height: 18px;
+    background: linear-gradient(to right, #f85149, #444, #3fb950);
+    border-radius: 9px;
+    position: relative;
+    overflow: hidden;
+  }
+  .sim-bar-fill {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 3px;
+    background: #fff;
+    border-radius: 2px;
+    transition: left var(--transition);
+    box-shadow: 0 0 8px rgba(255,255,255,0.7);
+  }
+  .sim-bar-val {
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-top: 0.4rem;
+    transition: color var(--transition);
+  }
+
+  /* Application section */
+  .demo-application {
+    margin-top: 3rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+  .demo-application h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.4rem;
+  }
+  .app-lead {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 0 0 1.5rem;
+    max-width: 700px;
+  }
+  .app-layout {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .app-layout { grid-template-columns: 1fr; }
+    .controls { grid-template-columns: 1fr; }
+  }
+  .search-canvas-wrap {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    overflow: hidden;
+  }
+  #searchCanvas { display: block; border-radius: 6px; max-width: 100%; }
+
+  .query-controls {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.25rem;
+    margin-top: 1rem;
+  }
+
+  /* Results panel */
+  .results-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .results-title {
+    font-size: 0.72rem;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.25rem;
+  }
+  .result-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.7rem 0.9rem;
+    transition: border-color var(--transition), background var(--transition);
+  }
+  .result-item.best {
+    border-color: var(--accent3);
+    background: rgba(63, 185, 80, 0.07);
+  }
+  .result-item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    margin-bottom: 0.45rem;
+  }
+  .result-rank {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--muted);
+    background: rgba(255,255,255,0.05);
+    border-radius: 5px;
+    padding: 0.15rem 0.45rem;
+    flex-shrink: 0;
+  }
+  .result-item.best .result-rank { color: var(--accent3); background: rgba(63,185,80,0.15); }
+  .result-text {
+    font-size: 0.83rem;
+    color: var(--text);
+    line-height: 1.45;
+    flex: 1;
+  }
+  .result-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .result-bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .result-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--transition), background var(--transition);
+  }
+  .result-score {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    width: 46px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+</style>
+
+<div class="demo-page">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb" aria-label="breadcrumb">
+    <a href="{{ '/' | relative_url }}">Inicio</a>
+    <span class="sep">›</span>
+    <a href="{{ '/modulo-01/' | relative_url }}">Módulo 01 — Vectores</a>
+    <span class="sep">›</span>
+    Similitud Coseno
+  </nav>
+
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="module-eyebrow">Módulo 01 · Álgebra &amp; Geometría · Ciencia de la Computación</div>
+    <h1>Similitud Coseno</h1>
+    <p class="demo-lead">
+      Mide el ángulo entre dos vectores para determinar qué tan similares son en dirección,
+      independientemente de su magnitud. Base de motores de búsqueda, recomendaciones y NLP.
+    </p>
+  </header>
+
+  <!-- Main 2-col layout -->
+  <div class="demo-layout">
+
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <!-- Block 1: Definición -->
+      <div class="theory-block">
+        <h3>Definición</h3>
+        <p>
+          La similitud coseno entre dos vectores <strong>a</strong> y <strong>b</strong>
+          mide el coseno del ángulo θ entre ellos:
+        </p>
+        <div class="formula-box">
+          sim(a, b) = (a · b) / (|a| · |b|) = cos(θ)
+        </div>
+        <p>
+          Su rango va de <strong>−1</strong> (opuestos) a <strong>+1</strong>
+          (misma dirección). Un valor de <strong>0</strong> indica vectores perpendiculares.
+        </p>
+      </div>
+
+      <!-- Block 2: Interpretación -->
+      <div class="theory-block">
+        <h3>Interpretación</h3>
+        <ul class="interp-list">
+          <li class="pos"><span class="cond">sim = +1.0</span> Los vectores apuntan exactamente en la misma dirección.</li>
+          <li class="zer"><span class="cond">sim =  0.0</span> Los vectores son perpendiculares (sin relación).</li>
+          <li class="neg"><span class="cond">sim = −1.0</span> Los vectores apuntan en direcciones opuestas.</li>
+        </ul>
+        <p style="margin-top:0.75rem;">
+          A diferencia del producto punto, la similitud coseno es
+          <strong style="color:var(--text);">independiente de la magnitud</strong> —
+          solo importa la dirección.
+        </p>
+      </div>
+
+      <!-- Block 3: Diferencia con distancia euclídea -->
+      <div class="theory-block">
+        <h3>vs. Distancia Euclídea</h3>
+        <p>
+          La <strong style="color:var(--text);">distancia euclídea</strong> mide qué tan
+          lejos están dos vectores en el espacio. La
+          <strong style="color:var(--accent);">similitud coseno</strong> mide el ángulo
+          entre ellos.
+        </p>
+        <p>
+          Dos vectores pueden estar muy alejados pero tener similitud coseno alta si
+          apuntan en la misma dirección. Esto es crucial en NLP: un documento largo y uno
+          corto sobre el mismo tema tendrán similitud coseno alta aunque sus vectores
+          difieran en magnitud.
+        </p>
+      </div>
+
+      <!-- Block 4: Live panel -->
+      <div class="live-panel">
+        <div class="live-panel-header">
+          <div class="live-dot"></div>
+          Valores en tiempo real
+        </div>
+        <div class="live-panel-body">
+          <div class="live-row">
+            <span class="live-label">Vector a</span>
+            <span class="live-value accent" id="lv-a">(2.00, 0.00)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">|a|</span>
+            <span class="live-value accent" id="lv-mag-a">2.000</span>
+          </div>
+          <div class="live-divider"></div>
+          <div class="live-row">
+            <span class="live-label">Vector b</span>
+            <span class="live-value violet" id="lv-b">(0.00, 2.00)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">|b|</span>
+            <span class="live-value violet" id="lv-mag-b">2.000</span>
+          </div>
+          <div class="live-divider"></div>
+          <div class="live-row">
+            <span class="live-label">a · b</span>
+            <span class="live-value" id="lv-dot">0.000</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">cos(θ)</span>
+            <span class="live-value" id="lv-cos">0.000</span>
+          </div>
+          <div class="live-divider"></div>
+          <div class="live-row">
+            <span class="live-label" style="font-weight:700;color:var(--text);">Similitud</span>
+            <span class="live-value result" id="lv-sim">0.000</span>
+          </div>
+          <div class="live-interp" id="lv-interp">Sin relación (perpendiculares)</div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <div class="demo-interactive">
+
+      <div class="canvas-wrapper">
+        <canvas id="simCanvas" width="400" height="400" title="Arrastra las puntas de los vectores"></canvas>
+      </div>
+
+      <!-- Sliders -->
+      <div class="controls">
+        <div class="slider-group">
+          <label>Ángulo de a <span id="sl-aAngle-val">30°</span></label>
+          <input type="range" id="sl-aAngle" min="0" max="360" value="30">
+        </div>
+        <div class="slider-group">
+          <label>Magnitud de a <span id="sl-aMag-val">2.0</span></label>
+          <input type="range" id="sl-aMag" min="0.5" max="4" step="0.1" value="2">
+        </div>
+        <div class="slider-group violet">
+          <label>Ángulo de b <span id="sl-bAngle-val">100°</span></label>
+          <input type="range" id="sl-bAngle" min="0" max="360" value="100">
+        </div>
+        <div class="slider-group violet">
+          <label>Magnitud de b <span id="sl-bMag-val">2.0</span></label>
+          <input type="range" id="sl-bMag" min="0.5" max="4" step="0.1" value="2">
+        </div>
+      </div>
+
+      <!-- Similarity bar -->
+      <div class="sim-bar-wrap">
+        <div class="sim-bar-label">
+          <span>−1 (opuestos)</span>
+          <span>Similitud Coseno</span>
+          <span>+1 (idénticos)</span>
+        </div>
+        <div class="sim-bar-track">
+          <div class="sim-bar-fill" id="simBarFill"></div>
+        </div>
+        <div class="sim-bar-val" id="simBarVal">0.000</div>
+      </div>
+
+    </div>
+  </div><!-- /.demo-layout -->
+
+  <!-- APPLICATION SECTION -->
+  <section class="demo-application">
+    <h2>Aplicación en CS: Búsqueda Semántica con TF-IDF</h2>
+    <p class="app-lead">
+      En motores de búsqueda y procesamiento de lenguaje natural, los documentos y consultas
+      se representan como vectores (p. ej. TF-IDF o word embeddings). El documento más relevante
+      es el que tiene la <strong style="color:var(--accent3);">mayor similitud coseno</strong>
+      con el vector de consulta — no el más cercano en distancia euclídea.
+      Mueve el vector de consulta Q y observa cómo cambia el ranking en tiempo real.
+    </p>
+
+    <div class="app-layout">
+      <!-- Canvas + query sliders -->
+      <div>
+        <div class="search-canvas-wrap">
+          <canvas id="searchCanvas" width="500" height="340"></canvas>
+        </div>
+        <div class="query-controls">
+          <div class="slider-group">
+            <label style="color:var(--warn);">Consulta Q<sub>x</sub> <span id="sl-qx-val" style="color:var(--warn);">2.0</span></label>
+            <input type="range" id="sl-qx" min="-4" max="4" step="0.1" value="2" style="accent-color:var(--warn);">
+          </div>
+          <div class="slider-group">
+            <label style="color:var(--warn);">Consulta Q<sub>y</sub> <span id="sl-qy-val" style="color:var(--warn);">1.0</span></label>
+            <input type="range" id="sl-qy" min="-4" max="4" step="0.1" value="1" style="accent-color:var(--warn);">
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div class="results-panel">
+        <div class="results-title">Documentos ordenados por similitud</div>
+        <div id="searchResults"></div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /.demo-page -->
+
+<script>
+/* ================================================================
+   SIMILARITY CANVAS
+================================================================ */
+const canvas = document.getElementById('simCanvas');
+const ctx    = canvas.getContext('2d');
+const CX = 200, CY = 200, SCALE = 50;
+
+let vA = { mag: 2, angle: 30  };
+let vB = { mag: 2, angle: 100 };
+let dragging = null;
+
+function toCart(v) {
+  return {
+    x:  v.mag * Math.cos(v.angle * Math.PI / 180),
+    y: -v.mag * Math.sin(v.angle * Math.PI / 180)   // canvas y is flipped
+  };
+}
+
+function toCanvasXY(cx, cy) {
+  return { x: CX + cx * SCALE, y: CY + cy * SCALE };
+}
+
+function cosineSim(ax, ay, bx, by) {
+  const dot  = ax * bx + ay * by;
+  const magA = Math.sqrt(ax * ax + ay * ay);
+  const magB = Math.sqrt(bx * bx + by * by);
+  if (magA === 0 || magB === 0) return 0;
+  return dot / (magA * magB);
+}
+
+function drawArrow(fromX, fromY, toX, toY, color, label, lineWidth) {
+  const headLen = 12;
+  const dx = toX - fromX, dy = toY - fromY;
+  const angle = Math.atan2(dy, dx);
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle   = color;
+  ctx.lineWidth   = lineWidth || 2.5;
+  ctx.lineCap     = 'round';
+
+  ctx.beginPath();
+  ctx.moveTo(fromX, fromY);
+  ctx.lineTo(toX, toY);
+  ctx.stroke();
+
+  // Arrowhead
+  ctx.beginPath();
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - headLen * Math.cos(angle - 0.42), toY - headLen * Math.sin(angle - 0.42));
+  ctx.lineTo(toX - headLen * Math.cos(angle + 0.42), toY - headLen * Math.sin(angle + 0.42));
+  ctx.closePath();
+  ctx.fill();
+
+  // Label
+  if (label) {
+    ctx.font = 'bold 14px JetBrains Mono, monospace';
+    ctx.fillStyle = color;
+    const ox = 12 * Math.cos(angle - Math.PI / 2);
+    const oy = 12 * Math.sin(angle - Math.PI / 2);
+    ctx.fillText(label, toX + ox, toY + oy);
+  }
+  ctx.restore();
+}
+
+function drawScene() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = '#0d1117';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Grid
+  ctx.save();
+  ctx.strokeStyle = 'rgba(48,54,61,0.8)';
+  ctx.lineWidth = 1;
+  for (let i = -4; i <= 4; i++) {
+    const gx = CX + i * SCALE;
+    const gy = CY + i * SCALE;
+    ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, canvas.height); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(canvas.width, gy); ctx.stroke();
+  }
+  ctx.restore();
+
+  // Unit circle (dashed)
+  ctx.save();
+  ctx.strokeStyle = 'rgba(139,148,158,0.35)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.arc(CX, CY, SCALE, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.restore();
+
+  // Axes
+  ctx.save();
+  ctx.strokeStyle = 'rgba(139,148,158,0.5)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(10, CY); ctx.lineTo(canvas.width - 10, CY); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX, 10); ctx.lineTo(CX, canvas.height - 10); ctx.stroke();
+  ctx.fillStyle = 'rgba(139,148,158,0.6)';
+  ctx.font = '11px JetBrains Mono, monospace';
+  ctx.fillText('x', canvas.width - 16, CY - 6);
+  ctx.fillText('y', CX + 5, 16);
+  ctx.restore();
+
+  const cA = toCart(vA);
+  const cB = toCart(vB);
+  const tipAx = CX + cA.x * SCALE, tipAy = CY + cA.y * SCALE;
+  const tipBx = CX + cB.x * SCALE, tipBy = CY + cB.y * SCALE;
+
+  // Angle arc
+  const angleA = Math.atan2(-cA.y, cA.x);
+  const angleB = Math.atan2(-cB.y, cB.x);
+  const arcR   = 30;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth   = 1.5;
+  let startAng = Math.min(angleA, angleB);
+  let endAng   = Math.max(angleA, angleB);
+  // Always draw the smaller arc
+  if (endAng - startAng > Math.PI) {
+    [startAng, endAng] = [endAng, startAng + Math.PI * 2];
+  }
+  ctx.beginPath();
+  ctx.arc(CX, CY, arcR, -startAng, -endAng, true);
+  ctx.stroke();
+  // θ label
+  const midAng = (startAng + endAng) / 2;
+  ctx.font = 'italic 12px serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillText('θ', CX + (arcR + 10) * Math.cos(midAng), CY - (arcR + 10) * Math.sin(midAng));
+  ctx.restore();
+
+  // Vectors
+  drawArrow(CX, CY, tipAx, tipAy, '#58a6ff', 'a', 2.5);
+  drawArrow(CX, CY, tipBx, tipBy, '#bc8cff', 'b', 2.5);
+
+  // Normalized projections on unit circle
+  const magA = Math.sqrt(cA.x * cA.x + cA.y * cA.y);
+  const magB = Math.sqrt(cB.x * cB.x + cB.y * cB.y);
+  if (magA > 0) {
+    ctx.save();
+    ctx.fillStyle = '#58a6ff';
+    ctx.beginPath();
+    ctx.arc(CX + (cA.x / magA) * SCALE, CY + (cA.y / magA) * SCALE, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  if (magB > 0) {
+    ctx.save();
+    ctx.fillStyle = '#bc8cff';
+    ctx.beginPath();
+    ctx.arc(CX + (cB.x / magB) * SCALE, CY + (cB.y / magB) * SCALE, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Drag handles
+  [[tipAx, tipAy, '#58a6ff'], [tipBx, tipBy, '#bc8cff']].forEach(([tx, ty, col]) => {
+    ctx.save();
+    ctx.strokeStyle = col;
+    ctx.fillStyle   = 'rgba(13,17,23,0.85)';
+    ctx.lineWidth   = 2;
+    ctx.beginPath();
+    ctx.arc(tx, ty, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  updateLivePanel(cA, cB);
+}
+
+function updateLivePanel(cA, cB) {
+  const magA = Math.sqrt(cA.x * cA.x + cA.y * cA.y);
+  const magB = Math.sqrt(cB.x * cB.x + cB.y * cB.y);
+  const dot  = cA.x * cB.x + (-cA.y) * (-cB.y);   // in math coords
+  // Recompute in math coords
+  const axM =  cA.x, ayM = -cA.y;
+  const bxM =  cB.x, byM = -cB.y;
+  const dotM = axM * bxM + ayM * byM;
+  const sim  = cosineSim(axM, ayM, bxM, byM);
+
+  document.getElementById('lv-a').textContent     = `(${axM.toFixed(2)}, ${ayM.toFixed(2)})`;
+  document.getElementById('lv-mag-a').textContent  = magA.toFixed(3);
+  document.getElementById('lv-b').textContent     = `(${bxM.toFixed(2)}, ${byM.toFixed(2)})`;
+  document.getElementById('lv-mag-b').textContent  = magB.toFixed(3);
+  document.getElementById('lv-dot').textContent   = dotM.toFixed(3);
+  document.getElementById('lv-cos').textContent   = sim.toFixed(3);
+
+  const simEl = document.getElementById('lv-sim');
+  simEl.textContent = sim.toFixed(3);
+  simEl.className   = 'live-value result' + (sim < -0.1 ? ' neg' : (Math.abs(sim) <= 0.1 ? ' zero' : ''));
+
+  const interp = document.getElementById('lv-interp');
+  if (sim >= 0.85)       { interp.textContent = 'Muy similares'; interp.style.cssText = 'background:rgba(63,185,80,0.15);color:#3fb950;'; }
+  else if (sim >= 0.5)   { interp.textContent = 'Similares'; interp.style.cssText = 'background:rgba(63,185,80,0.08);color:#3fb950;'; }
+  else if (sim >= 0.15)  { interp.textContent = 'Algo relacionados'; interp.style.cssText = 'background:rgba(88,166,255,0.1);color:#58a6ff;'; }
+  else if (sim >= -0.15) { interp.textContent = 'Sin relación (perpendiculares)'; interp.style.cssText = 'background:rgba(139,148,158,0.1);color:#8b949e;'; }
+  else if (sim >= -0.5)  { interp.textContent = 'Algo opuestos'; interp.style.cssText = 'background:rgba(248,81,73,0.08);color:#f85149;'; }
+  else                   { interp.textContent = 'Opuestos'; interp.style.cssText = 'background:rgba(248,81,73,0.15);color:#f85149;'; }
+
+  // Similarity bar: map [-1,+1] → [0%, 100%]
+  const pct = (sim + 1) / 2 * 100;
+  document.getElementById('simBarFill').style.left = `calc(${pct.toFixed(1)}% - 1.5px)`;
+  const barValEl = document.getElementById('simBarVal');
+  barValEl.textContent = sim.toFixed(3);
+  barValEl.style.color = sim > 0.1 ? '#3fb950' : (sim < -0.1 ? '#f85149' : '#8b949e');
+}
+
+/* ----- Slider sync ----- */
+const slAAngle = document.getElementById('sl-aAngle');
+const slAMag   = document.getElementById('sl-aMag');
+const slBAngle = document.getElementById('sl-bAngle');
+const slBMag   = document.getElementById('sl-bMag');
+
+function syncSlidersFromVectors() {
+  slAAngle.value = ((vA.angle % 360) + 360) % 360;
+  slAMag.value   = vA.mag;
+  slBAngle.value = ((vB.angle % 360) + 360) % 360;
+  slBMag.value   = vB.mag;
+  document.getElementById('sl-aAngle-val').textContent = Math.round(vA.angle) + '°';
+  document.getElementById('sl-aMag-val').textContent   = Number(vA.mag).toFixed(1);
+  document.getElementById('sl-bAngle-val').textContent = Math.round(vB.angle) + '°';
+  document.getElementById('sl-bMag-val').textContent   = Number(vB.mag).toFixed(1);
+}
+
+slAAngle.addEventListener('input', () => {
+  vA.angle = parseFloat(slAAngle.value);
+  document.getElementById('sl-aAngle-val').textContent = Math.round(vA.angle) + '°';
+  drawScene();
+});
+slAMag.addEventListener('input', () => {
+  vA.mag = parseFloat(slAMag.value);
+  document.getElementById('sl-aMag-val').textContent = Number(vA.mag).toFixed(1);
+  drawScene();
+});
+slBAngle.addEventListener('input', () => {
+  vB.angle = parseFloat(slBAngle.value);
+  document.getElementById('sl-bAngle-val').textContent = Math.round(vB.angle) + '°';
+  drawScene();
+});
+slBMag.addEventListener('input', () => {
+  vB.mag = parseFloat(slBMag.value);
+  document.getElementById('sl-bMag-val').textContent = Number(vB.mag).toFixed(1);
+  drawScene();
+});
+
+/* ----- Mouse drag ----- */
+function tipPos(v) {
+  const c = toCart(v);
+  return { x: CX + c.x * SCALE, y: CY + c.y * SCALE };
+}
+
+function dist(ax, ay, bx, by) {
+  return Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2);
+}
+
+canvas.addEventListener('mousedown', e => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top)  * scaleY;
+  const tA = tipPos(vA), tB = tipPos(vB);
+  if (dist(mx, my, tA.x, tA.y) < 14) { dragging = 'A'; }
+  else if (dist(mx, my, tB.x, tB.y) < 14) { dragging = 'B'; }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width  / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (e.clientX - rect.left) * scaleX;
+  const my = (e.clientY - rect.top)  * scaleY;
+  const dx = (mx - CX) / SCALE;
+  const dy = (my - CY) / SCALE;
+  const mathX =  dx;
+  const mathY = -dy;
+  const mag   = Math.sqrt(mathX * mathX + mathY * mathY);
+  const angle = Math.atan2(mathY, mathX) * 180 / Math.PI;
+  const clampedMag = Math.max(0.5, Math.min(4, mag));
+  if (dragging === 'A') {
+    vA.mag   = clampedMag;
+    vA.angle = angle;
+  } else {
+    vB.mag   = clampedMag;
+    vB.angle = angle;
+  }
+  syncSlidersFromVectors();
+  drawScene();
+});
+
+window.addEventListener('mouseup', () => { dragging = null; });
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  const t = e.touches[0];
+  const me = { clientX: t.clientX, clientY: t.clientY };
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (me.clientX - rect.left) * scaleX;
+  const my = (me.clientY - rect.top)  * scaleY;
+  const tA = tipPos(vA), tB = tipPos(vB);
+  if (dist(mx, my, tA.x, tA.y) < 18) dragging = 'A';
+  else if (dist(mx, my, tB.x, tB.y) < 18) dragging = 'B';
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!dragging) return;
+  const t = e.touches[0];
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const mx = (t.clientX - rect.left) * scaleX;
+  const my = (t.clientY - rect.top)  * scaleY;
+  const dx = (mx - CX) / SCALE;
+  const dy = (my - CY) / SCALE;
+  const mathX =  dx, mathY = -dy;
+  const mag   = Math.sqrt(mathX * mathX + mathY * mathY);
+  const angle = Math.atan2(mathY, mathX) * 180 / Math.PI;
+  const clampedMag = Math.max(0.5, Math.min(4, mag));
+  if (dragging === 'A') { vA.mag = clampedMag; vA.angle = angle; }
+  else { vB.mag = clampedMag; vB.angle = angle; }
+  syncSlidersFromVectors();
+  drawScene();
+}, { passive: false });
+
+canvas.addEventListener('touchend', () => { dragging = null; });
+
+// Initial draw
+drawScene();
+
+/* ================================================================
+   SEARCH CANVAS
+================================================================ */
+const docs = [
+  { text: 'Álgebra lineal para machine learning',          vec: [3.2, 1.1] },
+  { text: 'Redes neuronales y backpropagation',            vec: [0.8, 3.5] },
+  { text: 'Gráficos 3D con matrices de transformación',    vec: [2.9, 0.4] },
+  { text: 'Bases de datos relacionales y SQL',             vec: [-1.2, 2.8] },
+  { text: 'Compresión de imágenes con SVD',                vec: [2.1, 2.4] }
+];
+
+const sCanvas = document.getElementById('searchCanvas');
+const sCtx    = sCanvas.getContext('2d');
+const SCX = 170, SCY = 170, SSCALE = 38;
+
+let query = { x: 2, y: 1 };
+
+function cosSimVec(ax, ay, bx, by) {
+  const dot  = ax * bx + ay * by;
+  const magA = Math.sqrt(ax * ax + ay * ay);
+  const magB = Math.sqrt(bx * bx + by * by);
+  if (magA === 0 || magB === 0) return 0;
+  return dot / (magA * magB);
+}
+
+function rankDocs() {
+  return docs.map((d, i) => ({
+    ...d,
+    idx: i,
+    sim: cosSimVec(query.x, query.y, d.vec[0], d.vec[1])
+  })).sort((a, b) => b.sim - a.sim);
+}
+
+function drawSearchArrow(ctx, fromX, fromY, toX, toY, color, lw) {
+  const headLen = 9;
+  const dx = toX - fromX, dy = toY - fromY;
+  const ang = Math.atan2(dy, dx);
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle   = color;
+  ctx.lineWidth   = lw || 1.8;
+  ctx.lineCap     = 'round';
+  ctx.beginPath(); ctx.moveTo(fromX, fromY); ctx.lineTo(toX, toY); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(toX - headLen * Math.cos(ang - 0.4), toY - headLen * Math.sin(ang - 0.4));
+  ctx.lineTo(toX - headLen * Math.cos(ang + 0.4), toY - headLen * Math.sin(ang + 0.4));
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawSearch() {
+  const ranked = rankDocs();
+  const bestIdx = ranked[0].idx;
+
+  sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+  sCtx.fillStyle = '#0d1117';
+  sCtx.fillRect(0, 0, sCanvas.width, sCanvas.height);
+
+  // Grid
+  sCtx.save();
+  sCtx.strokeStyle = 'rgba(48,54,61,0.7)';
+  sCtx.lineWidth = 1;
+  for (let i = -4; i <= 7; i++) {
+    const gx = SCX + i * SSCALE;
+    const gy = SCY + i * SSCALE;
+    sCtx.beginPath(); sCtx.moveTo(gx, 0); sCtx.lineTo(gx, sCanvas.height); sCtx.stroke();
+    sCtx.beginPath(); sCtx.moveTo(0, gy); sCtx.lineTo(sCanvas.width, gy); sCtx.stroke();
+  }
+  sCtx.restore();
+
+  // Axes
+  sCtx.save();
+  sCtx.strokeStyle = 'rgba(139,148,158,0.45)';
+  sCtx.lineWidth = 1.5;
+  sCtx.beginPath(); sCtx.moveTo(8, SCY); sCtx.lineTo(sCanvas.width - 8, SCY); sCtx.stroke();
+  sCtx.beginPath(); sCtx.moveTo(SCX, 8); sCtx.lineTo(SCX, sCanvas.height - 8); sCtx.stroke();
+  sCtx.fillStyle = 'rgba(139,148,158,0.5)';
+  sCtx.font = '10px JetBrains Mono, monospace';
+  sCtx.fillText('x', sCanvas.width - 14, SCY - 5);
+  sCtx.fillText('y', SCX + 4, 14);
+  sCtx.restore();
+
+  // Unit circle
+  sCtx.save();
+  sCtx.strokeStyle = 'rgba(139,148,158,0.2)';
+  sCtx.lineWidth = 1;
+  sCtx.setLineDash([3, 4]);
+  sCtx.beginPath();
+  sCtx.arc(SCX, SCY, SSCALE, 0, Math.PI * 2);
+  sCtx.stroke();
+  sCtx.setLineDash([]);
+  sCtx.restore();
+
+  // Document vectors
+  docs.forEach((d, i) => {
+    const isBest = (i === bestIdx);
+    const tx = SCX + d.vec[0] * SSCALE;
+    const ty = SCY - d.vec[1] * SSCALE;
+    const color = isBest ? '#3fb950' : 'rgba(139,148,158,0.55)';
+    const lw    = isBest ? 2.2 : 1.5;
+    drawSearchArrow(sCtx, SCX, SCY, tx, ty, color, lw);
+
+    // Label dot
+    sCtx.save();
+    sCtx.fillStyle = isBest ? '#3fb950' : 'rgba(139,148,158,0.7)';
+    sCtx.beginPath();
+    sCtx.arc(tx, ty, isBest ? 5 : 3.5, 0, Math.PI * 2);
+    sCtx.fill();
+    sCtx.restore();
+
+    // Doc label
+    sCtx.save();
+    sCtx.font      = isBest ? 'bold 9px Inter, system-ui' : '9px Inter, system-ui';
+    sCtx.fillStyle = isBest ? '#3fb950' : 'rgba(139,148,158,0.7)';
+    const labelStr = 'D' + (i + 1);
+    const ox = 8 * Math.sign(d.vec[0] || 1);
+    const oy = -8 * Math.sign(d.vec[1] || 1);
+    sCtx.fillText(labelStr, tx + ox, ty + oy);
+    sCtx.restore();
+  });
+
+  // Query vector (yellow/warn)
+  const qx = SCX + query.x * SSCALE;
+  const qy = SCY - query.y * SSCALE;
+  drawSearchArrow(sCtx, SCX, SCY, qx, qy, '#d29922', 3);
+  sCtx.save();
+  sCtx.fillStyle   = '#d29922';
+  sCtx.strokeStyle = '#0d1117';
+  sCtx.lineWidth   = 2;
+  sCtx.beginPath();
+  sCtx.arc(qx, qy, 6, 0, Math.PI * 2);
+  sCtx.fill();
+  sCtx.stroke();
+  sCtx.font      = 'bold 11px JetBrains Mono, monospace';
+  sCtx.fillStyle = '#d29922';
+  sCtx.fillText('Q', qx + 10, qy - 6);
+  sCtx.restore();
+
+  // Angle arcs from Q to each doc (subtle)
+  docs.forEach((d, i) => {
+    if (i !== bestIdx) return;
+    const angQ = Math.atan2(-query.y, query.x);
+    const angD = Math.atan2(-d.vec[1], d.vec[0]);
+    let a1 = Math.min(angQ, angD), a2 = Math.max(angQ, angD);
+    if (a2 - a1 > Math.PI) [a1, a2] = [a2, a1 + Math.PI * 2];
+    sCtx.save();
+    sCtx.strokeStyle = 'rgba(63,185,80,0.3)';
+    sCtx.lineWidth   = 1.5;
+    sCtx.setLineDash([3, 3]);
+    sCtx.beginPath();
+    sCtx.arc(SCX, SCY, 28, -a1, -a2, true);
+    sCtx.stroke();
+    sCtx.setLineDash([]);
+    sCtx.restore();
+  });
+
+  // Legend
+  sCtx.save();
+  sCtx.font      = '9px Inter, system-ui';
+  sCtx.fillStyle = '#d29922';
+  sCtx.fillText('■ Consulta Q', 10, sCanvas.height - 22);
+  sCtx.fillStyle = '#3fb950';
+  sCtx.fillText('■ Más similar', 10, sCanvas.height - 10);
+  sCtx.fillStyle = 'rgba(139,148,158,0.7)';
+  sCtx.fillText('■ Documentos', 100, sCanvas.height - 10);
+  sCtx.restore();
+}
+
+function simColor(s) {
+  if (s >= 0.5)       return '#3fb950';
+  if (s >= 0.1)       return '#58a6ff';
+  if (s >= -0.1)      return '#8b949e';
+  if (s >= -0.5)      return '#d29922';
+  return '#f85149';
+}
+
+function renderResults() {
+  const ranked = rankDocs();
+  const container = document.getElementById('searchResults');
+  container.innerHTML = '';
+  ranked.forEach((d, rank) => {
+    const isBest = rank === 0;
+    const pct    = Math.max(0, ((d.sim + 1) / 2 * 100)).toFixed(1);
+    const col    = simColor(d.sim);
+    const div    = document.createElement('div');
+    div.className = 'result-item' + (isBest ? ' best' : '');
+    div.innerHTML = `
+      <div class="result-item-top">
+        <span class="result-rank">#${rank + 1}</span>
+        <span class="result-text">${d.text}</span>
+      </div>
+      <div class="result-bar-wrap">
+        <div class="result-bar-track">
+          <div class="result-bar-fill" style="width:${pct}%;background:${col};"></div>
+        </div>
+        <span class="result-score" style="color:${col};">${d.sim.toFixed(3)}</span>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+/* Query sliders */
+const slQx = document.getElementById('sl-qx');
+const slQy = document.getElementById('sl-qy');
+
+slQx.addEventListener('input', () => {
+  query.x = parseFloat(slQx.value);
+  document.getElementById('sl-qx-val').textContent = Number(query.x).toFixed(1);
+  drawSearch();
+  renderResults();
+});
+slQy.addEventListener('input', () => {
+  query.y = parseFloat(slQy.value);
+  document.getElementById('sl-qy-val').textContent = Number(query.y).toFixed(1);
+  drawSearch();
+  renderResults();
+});
+
+// Initial render
+drawSearch();
+renderResults();
+</script>
