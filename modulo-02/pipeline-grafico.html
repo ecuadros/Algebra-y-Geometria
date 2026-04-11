@@ -1,0 +1,1016 @@
+---
+layout: default
+title: Pipeline Gráfico 3D
+prev_url: /modulo-02/transformaciones-2d.html
+prev_title: Transformaciones 2D
+next_url: /modulo-02/filtros-imagen.html
+next_title: Filtros de Imagen
+---
+<style>
+  /* ============================================================
+     DEMO PAGE — PIPELINE GRÁFICO 3D
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+
+  .demo-header { margin-bottom: 2.5rem; }
+  .module-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .demo-header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+  }
+  .demo-lead {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .theory-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-block h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.85rem;
+  }
+  .theory-block p {
+    font-size: 0.91rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.5rem;
+  }
+  .theory-block p:last-child { margin-bottom: 0; }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 8px;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--accent);
+    text-align: center;
+    margin: 0.75rem 0;
+    letter-spacing: 0.03em;
+    white-space: pre-line;
+    line-height: 1.85;
+  }
+  .formula-box.violet { color: var(--accent2); border-color: rgba(188, 140, 255, 0.35); }
+  .formula-box.green { color: var(--accent3); border-color: rgba(63, 185, 80, 0.35); }
+  .formula-box.warn { color: var(--warn); border-color: rgba(210, 153, 34, 0.35); }
+
+  /* Pipeline stages */
+  .pipeline-stages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0.75rem 0;
+  }
+  .stage-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.83rem;
+    border: 1px solid transparent;
+    transition: all var(--transition);
+    cursor: default;
+  }
+  .stage-item.active {
+    background: rgba(88,166,255,0.12);
+    border-color: rgba(88,166,255,0.4);
+  }
+  .stage-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .stage-name { font-family: var(--font-mono); font-weight: 600; color: var(--text); }
+  .stage-arrow { color: var(--muted); font-size: 0.7rem; margin: 0 0.1rem; }
+  .stage-desc { color: var(--muted); font-size: 0.78rem; }
+
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    margin-top: 0.5rem;
+  }
+  .live-panel-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .live-rows { display: flex; flex-direction: column; gap: 0.45rem; }
+  .live-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.87rem;
+  }
+  .live-label { color: var(--muted); font-family: var(--font-mono); }
+  .live-value { color: var(--text); font-family: var(--font-mono); font-size: 0.9rem; }
+
+  /* Vertex transform display */
+  .vertex-pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+  }
+  .vp-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    padding: 0.3rem 0.5rem;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.03);
+  }
+  .vp-label { color: var(--muted); min-width: 68px; }
+  .vp-coords { color: var(--accent); font-weight: 600; }
+  .vp-arrow { color: var(--border); }
+
+  /* Interactive column */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 0.75rem 0.5rem;
+  }
+  canvas { display: block; }
+
+  .controls-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .controls-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .ctrl-label {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--muted);
+    min-width: 110px;
+  }
+  .ctrl-slider {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+  }
+  .ctrl-val {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    min-width: 52px;
+    text-align: right;
+  }
+
+  /* Stage radio buttons */
+  .stage-radios {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .stage-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .stage-radio-label:has(input:checked) {
+    background: rgba(88,166,255,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .stage-radio-label input[type=radio] { display: none; }
+
+  .btn-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .btn:hover { background: var(--border); border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: rgba(88,166,255,0.15); border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: rgba(88,166,255,0.28); }
+
+  /* Application section */
+  .demo-application {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem 2.5rem;
+    margin-bottom: 3rem;
+  }
+  .app-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin: 0 0 0.5rem;
+  }
+  .demo-application h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+  }
+  .demo-application p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 640px;
+    margin: 0 0 1.5rem;
+  }
+  .app-content {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .app-canvas-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+  }
+  .app-controls {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .info-box {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: rgba(88,166,255,0.05);
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .info-box strong { color: var(--accent); }
+  .info-box .warn-text { color: var(--warn); }
+  .cube-legend {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .legend-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+  <nav class="breadcrumb">Inicio › Módulo 2: Matrices › Pipeline Gráfico 3D</nav>
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 2 · Matrices y Transformaciones</span>
+    <h1>Pipeline Gráfico 3D</h1>
+    <p class="demo-lead">Un vértice 3D pasa por cuatro transformaciones matriciales antes de aparecer como píxel en pantalla.</p>
+  </header>
+
+  <div class="demo-layout">
+    <aside class="demo-theory">
+      <div class="theory-block">
+        <h3>Las 4 Etapas del Pipeline</h3>
+        <p>Cada vértice se multiplica por cuatro matrices en secuencia para ir de coordenadas locales a píxeles en pantalla.</p>
+        <div class="pipeline-stages">
+          <div class="stage-item" data-stage="model">
+            <span class="stage-dot" style="background:#f85149;"></span>
+            <span class="stage-name">Model</span>
+            <span class="stage-arrow">→</span>
+            <span class="stage-desc">Coords. locales del objeto</span>
+          </div>
+          <div class="stage-item" data-stage="world">
+            <span class="stage-dot" style="background:#d29922;"></span>
+            <span class="stage-name">World</span>
+            <span class="stage-arrow">→</span>
+            <span class="stage-desc">Posición en la escena</span>
+          </div>
+          <div class="stage-item" data-stage="camera">
+            <span class="stage-dot" style="background:#3fb950;"></span>
+            <span class="stage-name">Camera</span>
+            <span class="stage-arrow">→</span>
+            <span class="stage-desc">Espacio relativo a la cámara</span>
+          </div>
+          <div class="stage-item" data-stage="screen">
+            <span class="stage-dot" style="background:#58a6ff;"></span>
+            <span class="stage-name">Pantalla</span>
+            <span class="stage-arrow">→</span>
+            <span class="stage-desc">Proyección 2D final</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Fórmula del Pipeline</h3>
+        <p>La transformación completa combina tres matrices multiplicadas en orden. La más cercana al vector se aplica primero:</p>
+        <div class="formula-box violet">v_clip = M_proj · M_view · M_model · v_local</div>
+        <div class="formula-box" style="font-size:0.78rem; line-height:2;">M_model = Rot · Escala · Traslación
+M_view  = inversa(pose_cámara)
+M_proj  = perspectiva(fov, near, far)</div>
+      </div>
+
+      <div class="theory-block">
+        <h3>División de Perspectiva</h3>
+        <p>Para simular que los objetos lejanos se ven más pequeños, se divide por la coordenada Z:</p>
+        <div class="formula-box green">x_screen = (x / z) · fov
+y_screen = (y / z) · fov</div>
+        <p>Esta operación <em>no es lineal</em>, por eso ocurre después de la proyección matricial.</p>
+      </div>
+
+      <div class="live-panel">
+        <div class="live-panel-title">
+          <span class="live-dot"></span>
+          Vértice (1, 1, 1) a través del pipeline
+        </div>
+        <div class="vertex-pipeline" id="vertexPipeline">
+          <div class="vp-row">
+            <span class="vp-label">Local:</span>
+            <span class="vp-coords" id="vpLocal">(1.00, 1.00, 1.00)</span>
+          </div>
+          <div class="vp-row" style="padding-left:1rem;">
+            <span class="vp-label">↓ M_model</span>
+            <span class="vp-arrow"></span>
+          </div>
+          <div class="vp-row">
+            <span class="vp-label">World:</span>
+            <span class="vp-coords" id="vpWorld">(1.00, 1.00, 1.00)</span>
+          </div>
+          <div class="vp-row" style="padding-left:1rem;">
+            <span class="vp-label">↓ M_view</span>
+          </div>
+          <div class="vp-row">
+            <span class="vp-label">Camera:</span>
+            <span class="vp-coords" id="vpCamera">(1.00, 1.00, 5.00)</span>
+          </div>
+          <div class="vp-row" style="padding-left:1rem;">
+            <span class="vp-label">↓ M_proj</span>
+          </div>
+          <div class="vp-row">
+            <span class="vp-label">Pantalla:</span>
+            <span class="vp-coords" style="color:var(--accent3);" id="vpScreen">(80px, 80px)</span>
+          </div>
+        </div>
+        <div class="live-rows" style="margin-top:0.75rem;">
+          <div class="live-row">
+            <span class="live-label">Etapa activa</span>
+            <span class="live-value" id="liveStage" style="color:var(--accent2);">Pantalla</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Aristas visibles</span>
+            <span class="live-value" id="liveEdges">12</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="canvas3d" width="480" height="380"></canvas>
+      </div>
+
+      <div class="controls-panel">
+        <p class="controls-title">Controles del Pipeline</p>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">Rotación Y</span>
+          <input type="range" class="ctrl-slider" id="sRotY" min="0" max="360" step="1" value="30">
+          <span class="ctrl-val" id="vRotY">30°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Rotación X</span>
+          <input type="range" class="ctrl-slider" id="sRotX" min="-90" max="90" step="1" value="-20">
+          <span class="ctrl-val" id="vRotX">-20°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Distancia cámara</span>
+          <input type="range" class="ctrl-slider" id="sCamDist" min="2" max="12" step="0.1" value="5">
+          <span class="ctrl-val" id="vCamDist">5.0</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">FOV</span>
+          <input type="range" class="ctrl-slider" id="sFov" min="150" max="700" step="10" value="400">
+          <span class="ctrl-val" id="vFov">400</span>
+        </div>
+
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Etapa destacada</div>
+          <div class="stage-radios">
+            <label class="stage-radio-label">
+              <input type="radio" name="stage" value="model"> Model
+            </label>
+            <label class="stage-radio-label">
+              <input type="radio" name="stage" value="world"> World
+            </label>
+            <label class="stage-radio-label">
+              <input type="radio" name="stage" value="camera"> Camera
+            </label>
+            <label class="stage-radio-label">
+              <input type="radio" name="stage" value="screen" checked> Pantalla
+            </label>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn primary" id="btnAnimRotate">▶ Animar rotación</button>
+          <button class="btn" id="btnStopAnim">■ Detener</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <section class="demo-application">
+    <p class="app-eyebrow">Aplicación en Ciencia de la Computación</p>
+    <h2>Motor de Renderizado 3D</h2>
+    <p>Un motor gráfico renderiza múltiples objetos en la escena, aplicando el pipeline completo a cada uno. Los objetos fuera del campo de visión (frustum) se descartan antes de dibujar — esto se llama <em>frustum culling</em>. Arrastra el mouse sobre el canvas para orbitar la cámara.</p>
+    <div class="app-content">
+      <div class="app-canvas-wrap" id="appCanvasWrap">
+        <canvas id="canvasScene" width="500" height="280"></canvas>
+      </div>
+      <div class="app-controls">
+        <div class="cube-legend">
+          <div class="legend-row">
+            <span class="legend-dot" style="background:var(--accent);"></span>
+            Cubo cercano (brillante)
+          </div>
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#3a5a7a;"></span>
+            Cubo medio (atenuado)
+          </div>
+          <div class="legend-row">
+            <span class="legend-dot" style="background:#1c2e3e;"></span>
+            Cubo lejano (oscuro)
+          </div>
+          <div class="legend-row">
+            <span class="legend-dot" style="background:var(--muted);"></span>
+            Cubo culled (fuera de frustum)
+          </div>
+        </div>
+        <div class="info-box">
+          <strong>Frustum culling:</strong><br>
+          Culled: <span id="appCulled">0</span> / 4 cubos<br>
+          Visibles: <span id="appVisible">4</span> / 4 cubos<br>
+          <br>
+          <span class="warn-text">Arrastra horizontalmente para orbitar</span>
+        </div>
+        <div class="info-box">
+          <strong>Cámara orbital:</strong><br>
+          Ángulo: <span id="appAngle">0°</span><br>
+          Distancia: 8 unidades<br>
+          FOV: 60°
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div><!-- /demo-page -->
+
+<script>
+// ============================================================
+//  PIPELINE GRÁFICO 3D — Main interactive canvas
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvas3d');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const CX = W/2, CY = H/2;
+
+  let rotY = 30, rotX = -20, camDist = 5, fov = 400;
+  let activeStage = 'screen';
+  let animating = false, animId = null;
+
+  // Cube vertices: 8 corners of [-0.5, 0.5]^3
+  const cubeVerts = [
+    [-0.5,-0.5,-0.5],[0.5,-0.5,-0.5],[0.5,0.5,-0.5],[-0.5,0.5,-0.5],
+    [-0.5,-0.5, 0.5],[0.5,-0.5, 0.5],[0.5,0.5, 0.5],[-0.5,0.5, 0.5]
+  ];
+  const cubeEdges = [
+    [0,1],[1,2],[2,3],[3,0], // back face
+    [4,5],[5,6],[6,7],[7,4], // front face
+    [0,4],[1,5],[2,6],[3,7]  // connecting edges
+  ];
+  // Face normals (for front-face detection)
+  const cubeFaces = [
+    [0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,3,7,4],[1,2,6,5]
+  ];
+
+  function project(x, y, z) {
+    // Rotate around Y
+    const ryRad = rotY * Math.PI / 180;
+    const cosY = Math.cos(ryRad), sinY = Math.sin(ryRad);
+    let x1 = x*cosY + z*sinY;
+    let z1 = -x*sinY + z*cosY;
+    let y1 = y;
+    // Rotate around X
+    const rxRad = rotX * Math.PI / 180;
+    const cosX = Math.cos(rxRad), sinX = Math.sin(rxRad);
+    let y2 = y1*cosX - z1*sinX;
+    let z2 = y1*sinX + z1*cosX;
+    let x2 = x1;
+    // Camera translation
+    z2 += camDist;
+    // Perspective divide
+    if(z2 < 0.01) return null;
+    const sx = CX + (x2/z2) * fov;
+    const sy = CY - (y2/z2) * fov;
+    return {sx, sy, z: z2};
+  }
+
+  function getStageColor() {
+    switch(activeStage) {
+      case 'model':  return '#f85149';
+      case 'world':  return '#d29922';
+      case 'camera': return '#3fb950';
+      case 'screen': return '#58a6ff';
+    }
+    return '#58a6ff';
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // Background
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid (subtle)
+    ctx.strokeStyle = 'rgba(48,54,61,0.5)';
+    ctx.lineWidth = 1;
+    const gridStep = 60;
+    for(let x=0; x<W; x+=gridStep) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+    for(let y=0; y<H; y+=gridStep) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+    // Stage highlight border
+    const stageColor = getStageColor();
+    ctx.strokeStyle = stageColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, W-4, H-4);
+
+    // Stage label
+    ctx.fillStyle = stageColor;
+    ctx.font = 'bold 11px JetBrains Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('Etapa: ' + activeStage.toUpperCase(), 12, 20);
+
+    // Project all vertices
+    const projected = cubeVerts.map(([x,y,z]) => project(x,y,z));
+
+    // Determine which faces are front-facing (z-sort)
+    const faceDepths = cubeFaces.map((face, fi) => {
+      const pts = face.map(vi => projected[vi]).filter(p => p !== null);
+      if(pts.length < 4) return { fi, depth: 999, visible: false };
+      const avgZ = pts.reduce((s,p)=>s+p.z,0)/pts.length;
+      // Compute face normal direction (simple: use cross product of two edges)
+      const [a,b,c,d] = face;
+      const vA = cubeVerts[a], vB = cubeVerts[b], vC = cubeVerts[c];
+      const e1 = [vB[0]-vA[0], vB[1]-vA[1], vB[2]-vA[2]];
+      const e2 = [vC[0]-vB[0], vC[1]-vB[1], vC[2]-vB[2]];
+      const nx = e1[1]*e2[2]-e1[2]*e2[1];
+      const ny = e1[2]*e2[0]-e1[0]*e2[2];
+      const nz = e1[0]*e2[1]-e1[1]*e2[0];
+      // View dir is approx (0,0,-1) after rotation
+      const dot = -nz; // simplified
+      return { fi, depth: avgZ, visible: true, pts, dot };
+    });
+
+    faceDepths.sort((a,b)=>b.depth-a.depth);
+
+    // Draw back faces first
+    faceDepths.forEach(({fi, visible, pts, dot}) => {
+      if(!visible || !pts) return;
+      if(dot >= 0) return; // back face, skip fill
+      ctx.beginPath();
+      ctx.moveTo(pts[0].sx, pts[0].sy);
+      for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].sx, pts[i].sy);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(88,166,255,0.03)';
+      ctx.fill();
+    });
+
+    // Draw all edges
+    cubeEdges.forEach(([i, j], ei) => {
+      const p1 = projected[i], p2 = projected[j];
+      if(!p1 || !p2) return;
+      // Color by depth (front edges brighter)
+      const avgZ = (p1.z + p2.z) / 2;
+      const t = Math.max(0, Math.min(1, (camDist + 2 - avgZ) / 3));
+      const alpha = 0.35 + t * 0.65;
+      ctx.strokeStyle = `rgba(88,166,255,${alpha.toFixed(2)})`;
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(p1.sx, p1.sy);
+      ctx.lineTo(p2.sx, p2.sy);
+      ctx.stroke();
+    });
+
+    // Draw front faces on top
+    faceDepths.forEach(({fi, visible, pts, dot}) => {
+      if(!visible || !pts) return;
+      if(dot < 0) return; // back face
+      ctx.beginPath();
+      ctx.moveTo(pts[0].sx, pts[0].sy);
+      for(let i=1;i<pts.length;i++) ctx.lineTo(pts[i].sx, pts[i].sy);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(88,166,255,0.06)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(88,166,255,0.9)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    });
+
+    // Draw vertices
+    projected.forEach((p, i) => {
+      if(!p) return;
+      ctx.beginPath();
+      ctx.arc(p.sx, p.sy, 3.5, 0, Math.PI*2);
+      ctx.fillStyle = stageColor;
+      ctx.fill();
+    });
+
+    // Draw axes at center
+    const origin = project(0, 0, 0);
+    const axisX  = project(0.7, 0, 0);
+    const axisY  = project(0, 0.7, 0);
+    const axisZ  = project(0, 0, 0.7);
+    if(origin && axisX) {
+      ctx.strokeStyle = '#f85149'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(origin.sx, origin.sy); ctx.lineTo(axisX.sx, axisX.sy); ctx.stroke();
+      ctx.fillStyle = '#f85149'; ctx.font = 'bold 11px JetBrains Mono, monospace'; ctx.textAlign = 'center';
+      ctx.fillText('X', axisX.sx, axisX.sy-5);
+    }
+    if(origin && axisY) {
+      ctx.strokeStyle = '#3fb950'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(origin.sx, origin.sy); ctx.lineTo(axisY.sx, axisY.sy); ctx.stroke();
+      ctx.fillStyle = '#3fb950';
+      ctx.fillText('Y', axisY.sx, axisY.sy-5);
+    }
+    if(origin && axisZ) {
+      ctx.strokeStyle = '#d29922'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(origin.sx, origin.sy); ctx.lineTo(axisZ.sx, axisZ.sy); ctx.stroke();
+      ctx.fillStyle = '#d29922';
+      ctx.fillText('Z', axisZ.sx, axisZ.sy-5);
+    }
+
+    // Update live vertex panel
+    const v = [0.5, 0.5, 0.5];
+    document.getElementById('vpLocal').textContent =
+      `(${v[0].toFixed(2)}, ${v[1].toFixed(2)}, ${v[2].toFixed(2)})`;
+    // After model (identity here)
+    document.getElementById('vpWorld').textContent =
+      `(${v[0].toFixed(2)}, ${v[1].toFixed(2)}, ${v[2].toFixed(2)})`;
+    // After view (add camera dist to z)
+    const ryR = rotY*Math.PI/180, rxR = rotX*Math.PI/180;
+    const cx = v[0]*Math.cos(ryR)+v[2]*Math.sin(ryR);
+    const cz0 = -v[0]*Math.sin(ryR)+v[2]*Math.cos(ryR);
+    const cy = v[1]*Math.cos(rxR)-cz0*Math.sin(rxR);
+    const cz = v[1]*Math.sin(rxR)+cz0*Math.cos(rxR)+camDist;
+    document.getElementById('vpCamera').textContent =
+      `(${cx.toFixed(2)}, ${cy.toFixed(2)}, ${cz.toFixed(2)})`;
+    const sx2 = CX + (cx/cz)*fov;
+    const sy2 = CY - (cy/cz)*fov;
+    document.getElementById('vpScreen').textContent =
+      `(${sx2.toFixed(0)}px, ${sy2.toFixed(0)}px)`;
+    document.getElementById('liveStage').textContent = activeStage.charAt(0).toUpperCase()+activeStage.slice(1);
+  }
+
+  // Sliders
+  function bindSlider(id, valId, suffix, dec, setter) {
+    const s = document.getElementById(id);
+    const v = document.getElementById(valId);
+    s.addEventListener('input', () => {
+      setter(parseFloat(s.value));
+      v.textContent = parseFloat(s.value).toFixed(dec) + suffix;
+      draw();
+    });
+  }
+  bindSlider('sRotY','vRotY','°',0, v=>{ rotY=v; });
+  bindSlider('sRotX','vRotX','°',0, v=>{ rotX=v; });
+  bindSlider('sCamDist','vCamDist','',1, v=>{ camDist=v; });
+  bindSlider('sFov','vFov','',0, v=>{ fov=v; });
+
+  // Stage highlight update
+  document.querySelectorAll('input[name=stage]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      activeStage = radio.value;
+      document.querySelectorAll('.stage-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.stage === activeStage);
+      });
+      draw();
+    });
+  });
+
+  // Animation
+  document.getElementById('btnAnimRotate').addEventListener('click', () => {
+    if(animating) return;
+    animating = true;
+    function frame() {
+      rotY = (rotY + 0.5) % 360;
+      document.getElementById('sRotY').value = rotY;
+      document.getElementById('vRotY').textContent = Math.round(rotY)+'°';
+      draw();
+      if(animating) animId = requestAnimationFrame(frame);
+    }
+    animId = requestAnimationFrame(frame);
+  });
+  document.getElementById('btnStopAnim').addEventListener('click', () => {
+    animating = false;
+    if(animId) cancelAnimationFrame(animId);
+  });
+
+  // Init stage highlight
+  document.querySelectorAll('.stage-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.stage === activeStage);
+  });
+
+  draw();
+})();
+
+// ============================================================
+//  SCENE APPLICATION — 3 cubes + orbital camera + frustum culling
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvasScene');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const CX = W/2, CY = H/2;
+
+  let orbitAngle = 20;
+  let isDragging = false, dragStartX = 0, dragStartAngle = 0;
+
+  const cubePositions = [
+    { pos: [0, 0, 0],   size: 0.6 },
+    { pos: [2, 0, 1],   size: 0.5 },
+    { pos: [-2.5, 0, -1], size: 0.4 },
+    { pos: [0.5, 0, 3.5], size: 0.55 }
+  ];
+
+  const cubeEdges = [
+    [0,1],[1,2],[2,3],[3,0],
+    [4,5],[5,6],[6,7],[7,4],
+    [0,4],[1,5],[2,6],[3,7]
+  ];
+
+  function projectScene(x, y, z, rotY, camDist) {
+    const fov = 300;
+    const ryR = rotY * Math.PI / 180;
+    const x1 = x*Math.cos(ryR) + z*Math.sin(ryR);
+    const z1 = -x*Math.sin(ryR) + z*Math.cos(ryR);
+    const y1 = y;
+    const rxR = -15 * Math.PI / 180;
+    const y2 = y1*Math.cos(rxR) - z1*Math.sin(rxR);
+    const z2 = y1*Math.sin(rxR) + z1*Math.cos(rxR) + camDist;
+    if(z2 < 0.1) return null;
+    return {
+      sx: CX + (x1/z2)*fov,
+      sy: CY - (y2/z2)*fov,
+      z: z2
+    };
+  }
+
+  function isCulled(pos, rotY) {
+    // Simple frustum check: project center, see if it's way off screen
+    const p = projectScene(pos[0], pos[1], pos[2], rotY, 8);
+    if(!p) return true;
+    return p.sx < -100 || p.sx > W+100 || p.sy < -100 || p.sy > H+100;
+  }
+
+  function getCubeVerts(pos, size) {
+    const s = size/2;
+    return [
+      [pos[0]-s,pos[1]-s,pos[2]-s],[pos[0]+s,pos[1]-s,pos[2]-s],
+      [pos[0]+s,pos[1]+s,pos[2]-s],[pos[0]-s,pos[1]+s,pos[2]-s],
+      [pos[0]-s,pos[1]-s,pos[2]+s],[pos[0]+s,pos[1]-s,pos[2]+s],
+      [pos[0]+s,pos[1]+s,pos[2]+s],[pos[0]-s,pos[1]+s,pos[2]+s]
+    ];
+  }
+
+  function drawScene() {
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(48,54,61,0.4)';
+    ctx.lineWidth = 1;
+    for(let x=0;x<W;x+=50){ ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke(); }
+    for(let y=0;y<H;y+=50){ ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke(); }
+
+    const camDist = 8;
+    let culledCount = 0, visibleCount = 0;
+
+    // Sort cubes by depth
+    const cubeData = cubePositions.map((cube, i) => {
+      const p = projectScene(cube.pos[0], cube.pos[1], cube.pos[2], orbitAngle, camDist);
+      const culled = isCulled(cube.pos, orbitAngle);
+      return { ...cube, projCenter: p, culled, i };
+    }).sort((a,b) => {
+      const za = a.projCenter ? a.projCenter.z : 999;
+      const zb = b.projCenter ? b.projCenter.z : 999;
+      return zb - za; // far to near
+    });
+
+    cubeData.forEach(cube => {
+      if(cube.culled) {
+        culledCount++;
+      } else {
+        visibleCount++;
+      }
+      const verts = getCubeVerts(cube.pos, cube.size);
+      const projected = verts.map(([x,y,z]) => projectScene(x,y,z, orbitAngle, camDist));
+      const culled = cube.culled;
+
+      // Color by depth
+      const avgZ = cube.projCenter ? cube.projCenter.z : 10;
+      const t = Math.max(0, Math.min(1, (10-avgZ)/8));
+      let edgeColor, fillColor;
+      if(culled) {
+        edgeColor = 'rgba(139,148,158,0.4)';
+        fillColor = 'rgba(139,148,158,0.04)';
+      } else {
+        const r = Math.round(28 + t*60);
+        const g = Math.round(90 + t*76);
+        const b = Math.round(122 + t*133);
+        edgeColor = `rgba(${r},${g},${b},0.9)`;
+        fillColor = `rgba(${r},${g},${b},0.06)`;
+      }
+
+      cubeEdges.forEach(([i,j]) => {
+        const p1 = projected[i], p2 = projected[j];
+        if(!p1||!p2) return;
+        ctx.strokeStyle = edgeColor;
+        ctx.lineWidth = culled ? 0.8 : 1.5;
+        ctx.setLineDash(culled ? [4,4] : []);
+        ctx.beginPath();
+        ctx.moveTo(p1.sx, p1.sy);
+        ctx.lineTo(p2.sx, p2.sy);
+        ctx.stroke();
+      });
+      ctx.setLineDash([]);
+
+      if(cube.projCenter && !culled) {
+        ctx.beginPath();
+        ctx.arc(cube.projCenter.sx, cube.projCenter.sy, 3, 0, Math.PI*2);
+        ctx.fillStyle = edgeColor;
+        ctx.fill();
+      }
+    });
+
+    document.getElementById('appCulled').textContent = culledCount;
+    document.getElementById('appVisible').textContent = visibleCount;
+    document.getElementById('appAngle').textContent = Math.round(orbitAngle)+'°';
+  }
+
+  // Drag to orbit
+  const wrap = document.getElementById('appCanvasWrap');
+  wrap.addEventListener('mousedown', e => {
+    isDragging = true;
+    dragStartX = e.clientX;
+    dragStartAngle = orbitAngle;
+  });
+  window.addEventListener('mousemove', e => {
+    if(!isDragging) return;
+    orbitAngle = dragStartAngle + (e.clientX - dragStartX) * 0.5;
+    drawScene();
+  });
+  window.addEventListener('mouseup', () => { isDragging = false; });
+
+  drawScene();
+})();
+</script>

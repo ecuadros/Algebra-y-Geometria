@@ -1,0 +1,875 @@
+---
+layout: default
+title: Filtros de Imagen por Convolución
+prev_url: /modulo-02/pipeline-grafico.html
+prev_title: Pipeline Gráfico 3D
+next_url: /modulo-02/cadenas-markov.html
+next_title: Cadenas de Markov
+---
+<style>
+  /* ============================================================
+     DEMO PAGE — FILTROS DE IMAGEN POR CONVOLUCIÓN
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+
+  .demo-header { margin-bottom: 2.5rem; }
+  .module-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .demo-header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+  }
+  .demo-lead {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .theory-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-block h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.85rem;
+  }
+  .theory-block p {
+    font-size: 0.91rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.5rem;
+  }
+  .theory-block p:last-child { margin-bottom: 0; }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 8px;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    color: var(--accent);
+    text-align: center;
+    margin: 0.75rem 0;
+    letter-spacing: 0.03em;
+    white-space: pre-line;
+    line-height: 1.85;
+  }
+  .formula-box.violet { color: var(--accent2); border-color: rgba(188, 140, 255, 0.35); }
+  .formula-box.green { color: var(--accent3); border-color: rgba(63, 185, 80, 0.35); }
+
+  /* Kernel display grid */
+  .kernel-preview {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    background: rgba(88,166,255,0.06);
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 7px;
+    padding: 6px;
+    margin: 0.5rem 0;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+  }
+  .kernel-cell {
+    text-align: center;
+    padding: 0.25rem 0.1rem;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.03);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .kernel-cell.center { background: rgba(188,140,255,0.1); color: var(--accent2); }
+  .kernel-cell.neg { color: var(--danger); }
+
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    margin-top: 0.5rem;
+  }
+  .live-panel-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .live-rows { display: flex; flex-direction: column; gap: 0.45rem; }
+  .live-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.87rem;
+  }
+  .live-label { color: var(--muted); font-family: var(--font-mono); }
+  .live-value { color: var(--text); font-family: var(--font-mono); font-size: 0.9rem; }
+
+  /* Interactive column */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .canvases-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .canvas-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .canvas-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  canvas { display: block; }
+
+  .controls-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .controls-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* Kernel editor */
+  .kernel-editor {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+  .kernel-input {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    text-align: center;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    color: var(--text);
+    padding: 0.35rem 0.2rem;
+    width: 100%;
+    transition: border-color var(--transition);
+  }
+  .kernel-input:focus {
+    outline: none;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .kernel-input.center-cell {
+    border-color: rgba(188,140,255,0.4);
+    color: var(--accent2);
+  }
+
+  .btn-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-sans);
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--border); border-color: var(--accent); color: var(--accent); }
+  .btn.active { background: rgba(88,166,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .ctrl-label {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--muted);
+    min-width: 80px;
+  }
+  .ctrl-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 4px; }
+  .ctrl-val {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  /* Application section */
+  .demo-application {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem 2.5rem;
+    margin-bottom: 3rem;
+  }
+  .app-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin: 0 0 0.5rem;
+  }
+  .demo-application h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+  }
+  .demo-application p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 640px;
+    margin: 0 0 1.5rem;
+  }
+  .app-content {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .app-canvas-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .app-controls {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .info-box {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: rgba(88,166,255,0.05);
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+  .info-box strong { color: var(--accent); }
+  .info-box .green { color: var(--accent3); }
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+  <nav class="breadcrumb">Inicio › Módulo 2: Matrices › Filtros de Imagen por Convolución</nav>
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 2 · Matrices y Transformaciones</span>
+    <h1>Filtros de Imagen por Convolución</h1>
+    <p class="demo-lead">Un kernel de convolución es una pequeña matriz que transforma cada píxel usando sus vecinos.</p>
+  </header>
+
+  <div class="demo-layout">
+    <aside class="demo-theory">
+      <div class="theory-block">
+        <h3>Operación de Convolución</h3>
+        <p>Para cada píxel en la imagen, se multiplica el kernel por el vecindario 3×3 de ese píxel y se suman los resultados:</p>
+        <div class="formula-box">output[i][j] =
+Σ<sub>m</sub> Σ<sub>n</sub> kernel[m][n] · image[i+m, j+n]</div>
+        <p>El kernel "desliza" sobre cada posición de la imagen. Si la suma del kernel es 1, el brillo se conserva; si es 0, el resultado es una operación de diferenciación.</p>
+      </div>
+
+      <div class="theory-block">
+        <h3>Kernels Comunes</h3>
+        <p>Identidad (sin cambio):</p>
+        <div class="kernel-preview">
+          <span class="kernel-cell">0</span><span class="kernel-cell">0</span><span class="kernel-cell">0</span>
+          <span class="kernel-cell">0</span><span class="kernel-cell center">1</span><span class="kernel-cell">0</span>
+          <span class="kernel-cell">0</span><span class="kernel-cell">0</span><span class="kernel-cell">0</span>
+        </div>
+        <p>Nitidez (sharpening):</p>
+        <div class="kernel-preview">
+          <span class="kernel-cell">0</span><span class="kernel-cell neg">-1</span><span class="kernel-cell">0</span>
+          <span class="kernel-cell neg">-1</span><span class="kernel-cell center">5</span><span class="kernel-cell neg">-1</span>
+          <span class="kernel-cell">0</span><span class="kernel-cell neg">-1</span><span class="kernel-cell">0</span>
+        </div>
+        <p>Sobel X (bordes verticales):</p>
+        <div class="kernel-preview">
+          <span class="kernel-cell neg">-1</span><span class="kernel-cell">0</span><span class="kernel-cell">1</span>
+          <span class="kernel-cell neg">-2</span><span class="kernel-cell center">0</span><span class="kernel-cell">2</span>
+          <span class="kernel-cell neg">-1</span><span class="kernel-cell">0</span><span class="kernel-cell">1</span>
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Normalización y Bordes</h3>
+        <p>Los valores fuera de rango se recortan a <strong style="color:var(--accent)">[0, 255]</strong>. Para kernels de blur, la suma total debe ser 1 (se divide entre el número de elementos activos). Para detección de bordes, la suma es 0 — el resultado muestra cambios de contraste.</p>
+      </div>
+
+      <div class="live-panel">
+        <div class="live-panel-title">
+          <span class="live-dot"></span>
+          Estado del filtro actual
+        </div>
+        <div class="live-rows">
+          <div class="live-row">
+            <span class="live-label">Kernel activo</span>
+            <span class="live-value" id="liveKernelName" style="color:var(--accent2);">Identidad</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Suma kernel</span>
+            <span class="live-value" id="liveKernelSum">1.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Efecto</span>
+            <span class="live-value" id="liveEffect" style="color:var(--accent3);">Sin cambio</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Intensidad</span>
+            <span class="live-value" id="liveIntensity">1.0×</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="demo-interactive">
+      <div class="canvases-row">
+        <div class="canvas-panel">
+          <div class="canvas-label">Imagen Original</div>
+          <canvas id="canvasSrc" width="210" height="210"></canvas>
+        </div>
+        <div class="canvas-panel">
+          <div class="canvas-label">Resultado Filtrado</div>
+          <canvas id="canvasDst" width="210" height="210"></canvas>
+        </div>
+      </div>
+
+      <div class="controls-panel">
+        <p class="controls-title">Editor de Kernel 3×3</p>
+        <div class="kernel-editor" id="kernelEditor">
+          <!-- 9 inputs generated by JS -->
+        </div>
+
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:0.5rem;">Presets</div>
+          <div class="btn-row" id="presetBtns">
+            <button class="btn active" data-preset="identity">Identidad</button>
+            <button class="btn" data-preset="blur">Blur 3×3</button>
+            <button class="btn" data-preset="sharpen">Nitidez</button>
+            <button class="btn" data-preset="sobelX">Sobel X</button>
+            <button class="btn" data-preset="sobelY">Sobel Y</button>
+            <button class="btn" data-preset="emboss">Relieve</button>
+            <button class="btn" data-preset="gaussian">Gaussiano</button>
+          </div>
+        </div>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">Intensidad</span>
+          <input type="range" class="ctrl-slider" id="sIntensity" min="0.1" max="3" step="0.05" value="1">
+          <span class="ctrl-val" id="vIntensity">1.0×</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <section class="demo-application">
+    <p class="app-eyebrow">Aplicación en Ciencia de la Computación</p>
+    <h2>Detección de Bordes en Visión Computacional</h2>
+    <p>La detección de bordes es el primer paso en muchos algoritmos de visión por computadora: segmentación de objetos, reconocimiento facial, y más. El kernel Sobel calcula el gradiente de intensidad — donde el gradiente es alto, hay un borde. La animación muestra la ventana 3×3 deslizándose por la imagen.</p>
+    <div class="app-content">
+      <div class="app-canvas-wrap">
+        <canvas id="canvasAnim" width="540" height="240"></canvas>
+      </div>
+      <div class="app-controls">
+        <div class="ctrl-row">
+          <span class="ctrl-label">Velocidad</span>
+          <input type="range" class="ctrl-slider" id="sSpeed" min="1" max="20" step="1" value="8">
+          <span class="ctrl-val" id="vSpeed">8×</span>
+        </div>
+        <div class="btn-row">
+          <button class="btn active" id="btnToggleAnim">⏸ Pausar</button>
+          <button class="btn" id="btnRestartAnim">↺ Reiniciar</button>
+        </div>
+        <div class="info-box">
+          <strong>Posición actual:</strong><br>
+          Fila: <span id="animRow">0</span> / 58<br>
+          Col: <span id="animCol">0</span> / 58<br>
+          <br>
+          <span class="green">Kernel: Sobel X</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div><!-- /demo-page -->
+
+<script>
+// ============================================================
+//  FILTROS DE IMAGEN — Convolution demo
+// ============================================================
+(function() {
+  const PRESETS = {
+    identity:  { name:'Identidad',  vals:[0,0,0, 0,1,0, 0,0,0], effect:'Sin cambio' },
+    blur:      { name:'Blur 3×3',   vals:[1,1,1, 1,1,1, 1,1,1].map(v=>v/9), effect:'Suavizado' },
+    sharpen:   { name:'Nitidez',    vals:[0,-1,0, -1,5,-1, 0,-1,0], effect:'Nitidez/Contraste' },
+    sobelX:    { name:'Sobel X',    vals:[-1,0,1, -2,0,2, -1,0,1], effect:'Bordes verticales' },
+    sobelY:    { name:'Sobel Y',    vals:[-1,-2,-1, 0,0,0, 1,2,1], effect:'Bordes horizontales' },
+    emboss:    { name:'Relieve',    vals:[-2,-1,0, -1,1,1, 0,1,2], effect:'Efecto relieve' },
+    gaussian:  { name:'Gaussiano',  vals:[1,2,1, 2,4,2, 1,2,1].map(v=>v/16), effect:'Blur suave' }
+  };
+
+  let currentKernel = [...PRESETS.identity.vals];
+  let intensity = 1.0;
+  let currentPreset = 'identity';
+
+  // Build kernel editor inputs
+  const editor = document.getElementById('kernelEditor');
+  for(let i=0;i<9;i++) {
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.step = '0.1';
+    inp.className = 'kernel-input' + (i===4 ? ' center-cell' : '');
+    inp.value = currentKernel[i].toFixed(2);
+    inp.id = `ki${i}`;
+    inp.addEventListener('input', () => {
+      currentKernel[i] = parseFloat(inp.value)||0;
+      currentPreset = 'custom';
+      document.querySelectorAll('#presetBtns .btn').forEach(b=>b.classList.remove('active'));
+      document.getElementById('liveKernelName').textContent = 'Personalizado';
+      applyAndDraw();
+    });
+    editor.appendChild(inp);
+  }
+
+  function updateEditorValues() {
+    for(let i=0;i<9;i++) {
+      document.getElementById(`ki${i}`).value = currentKernel[i].toFixed(3);
+    }
+  }
+
+  // Source image: 60x60 test pattern
+  const SRC_SIZE = 60;
+  const srcData = new Uint8ClampedArray(SRC_SIZE*SRC_SIZE*4);
+
+  function generateSrcImage() {
+    for(let y=0;y<SRC_SIZE;y++) {
+      for(let x=0;x<SRC_SIZE;x++) {
+        let v = 0;
+        if(y < SRC_SIZE/2) {
+          // Top half: horizontal gradient
+          v = Math.round((x/SRC_SIZE)*255);
+          // Add circles
+          const cx1=20,cy1=15,cx2=45,cy2=20;
+          if((x-cx1)**2+(y-cy1)**2 < 100) v = 200;
+          if((x-cx2)**2+(y-cy2)**2 < 64) v = 80;
+          // Rectangle
+          if(x>=28&&x<=38&&y>=8&&y<=22) v = 150;
+        } else {
+          // Bottom half: vertical stripes
+          v = (Math.floor(x/6)%2===0) ? 220 : 40;
+          // Add horizontal bar
+          if(y>=46&&y<=50) v = 130;
+        }
+        const idx = (y*SRC_SIZE+x)*4;
+        srcData[idx] = srcData[idx+1] = srcData[idx+2] = v;
+        srcData[idx+3] = 255;
+      }
+    }
+  }
+  generateSrcImage();
+
+  // Draw source on canvasSrc (scaled to 210x210)
+  const srcCanvas = document.getElementById('canvasSrc');
+  const srcCtx = srcCanvas.getContext('2d');
+
+  function drawScaled(ctx, data, size, displaySize) {
+    const tmpCanvas = document.createElement('canvas');
+    tmpCanvas.width = size; tmpCanvas.height = size;
+    const tmpCtx = tmpCanvas.getContext('2d');
+    const imgData = new ImageData(data, size, size);
+    tmpCtx.putImageData(imgData, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(tmpCanvas, 0, 0, displaySize, displaySize);
+  }
+
+  function convolve(src, width, height, kernel, inten) {
+    const dst = new Uint8ClampedArray(src.length);
+    for(let y=0;y<height;y++) {
+      for(let x=0;x<width;x++) {
+        let sum = 0;
+        for(let ky=0;ky<3;ky++) {
+          for(let kx=0;kx<3;kx++) {
+            const sy = Math.max(0,Math.min(height-1, y+ky-1));
+            const sx = Math.max(0,Math.min(width-1, x+kx-1));
+            const kidx = ky*3+kx;
+            const k = (kidx===4) ? kernel[4] : kernel[kidx]*inten;
+            const pidx = (sy*width+sx)*4;
+            sum += src[pidx] * k;
+          }
+        }
+        const out = Math.max(0,Math.min(255, Math.round(sum)));
+        const idx = (y*width+x)*4;
+        dst[idx] = dst[idx+1] = dst[idx+2] = out;
+        dst[idx+3] = 255;
+      }
+    }
+    return dst;
+  }
+
+  function applyAndDraw() {
+    // Draw source
+    srcCtx.clearRect(0,0,210,210);
+    srcCtx.fillStyle = '#0d1117';
+    srcCtx.fillRect(0,0,210,210);
+    drawScaled(srcCtx, srcData, SRC_SIZE, 210);
+
+    // Apply convolution
+    const result = convolve(srcData, SRC_SIZE, SRC_SIZE, currentKernel, intensity);
+    const dstCanvas = document.getElementById('canvasDst');
+    const dstCtx = dstCanvas.getContext('2d');
+    dstCtx.clearRect(0,0,210,210);
+    dstCtx.fillStyle = '#0d1117';
+    dstCtx.fillRect(0,0,210,210);
+    drawScaled(dstCtx, result, SRC_SIZE, 210);
+
+    // Update live panel
+    const sum = currentKernel.reduce((a,b)=>a+b,0);
+    document.getElementById('liveKernelSum').textContent = sum.toFixed(3);
+    document.getElementById('liveIntensity').textContent = intensity.toFixed(1)+'×';
+    const eff = document.getElementById('liveEffect');
+    if(Math.abs(sum) < 0.01) {
+      eff.textContent = 'Detector de bordes';
+      eff.style.color = 'var(--warn)';
+    } else if(sum < 0.5) {
+      eff.textContent = 'Diferenciación';
+      eff.style.color = 'var(--accent2)';
+    } else if(Math.abs(sum-1)<0.05) {
+      eff.textContent = 'Conserva brillo';
+      eff.style.color = 'var(--accent3)';
+    } else {
+      eff.textContent = `Suma: ${sum.toFixed(2)}`;
+      eff.style.color = 'var(--accent)';
+    }
+  }
+
+  // Preset buttons
+  document.querySelectorAll('#presetBtns .btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.preset;
+      const preset = PRESETS[key];
+      if(!preset) return;
+      currentKernel = [...preset.vals];
+      currentPreset = key;
+      document.getElementById('liveKernelName').textContent = preset.name;
+      document.getElementById('liveEffect').textContent = preset.effect;
+      document.querySelectorAll('#presetBtns .btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      updateEditorValues();
+      applyAndDraw();
+    });
+  });
+
+  // Intensity slider
+  document.getElementById('sIntensity').addEventListener('input', function() {
+    intensity = parseFloat(this.value);
+    document.getElementById('vIntensity').textContent = intensity.toFixed(1)+'×';
+    applyAndDraw();
+  });
+
+  applyAndDraw();
+})();
+
+// ============================================================
+//  ANIMATION — sliding kernel visualization
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvasAnim');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const SRC_SIZE = 60;
+  const DISP_SIZE = 210;
+  const SCALE = DISP_SIZE / SRC_SIZE;
+
+  // Regenerate src image
+  const srcData = new Uint8ClampedArray(SRC_SIZE*SRC_SIZE*4);
+  for(let y=0;y<SRC_SIZE;y++) {
+    for(let x=0;x<SRC_SIZE;x++) {
+      let v = 0;
+      if(y < SRC_SIZE/2) {
+        v = Math.round((x/SRC_SIZE)*255);
+        if((x-20)**2+(y-15)**2 < 100) v = 200;
+        if((x-45)**2+(y-20)**2 < 64) v = 80;
+        if(x>=28&&x<=38&&y>=8&&y<=22) v = 150;
+      } else {
+        v = (Math.floor(x/6)%2===0) ? 220 : 40;
+        if(y>=46&&y<=50) v = 130;
+      }
+      const idx = (y*SRC_SIZE+x)*4;
+      srcData[idx]=srcData[idx+1]=srcData[idx+2]=v;
+      srcData[idx+3]=255;
+    }
+  }
+
+  // Sobel X kernel
+  const sobelX = [-1,0,1,-2,0,2,-1,0,1];
+
+  // Full convolution result
+  const dstData = new Uint8ClampedArray(SRC_SIZE*SRC_SIZE*4);
+  for(let y=0;y<SRC_SIZE;y++) {
+    for(let x=0;x<SRC_SIZE;x++) {
+      let sum=0;
+      for(let ky=0;ky<3;ky++) for(let kx=0;kx<3;kx++) {
+        const sy=Math.max(0,Math.min(SRC_SIZE-1,y+ky-1));
+        const sx=Math.max(0,Math.min(SRC_SIZE-1,x+kx-1));
+        const pi=(sy*SRC_SIZE+sx)*4;
+        sum+=srcData[pi]*sobelX[ky*3+kx];
+      }
+      const out=Math.max(0,Math.min(255,Math.abs(Math.round(sum))));
+      const di=(y*SRC_SIZE+x)*4;
+      dstData[di]=dstData[di+1]=dstData[di+2]=out;
+      dstData[di+3]=255;
+    }
+  }
+
+  // Create offscreen canvases
+  function makeScaledCanvas(data, size, dispSize) {
+    const c=document.createElement('canvas');
+    c.width=size;c.height=size;
+    const t=c.getContext('2d');
+    t.putImageData(new ImageData(data,size,size),0,0);
+    const c2=document.createElement('canvas');
+    c2.width=dispSize;c2.height=dispSize;
+    const t2=c2.getContext('2d');
+    t2.imageSmoothingEnabled=false;
+    t2.drawImage(c,0,0,dispSize,dispSize);
+    return c2;
+  }
+  const srcDisp = makeScaledCanvas(srcData, SRC_SIZE, DISP_SIZE);
+  const dstDisp = makeScaledCanvas(dstData, SRC_SIZE, DISP_SIZE);
+
+  let animRow=1, animCol=1, animRunning=true, speed=8, frameCount=0, animId=null;
+  const OFFSET_SRC=10, OFFSET_DST=280;
+
+  function drawFrame() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117';
+    ctx.fillRect(0,0,W,H);
+
+    // Labels
+    ctx.fillStyle='rgba(139,148,158,0.8)';
+    ctx.font='bold 10px JetBrains Mono, monospace';
+    ctx.textAlign='left';
+    ctx.fillText('ORIGINAL', OFFSET_SRC, H-6);
+    ctx.fillText('SOBEL X (resultado)', OFFSET_DST, H-6);
+
+    // Draw images
+    ctx.drawImage(srcDisp, OFFSET_SRC, 12);
+    ctx.drawImage(dstDisp, OFFSET_DST, 12);
+
+    // Sliding window highlight on source
+    const wx = OFFSET_SRC + (animCol-1)*SCALE;
+    const wy = 12 + (animRow-1)*SCALE;
+    const ww = 3*SCALE;
+    ctx.strokeStyle='rgba(88,166,255,0.9)';
+    ctx.lineWidth=2;
+    ctx.setLineDash([]);
+    ctx.strokeRect(wx, wy, ww, ww);
+    ctx.fillStyle='rgba(88,166,255,0.12)';
+    ctx.fillRect(wx, wy, ww, ww);
+
+    // Corresponding output pixel highlight
+    const opx = OFFSET_DST + animCol*SCALE;
+    const opy = 12 + animRow*SCALE;
+    ctx.strokeStyle='rgba(63,185,80,0.9)';
+    ctx.lineWidth=2;
+    ctx.strokeRect(opx, opy, SCALE, SCALE);
+    ctx.fillStyle='rgba(63,185,80,0.25)';
+    ctx.fillRect(opx, opy, SCALE, SCALE);
+
+    // Kernel values panel
+    const KX = OFFSET_SRC + DISP_SIZE + 10;
+    const KY = 12;
+    const KW = 55;
+    ctx.fillStyle='rgba(22,27,34,0.95)';
+    ctx.fillRect(KX, KY, KW, 95);
+    ctx.strokeStyle='rgba(88,166,255,0.3)';
+    ctx.lineWidth=1;
+    ctx.strokeRect(KX, KY, KW, 95);
+    ctx.fillStyle='rgba(139,148,158,0.8)';
+    ctx.font='bold 9px JetBrains Mono, monospace';
+    ctx.textAlign='center';
+    ctx.fillText('KERNEL', KX+KW/2, KY+11);
+
+    sobelX.forEach((k,i) => {
+      const kx2 = KX + (i%3)*(KW/3);
+      const ky2 = KY + 18 + Math.floor(i/3)*24;
+      const kw2 = KW/3;
+      const kh2 = 22;
+      ctx.fillStyle = k<0 ? 'rgba(248,81,73,0.12)' : (k>0?'rgba(88,166,255,0.1)':'rgba(255,255,255,0.04)');
+      ctx.fillRect(kx2+1, ky2+1, kw2-2, kh2-2);
+      ctx.fillStyle = k<0 ? '#f85149' : (k>0?'#58a6ff':'#8b949e');
+      ctx.font='bold 10px JetBrains Mono, monospace';
+      ctx.textAlign='center';
+      ctx.fillText(k, kx2+kw2/2, ky2+15);
+    });
+
+    // Current pixel value
+    const pi=(animRow*SRC_SIZE+animCol)*4;
+    const pv=srcData[pi];
+    const di2=(animRow*SRC_SIZE+animCol)*4;
+    const dv=dstData[di2];
+    ctx.fillStyle='rgba(22,27,34,0.95)';
+    ctx.fillRect(KX, KY+100, KW, 70);
+    ctx.strokeStyle='rgba(63,185,80,0.3)';
+    ctx.lineWidth=1;
+    ctx.strokeRect(KX, KY+100, KW, 70);
+    ctx.fillStyle='rgba(139,148,158,0.8)';
+    ctx.font='9px JetBrains Mono, monospace';
+    ctx.textAlign='center';
+    ctx.fillText('IN', KX+KW/2, KY+114);
+    ctx.fillStyle='#58a6ff';
+    ctx.font='bold 13px JetBrains Mono, monospace';
+    ctx.fillText(pv, KX+KW/2, KY+130);
+    ctx.fillStyle='rgba(139,148,158,0.8)';
+    ctx.font='9px JetBrains Mono, monospace';
+    ctx.fillText('OUT', KX+KW/2, KY+148);
+    ctx.fillStyle='#3fb950';
+    ctx.font='bold 13px JetBrains Mono, monospace';
+    ctx.fillText(dv, KX+KW/2, KY+163);
+
+    document.getElementById('animRow').textContent = animRow;
+    document.getElementById('animCol').textContent = animCol;
+  }
+
+  function step() {
+    animCol++;
+    if(animCol >= SRC_SIZE-1) { animCol=1; animRow++; }
+    if(animRow >= SRC_SIZE-1) { animRow=1; animCol=1; }
+  }
+
+  function loop() {
+    if(animRunning) {
+      frameCount++;
+      if(frameCount % Math.max(1, Math.round(21-speed)) === 0) {
+        for(let i=0;i<speed;i++) step();
+      }
+    }
+    drawFrame();
+    animId = requestAnimationFrame(loop);
+  }
+  loop();
+
+  document.getElementById('btnToggleAnim').addEventListener('click', function() {
+    animRunning = !animRunning;
+    this.textContent = animRunning ? '⏸ Pausar' : '▶ Reanudar';
+    this.classList.toggle('active', animRunning);
+  });
+  document.getElementById('btnRestartAnim').addEventListener('click', () => {
+    animRow=1; animCol=1;
+  });
+  document.getElementById('sSpeed').addEventListener('input', function() {
+    speed = parseInt(this.value);
+    document.getElementById('vSpeed').textContent = speed+'×';
+  });
+})();
+</script>

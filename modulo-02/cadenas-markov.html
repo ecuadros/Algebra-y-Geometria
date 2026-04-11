@@ -1,0 +1,856 @@
+---
+layout: default
+title: Cadenas de Markov
+prev_url: /modulo-02/filtros-imagen.html
+prev_title: Filtros de Imagen
+next_url: /modulo-03/equilibrio-redes.html
+next_title: Equilibrio de Redes
+---
+<style>
+  /* ============================================================
+     DEMO PAGE — CADENAS DE MARKOV
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+
+  .demo-header { margin-bottom: 2.5rem; }
+  .module-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .demo-header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+  }
+  .demo-lead {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .theory-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-block h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.85rem;
+  }
+  .theory-block p {
+    font-size: 0.91rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.5rem;
+  }
+  .theory-block p:last-child { margin-bottom: 0; }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 8px;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--accent);
+    text-align: center;
+    margin: 0.75rem 0;
+    letter-spacing: 0.03em;
+    white-space: pre-line;
+    line-height: 1.85;
+  }
+  .formula-box.violet { color: var(--accent2); border-color: rgba(188, 140, 255, 0.35); }
+  .formula-box.green { color: var(--accent3); border-color: rgba(63, 185, 80, 0.35); }
+
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    margin-top: 0.5rem;
+  }
+  .live-panel-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .live-rows { display: flex; flex-direction: column; gap: 0.45rem; }
+  .live-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.87rem;
+  }
+  .live-label { color: var(--muted); font-family: var(--font-mono); }
+  .live-value { color: var(--text); font-family: var(--font-mono); font-size: 0.9rem; }
+
+  /* State probability bars */
+  .prob-bars { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+  .prob-bar-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; }
+  .prob-bar-label { font-family: var(--font-mono); color: var(--muted); min-width: 72px; font-size: 0.78rem; }
+  .prob-bar-track {
+    flex: 1;
+    height: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .prob-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: var(--accent);
+    transition: width 0.3s ease;
+  }
+  .prob-bar-val { font-family: var(--font-mono); color: var(--text); font-size: 0.78rem; min-width: 44px; text-align: right; }
+
+  /* Interactive column */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 0.5rem;
+  }
+  canvas { display: block; }
+
+  .controls-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .controls-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .ctrl-label {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--muted);
+    min-width: 115px;
+  }
+  .ctrl-slider { flex: 1; accent-color: var(--accent); cursor: pointer; height: 4px; }
+  .ctrl-val {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    min-width: 40px;
+    text-align: right;
+  }
+
+  .btn-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .btn:hover { background: var(--border); border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: rgba(88,166,255,0.15); border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: rgba(88,166,255,0.28); }
+  .btn.danger { background: rgba(248,81,73,0.1); border-color: var(--danger); color: var(--danger); }
+  .btn.active { background: rgba(63,185,80,0.12); border-color: var(--accent3); color: var(--accent3); }
+
+  /* Application section */
+  .demo-application {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem 2.5rem;
+    margin-bottom: 3rem;
+  }
+  .app-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin: 0 0 0.5rem;
+  }
+  .demo-application h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+  }
+  .demo-application p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 640px;
+    margin: 0 0 1.5rem;
+  }
+  .app-content {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .app-canvas-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .app-controls {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .sentence-display {
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+    background: rgba(88,166,255,0.05);
+    border: 1px solid rgba(88,166,255,0.25);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    color: var(--accent);
+    min-height: 50px;
+    line-height: 1.8;
+    word-break: break-word;
+  }
+  .next-word-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+  .nw-row { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8rem; }
+  .nw-label { font-family: var(--font-mono); color: var(--muted); min-width: 58px; font-size: 0.78rem; }
+  .nw-track {
+    flex: 1;
+    height: 7px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .nw-fill { height: 100%; border-radius: 3px; background: var(--accent2); transition: width 0.25s ease; }
+  .nw-val { font-family: var(--font-mono); color: var(--text); font-size: 0.78rem; min-width: 36px; text-align: right; }
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+  <nav class="breadcrumb">Inicio › Módulo 2: Matrices › Cadenas de Markov</nav>
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 2 · Matrices y Transformaciones</span>
+    <h1>Cadenas de Markov</h1>
+    <p class="demo-lead">Una cadena de Markov modela saltos aleatorios entre estados — la base de PageRank, modelos de lenguaje y más.</p>
+  </header>
+
+  <div class="demo-layout">
+    <aside class="demo-theory">
+      <div class="theory-block">
+        <h3>Definición</h3>
+        <p>Un sistema con <em>n</em> estados se describe con un <strong>vector de estado</strong> <em>x_t</em> y una <strong>matriz de transición</strong> <em>P</em>, donde cada entrada P[i][j] es la probabilidad de pasar del estado <em>j</em> al estado <em>i</em>.</p>
+        <div class="formula-box">x_t = [p₁, p₂, p₃, p₄]ᵀ
+Σ pᵢ = 1  (distribución de prob.)
+
+P[i][j] = P(j → i)</div>
+        <p>Cada columna de P debe sumar 1 — es una matriz estocástica.</p>
+      </div>
+
+      <div class="theory-block">
+        <h3>Evolución del Sistema</h3>
+        <p>Para avanzar un paso en el tiempo, se multiplica la matriz por el vector actual:</p>
+        <div class="formula-box violet">x_{t+1} = P · x_t</div>
+        <p>Después de muchos pasos, la distribución converge al <strong>estado estacionario</strong> independientemente del estado inicial.</p>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado Estacionario</h3>
+        <p>El estado estacionario π es el eigenvector de P con eigenvalor 1:</p>
+        <div class="formula-box green">π = P · π
+
+Se encuentra por iteración de potencias:
+P · P · P · ... · x₀  →  π</div>
+        <p>PageRank usa exactamente este proceso para rankear páginas web.</p>
+      </div>
+
+      <div class="live-panel">
+        <div class="live-panel-title">
+          <span class="live-dot"></span>
+          Estado de la cadena
+        </div>
+        <div class="live-rows">
+          <div class="live-row">
+            <span class="live-label">Iteración</span>
+            <span class="live-value" id="liveIter">0</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Δ máximo</span>
+            <span class="live-value" id="liveDelta">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Convergió</span>
+            <span class="live-value" id="liveConverged" style="color:var(--warn);">No</span>
+          </div>
+        </div>
+        <div class="prob-bars" id="probBars">
+          <!-- Generated by JS -->
+        </div>
+      </div>
+    </aside>
+
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="canvasMarkov" width="460" height="360"></canvas>
+      </div>
+
+      <div class="controls-panel">
+        <p class="controls-title">Probabilidad de quedarse en cada estado</p>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">Inicio (retención)</span>
+          <input type="range" class="ctrl-slider" id="sStick0" min="0.1" max="0.9" step="0.05" value="0.4">
+          <span class="ctrl-val" id="vStick0">0.40</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Productos (retención)</span>
+          <input type="range" class="ctrl-slider" id="sStick1" min="0.1" max="0.9" step="0.05" value="0.5">
+          <span class="ctrl-val" id="vStick1">0.50</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Blog (retención)</span>
+          <input type="range" class="ctrl-slider" id="sStick2" min="0.1" max="0.9" step="0.05" value="0.3">
+          <span class="ctrl-val" id="vStick2">0.30</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Contacto (retención)</span>
+          <input type="range" class="ctrl-slider" id="sStick3" min="0.1" max="0.9" step="0.05" value="0.2">
+          <span class="ctrl-val" id="vStick3">0.20</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn primary" id="btnStep">Un paso →</button>
+          <button class="btn active" id="btnRun">▶ Correr</button>
+          <button class="btn danger" id="btnReset">↺ Reiniciar</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <section class="demo-application">
+    <p class="app-eyebrow">Aplicación en Ciencia de la Computación</p>
+    <h2>Modelo de Lenguaje Simple</h2>
+    <p>Los modelos de lenguaje usan cadenas de Markov para predecir la siguiente palabra. Cada estado es una palabra, y la matriz de transición contiene las probabilidades de que una palabra siga a otra. El heat-map muestra las probabilidades de transición entre 5 palabras en español.</p>
+    <div class="app-content">
+      <div class="app-canvas-wrap">
+        <canvas id="canvasLM" width="500" height="260"></canvas>
+      </div>
+      <div class="app-controls">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;">Oración generada</div>
+        <div class="sentence-display" id="sentenceDisplay">Presiona "Generar oración" para comenzar.</div>
+        <button class="btn primary" id="btnGenSentence">✦ Generar oración</button>
+        <div>
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;">Probabilidad siguiente palabra</div>
+          <div class="next-word-bars" id="nextWordBars">
+            <!-- Generated by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div><!-- /demo-page -->
+
+<script>
+// ============================================================
+//  CADENAS DE MARKOV — main Markov chain graph
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvasMarkov');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const NODE_NAMES = ['Inicio', 'Productos', 'Blog', 'Contacto'];
+  const NODE_COLORS = ['#58a6ff','#bc8cff','#3fb950','#d29922'];
+  // Node positions
+  const NODE_POS = [
+    [W*0.25, H*0.28],  // Inicio - top left
+    [W*0.75, H*0.28],  // Productos - top right
+    [W*0.25, H*0.72],  // Blog - bottom left
+    [W*0.75, H*0.72]   // Contacto - bottom right
+  ];
+
+  let stickiness = [0.4, 0.5, 0.3, 0.2];
+  // State vector — uniform initially
+  let stateVec = [0.25, 0.25, 0.25, 0.25];
+  let iteration = 0;
+  let running = true;
+  let animId = null;
+  let lastDelta = 1;
+  let converged = false;
+  // Animated walker
+  let walker = { node: 0, x: NODE_POS[0][0], y: NODE_POS[0][1], tx: NODE_POS[0][0], ty: NODE_POS[0][1], t: 1 };
+
+  function buildTransitionMatrix() {
+    // Each node i has probability stickiness[i] to stay, and distributes the rest equally among 3 others
+    const P = Array.from({length:4},()=>Array(4).fill(0));
+    for(let j=0;j<4;j++) {
+      const leave = (1 - stickiness[j]) / 3;
+      for(let i=0;i<4;i++) {
+        P[i][j] = (i===j) ? stickiness[j] : leave;
+      }
+    }
+    return P;
+  }
+
+  function matVecMul(P, x) {
+    return P.map(row => row.reduce((s,p,j)=>s+p*x[j], 0));
+  }
+
+  function stepMarkov() {
+    const P = buildTransitionMatrix();
+    const newVec = matVecMul(P, stateVec);
+    lastDelta = Math.max(...newVec.map((v,i)=>Math.abs(v-stateVec[i])));
+    stateVec = newVec;
+    iteration++;
+    converged = lastDelta < 0.001;
+  }
+
+  function stepWalker() {
+    const P = buildTransitionMatrix();
+    const col = P.map(row=>row[walker.node]);
+    let r = Math.random(), cum = 0;
+    let next = walker.node;
+    for(let i=0;i<4;i++) { cum+=col[i]; if(r<cum){next=i;break;} }
+    walker.node = next;
+    walker.tx = NODE_POS[next][0];
+    walker.ty = NODE_POS[next][1];
+    walker.t = 0;
+  }
+
+  function drawArrow(x1,y1,x2,y2,prob,fromNode,toNode) {
+    if(prob < 0.01) return;
+    const alpha = Math.max(0.1, Math.min(0.9, prob * 2.5));
+    const dx=x2-x1, dy=y2-y1;
+    const len=Math.sqrt(dx*dx+dy*dy);
+    const nx=dx/len, ny=dy/len;
+    const nodeR=28;
+    // Offset start/end by node radius + curve offset
+    const cx=(x1+x2)/2 + ny*30*((fromNode+toNode)%2===0?1:-1);
+    const cy=(y1+y2)/2 - nx*30*((fromNode+toNode)%2===0?1:-1);
+
+    const sx=x1+nx*nodeR, sy=y1+ny*nodeR;
+    const ex=x2-nx*nodeR, ey=y2-ny*nodeR;
+
+    ctx.strokeStyle = `rgba(139,148,158,${alpha})`;
+    ctx.lineWidth = 1 + prob*3;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.quadraticCurveTo(cx, cy, ex, ey);
+    ctx.stroke();
+
+    // Arrowhead
+    const t=0.95;
+    const atx=2*(1-t)*cx+2*t*ex-(2*(1-t)*cx+2*t*ex-ex);
+    const aty=2*(1-t)*cy+2*t*ey-(2*(1-t)*cy+2*t*ey-ey);
+    const tang_x=(2*(1-t)*(cx-sx)+2*t*(ex-cx));
+    const tang_y=(2*(1-t)*(cy-sy)+2*t*(ey-cy));
+    const tang_len=Math.sqrt(tang_x**2+tang_y**2);
+    const ang=Math.atan2(tang_y/tang_len, tang_x/tang_len);
+    ctx.fillStyle = `rgba(139,148,158,${alpha})`;
+    ctx.beginPath();
+    ctx.moveTo(ex, ey);
+    ctx.lineTo(ex-8*Math.cos(ang-0.4), ey-8*Math.sin(ang-0.4));
+    ctx.lineTo(ex-8*Math.cos(ang+0.4), ey-8*Math.sin(ang+0.4));
+    ctx.closePath();
+    ctx.fill();
+
+    // Probability label
+    const midT=0.5;
+    const lx=(1-midT)**2*sx+2*(1-midT)*midT*cx+midT**2*ex;
+    const ly=(1-midT)**2*sy+2*(1-midT)*midT*cy+midT**2*ey;
+    ctx.fillStyle = `rgba(139,148,158,${Math.min(1,alpha+0.2)})`;
+    ctx.font='9px JetBrains Mono, monospace';
+    ctx.textAlign='center';
+    ctx.fillText(prob.toFixed(2), lx, ly);
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117';
+    ctx.fillRect(0,0,W,H);
+
+    const P = buildTransitionMatrix();
+
+    // Draw edges
+    for(let from=0;from<4;from++) {
+      for(let to=0;to<4;to++) {
+        if(from===to) continue;
+        const prob=P[to][from];
+        const [x1,y1]=NODE_POS[from];
+        const [x2,y2]=NODE_POS[to];
+        drawArrow(x1,y1,x2,y2,prob,from,to);
+      }
+    }
+
+    // Draw self-loops
+    for(let i=0;i<4;i++) {
+      const [cx,cy]=NODE_POS[i];
+      const selfP=P[i][i];
+      const angle=(i===0||i===2)?-Math.PI*0.75:-Math.PI*0.25;
+      const lx=cx+45*Math.cos(angle);
+      const ly=cy+45*Math.sin(angle);
+      ctx.strokeStyle=`rgba(${i===0?'88,166,255':i===1?'188,140,255':i===2?'63,185,80':'210,153,34'},${0.3+selfP*0.5})`;
+      ctx.lineWidth=1.5;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.arc(lx, ly, 14, 0, Math.PI*2);
+      ctx.stroke();
+      ctx.fillStyle=`rgba(139,148,158,0.7)`;
+      ctx.font='9px JetBrains Mono, monospace';
+      ctx.textAlign='center';
+      ctx.fillText(selfP.toFixed(2), lx, ly+3);
+    }
+
+    // Update walker position
+    walker.t = Math.min(1, walker.t+0.05);
+    walker.x = walker.x + (walker.tx-walker.x)*0.1;
+    walker.y = walker.y + (walker.ty-walker.y)*0.1;
+
+    // Draw nodes
+    for(let i=0;i<4;i++) {
+      const [cx,cy]=NODE_POS[i];
+      const prob=stateVec[i];
+      const r=18+prob*30; // size proportional to probability
+
+      // Glow
+      const grd=ctx.createRadialGradient(cx,cy,0,cx,cy,r+10);
+      const c=NODE_COLORS[i];
+      grd.addColorStop(0, c+'33');
+      grd.addColorStop(1, 'transparent');
+      ctx.fillStyle=grd;
+      ctx.beginPath();
+      ctx.arc(cx,cy,r+10,0,Math.PI*2);
+      ctx.fill();
+
+      // Node circle
+      ctx.beginPath();
+      ctx.arc(cx,cy,r,0,Math.PI*2);
+      const alpha=0.15+prob*0.6;
+      ctx.fillStyle=NODE_COLORS[i]+Math.round(alpha*255).toString(16).padStart(2,'0');
+      ctx.fill();
+      ctx.strokeStyle=NODE_COLORS[i];
+      ctx.lineWidth=2;
+      ctx.stroke();
+
+      // Label
+      ctx.fillStyle='#e6edf3';
+      ctx.font=`bold ${Math.round(10+prob*4)}px Inter, system-ui`;
+      ctx.textAlign='center';
+      ctx.fillText(NODE_NAMES[i], cx, cy+2);
+      ctx.fillStyle=NODE_COLORS[i];
+      ctx.font='bold 10px JetBrains Mono, monospace';
+      ctx.fillText((prob*100).toFixed(1)+'%', cx, cy+r+14);
+    }
+
+    // Draw walker dot
+    ctx.beginPath();
+    ctx.arc(walker.x, walker.y, 7, 0, Math.PI*2);
+    ctx.fillStyle='#ffffff';
+    ctx.fill();
+    ctx.strokeStyle=NODE_COLORS[walker.node];
+    ctx.lineWidth=2;
+    ctx.stroke();
+
+    // Update prob bars
+    const bars=document.getElementById('probBars');
+    if(bars.children.length===0) {
+      NODE_NAMES.forEach((name,i)=>{
+        bars.innerHTML+=`<div class="prob-bar-row">
+          <span class="prob-bar-label">${name}</span>
+          <div class="prob-bar-track"><div class="prob-bar-fill" id="bar${i}" style="width:25%;background:${NODE_COLORS[i]}"></div></div>
+          <span class="prob-bar-val" id="barval${i}">25.0%</span>
+        </div>`;
+      });
+    }
+    NODE_NAMES.forEach((_,i)=>{
+      const pct=(stateVec[i]*100).toFixed(1);
+      const bar=document.getElementById(`bar${i}`);
+      const val=document.getElementById(`barval${i}`);
+      if(bar) bar.style.width=pct+'%';
+      if(val) val.textContent=pct+'%';
+    });
+
+    document.getElementById('liveIter').textContent=iteration;
+    document.getElementById('liveDelta').textContent=lastDelta<0.001?'<0.001':lastDelta.toFixed(4);
+    const convEl=document.getElementById('liveConverged');
+    if(converged){convEl.textContent='Sí ✓';convEl.style.color='var(--accent3)';}
+    else{convEl.textContent='No';convEl.style.color='var(--warn)';}
+  }
+
+  let runAnim = false, runId = null, stepCount = 0;
+  function animate() {
+    if(runAnim) {
+      stepCount++;
+      if(stepCount % 8 === 0) { stepMarkov(); stepWalker(); }
+    }
+    draw();
+    runId = requestAnimationFrame(animate);
+  }
+  animate();
+
+  document.getElementById('btnStep').addEventListener('click', () => {
+    stepMarkov();
+    stepWalker();
+  });
+  const btnRun = document.getElementById('btnRun');
+  btnRun.addEventListener('click', () => {
+    runAnim = !runAnim;
+    btnRun.textContent = runAnim ? '⏸ Pausar' : '▶ Correr';
+    btnRun.classList.toggle('active', runAnim);
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    stateVec=[0.25,0.25,0.25,0.25];
+    iteration=0; lastDelta=1; converged=false;
+    walker.node=0; walker.x=NODE_POS[0][0]; walker.y=NODE_POS[0][1];
+    walker.tx=NODE_POS[0][0]; walker.ty=NODE_POS[0][1]; walker.t=1;
+  });
+
+  // Stickiness sliders
+  ['0','1','2','3'].forEach(i => {
+    const s=document.getElementById(`sStick${i}`);
+    const v=document.getElementById(`vStick${i}`);
+    s.addEventListener('input',()=>{
+      stickiness[i]=parseFloat(s.value);
+      v.textContent=parseFloat(s.value).toFixed(2);
+      converged=false; iteration=0;
+      stateVec=[0.25,0.25,0.25,0.25];
+    });
+  });
+})();
+
+// ============================================================
+//  LANGUAGE MODEL APPLICATION
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvasLM');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const WORDS = ['el', 'gato', 'perro', 'come', 'duerme'];
+  // Transition matrix (column j → row i)
+  // Each column sums to 1
+  const P = [
+    //  el     gato  perro   come  duerme
+    [  0.05,  0.40,  0.40,  0.25,  0.25 ], // → el
+    [  0.45,  0.05,  0.05,  0.05,  0.10 ], // → gato
+    [  0.40,  0.05,  0.05,  0.05,  0.10 ], // → perro
+    [  0.05,  0.35,  0.35,  0.10,  0.10 ], // → come
+    [  0.05,  0.15,  0.15,  0.55,  0.45 ], // → duerme
+  ];
+
+  const COLORS = ['#58a6ff','#bc8cff','#3fb950','#d29922','#f85149'];
+
+  // Draw heatmap
+  function drawHeatmap(highlight=-1) {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117';
+    ctx.fillRect(0,0,W,H);
+
+    const PAD=50, CELL=34;
+    const GX=PAD+CELL, GY=PAD;
+
+    // Column headers (from)
+    ctx.fillStyle='rgba(139,148,158,0.8)';
+    ctx.font='bold 9px JetBrains Mono, monospace';
+    ctx.textAlign='center';
+    ctx.fillText('DE →', PAD/2, GY-12);
+    WORDS.forEach((w,i) => {
+      ctx.fillStyle = COLORS[i];
+      ctx.fillText(w, GX+i*CELL+CELL/2, GY-10);
+    });
+
+    // Row headers (to)
+    ctx.fillStyle='rgba(139,148,158,0.6)';
+    ctx.font='9px JetBrains Mono, monospace';
+    ctx.textAlign='right';
+    ctx.fillText('A ↓', PAD-4, GY+8);
+    WORDS.forEach((w,i) => {
+      ctx.fillStyle = COLORS[i];
+      ctx.textAlign='right';
+      ctx.fillText(w, PAD-4, GY+i*CELL+CELL/2+4);
+    });
+
+    // Cells
+    WORDS.forEach((_, toI) => {
+      WORDS.forEach((__, fromI) => {
+        const v = P[toI][fromI];
+        const x = GX+fromI*CELL, y=GY+toI*CELL;
+        const alpha=0.05+v*0.8;
+        ctx.fillStyle=`rgba(88,166,255,${alpha})`;
+        ctx.fillRect(x+1,y+1,CELL-2,CELL-2);
+        if(highlight===fromI) {
+          ctx.strokeStyle=`rgba(63,185,80,0.8)`;
+          ctx.lineWidth=2;
+          ctx.strokeRect(x+1,y+1,CELL-2,CELL-2);
+        }
+        ctx.fillStyle=v>0.3?'#e6edf3':'rgba(139,148,158,0.8)';
+        ctx.font=`${v>0.3?'bold ':''}9px JetBrains Mono, monospace`;
+        ctx.textAlign='center';
+        ctx.fillText(v.toFixed(2),x+CELL/2,y+CELL/2+4);
+      });
+    });
+
+    // Grid lines
+    ctx.strokeStyle='rgba(48,54,61,0.7)';
+    ctx.lineWidth=1;
+    for(let i=0;i<=5;i++) {
+      ctx.beginPath();ctx.moveTo(GX+i*CELL,GY);ctx.lineTo(GX+i*CELL,GY+5*CELL);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(GX,GY+i*CELL);ctx.lineTo(GX+5*CELL,GY+i*CELL);ctx.stroke();
+    }
+
+    // Title
+    ctx.fillStyle='rgba(139,148,158,0.6)';
+    ctx.font='9px JetBrains Mono, monospace';
+    ctx.textAlign='left';
+    ctx.fillText('MATRIZ DE TRANSICIÓN P', GX, H-8);
+  }
+
+  let currentWord = 0;
+  let sentence = [];
+
+  function chooseNext(fromIdx) {
+    const col = P.map(row=>row[fromIdx]);
+    let r=Math.random(), cum=0;
+    for(let i=0;i<5;i++){cum+=col[i];if(r<cum)return i;}
+    return 4;
+  }
+
+  function updateNextWordBars(fromIdx) {
+    const container=document.getElementById('nextWordBars');
+    container.innerHTML='';
+    const col=P.map(row=>row[fromIdx]);
+    WORDS.forEach((w,i)=>{
+      const pct=(col[i]*100).toFixed(0);
+      container.innerHTML+=`<div class="nw-row">
+        <span class="nw-label">${w}</span>
+        <div class="nw-track"><div class="nw-fill" style="width:${pct}%;background:${COLORS[i]}"></div></div>
+        <span class="nw-val">${pct}%</span>
+      </div>`;
+    });
+  }
+
+  function generateSentence() {
+    sentence = [];
+    let cur = Math.floor(Math.random()*5);
+    // Force start with "el" if possible for readability
+    cur = 0;
+    for(let step=0;step<8;step++) {
+      sentence.push(WORDS[cur]);
+      cur = chooseNext(cur);
+    }
+    currentWord = cur;
+    document.getElementById('sentenceDisplay').textContent = sentence.join(' ') + '.';
+    drawHeatmap(cur);
+    updateNextWordBars(cur);
+  }
+
+  drawHeatmap();
+  updateNextWordBars(0);
+  document.getElementById('btnGenSentence').addEventListener('click', generateSentence);
+})();
+</script>

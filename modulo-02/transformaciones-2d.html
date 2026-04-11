@@ -1,0 +1,890 @@
+---
+layout: default
+title: Transformaciones 2D con Matrices
+prev_url: /modulo-01/campo-fuerzas.html
+prev_title: Campo de Fuerzas
+next_url: /modulo-02/pipeline-grafico.html
+next_title: Pipeline Gráfico 3D
+---
+<style>
+  /* ============================================================
+     DEMO PAGE — TRANSFORMACIONES 2D CON MATRICES
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* Header */
+  .demo-header { margin-bottom: 2.5rem; }
+  .module-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .demo-header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+  }
+  .demo-lead {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* Two-column layout */
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Theory column */
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .theory-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-block h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.85rem;
+  }
+  .theory-block p {
+    font-size: 0.91rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.5rem;
+  }
+  .theory-block p:last-child { margin-bottom: 0; }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 8px;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    color: var(--accent);
+    text-align: center;
+    margin: 0.75rem 0;
+    letter-spacing: 0.03em;
+    white-space: pre-line;
+    line-height: 1.85;
+  }
+  .formula-box.violet { color: var(--accent2); border-color: rgba(188, 140, 255, 0.35); }
+  .formula-box.green { color: var(--accent3); border-color: rgba(63, 185, 80, 0.35); }
+
+  /* Live panel */
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    margin-top: 0.5rem;
+  }
+  .live-panel-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .live-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .live-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.87rem;
+  }
+  .live-label { color: var(--muted); font-family: var(--font-mono); }
+  .live-value { color: var(--text); font-family: var(--font-mono); font-size: 0.9rem; }
+
+  /* Matrix display */
+  .matrix-display {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    padding: 0.5rem;
+    background: rgba(88,166,255,0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(88,166,255,0.2);
+  }
+  .matrix-cell {
+    text-align: center;
+    padding: 0.2rem 0.1rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  /* Right column — interactive */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    padding: 0.5rem;
+  }
+  canvas { display: block; }
+
+  /* Controls */
+  .controls-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .controls-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .ctrl-label {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--muted);
+    min-width: 90px;
+  }
+  .ctrl-slider {
+    flex: 1;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+  }
+  .ctrl-val {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    color: var(--text);
+    min-width: 52px;
+    text-align: right;
+  }
+
+  .btn-row {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+  .btn {
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.4rem 0.9rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    cursor: pointer;
+    transition: background var(--transition), border-color var(--transition);
+  }
+  .btn:hover { background: var(--border); border-color: var(--accent); color: var(--accent); }
+  .btn.primary { background: rgba(88,166,255,0.15); border-color: var(--accent); color: var(--accent); }
+  .btn.primary:hover { background: rgba(88,166,255,0.28); }
+  .btn.danger { background: rgba(248,81,73,0.1); border-color: var(--danger); color: var(--danger); }
+  .btn.danger:hover { background: rgba(248,81,73,0.2); }
+
+  /* Application section */
+  .demo-application {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem 2.5rem;
+    margin-bottom: 3rem;
+  }
+  .app-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin: 0 0 0.5rem;
+  }
+  .demo-application h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem;
+    color: var(--text);
+  }
+  .demo-application p {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 640px;
+    margin: 0 0 1.5rem;
+  }
+  .app-content {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .app-canvas-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  .app-controls {
+    flex: 1;
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+  .app-matrix-display {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    background: rgba(88,166,255,0.05);
+    border: 1px solid rgba(88,166,255,0.2);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+  .app-matrix-display .mat-title {
+    color: var(--muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .mat-row {
+    display: flex;
+    gap: 0.5rem;
+    margin: 0.2rem 0;
+    justify-content: center;
+  }
+  .mat-cell {
+    color: var(--accent);
+    min-width: 52px;
+    text-align: center;
+  }
+  .pose-btn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .pose-btn {
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.45rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: center;
+  }
+  .pose-btn:hover, .pose-btn.active {
+    background: rgba(188,140,255,0.15);
+    border-color: var(--accent2);
+    color: var(--accent2);
+  }
+
+  .matrix-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.3rem;
+    font-family: var(--font-mono);
+    font-size: 0.92rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(88,166,255,0.05);
+    border-radius: 6px;
+    border: 1px solid rgba(88,166,255,0.2);
+    margin-top: 0.5rem;
+  }
+  .matrix-grid-2x2 .mc {
+    text-align: center;
+    padding: 0.22rem;
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+  <nav class="breadcrumb">Inicio › Módulo 2: Matrices › Transformaciones 2D con Matrices</nav>
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 2 · Matrices y Transformaciones</span>
+    <h1>Transformaciones 2D con Matrices</h1>
+    <p class="demo-lead">Una matriz 2×2 puede rotar, escalar, reflejar y deformar cualquier figura geométrica.</p>
+  </header>
+
+  <div class="demo-layout">
+    <aside class="demo-theory">
+      <div class="theory-block">
+        <h3>Multiplicación Matriz-Vector</h3>
+        <p>Toda transformación lineal 2D se expresa como <strong>Ax = b</strong>, donde A es una matriz 2×2 que codifica la transformación.</p>
+        <div class="formula-box">⎡ a  b ⎤ ⎡ x ⎤   ⎡ ax + by ⎤
+⎣ c  d ⎦ ⎣ y ⎦ = ⎣ cx + dy ⎦</div>
+        <p>Las columnas de A indican hacia dónde van los vectores base î y ĵ.</p>
+      </div>
+
+      <div class="theory-block">
+        <h3>Matrices de Transformación</h3>
+        <div class="formula-box">R(θ) =  ⎡ cos θ  −sin θ ⎤
+        ⎣ sin θ   cos θ ⎦</div>
+        <div class="formula-box violet">S(sx,sy) = ⎡ sx  0  ⎤
+           ⎣  0  sy ⎦</div>
+        <div class="formula-box green">H(hx,hy) = ⎡  1  hx ⎤
+           ⎣ hy   1 ⎦</div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Composición de Transformaciones</h3>
+        <p>Para aplicar múltiples transformaciones, se <strong>multiplican las matrices</strong> en orden. La última se aplica primero:</p>
+        <div class="formula-box violet">M = R(θ) · S(sx,sy) · H(hx,hy)</div>
+        <p>El orden importa: la multiplicación de matrices no es conmutativa.</p>
+      </div>
+
+      <div class="live-panel">
+        <div class="live-panel-title">
+          <span class="live-dot"></span>
+          Matriz actual (homogénea 3×3)
+        </div>
+        <div class="matrix-display" id="liveMatrix3x3">
+          <span class="matrix-cell" id="m00">1.00</span>
+          <span class="matrix-cell" id="m01">0.00</span>
+          <span class="matrix-cell" id="m02">0.00</span>
+          <span class="matrix-cell" id="m10">0.00</span>
+          <span class="matrix-cell" id="m11">1.00</span>
+          <span class="matrix-cell" id="m12">0.00</span>
+          <span class="matrix-cell" id="m20" style="color:var(--muted)">0</span>
+          <span class="matrix-cell" id="m21" style="color:var(--muted)">0</span>
+          <span class="matrix-cell" id="m22" style="color:var(--muted)">1</span>
+        </div>
+        <div class="live-rows" style="margin-top:0.75rem;">
+          <div class="live-row">
+            <span class="live-label">det(M)</span>
+            <span class="live-value" id="livedet">1.0000</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Inversa</span>
+            <span class="live-value" id="liveinv" style="color:var(--accent3)">Existe</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Preserva área</span>
+            <span class="live-value" id="livearea">Sí (det=1)</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="canvas2d" width="420" height="420"></canvas>
+      </div>
+
+      <div class="controls-panel">
+        <p class="controls-title">Controles de Transformación</p>
+
+        <div class="ctrl-row">
+          <span class="ctrl-label">Rotación θ</span>
+          <input type="range" class="ctrl-slider" id="sRotation" min="0" max="360" step="1" value="0">
+          <span class="ctrl-val" id="vRotation">0°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Escala X</span>
+          <input type="range" class="ctrl-slider" id="sScaleX" min="0.1" max="3" step="0.05" value="1">
+          <span class="ctrl-val" id="vScaleX">1.00×</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Escala Y</span>
+          <input type="range" class="ctrl-slider" id="sScaleY" min="0.1" max="3" step="0.05" value="1">
+          <span class="ctrl-val" id="vScaleY">1.00×</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Shear X</span>
+          <input type="range" class="ctrl-slider" id="sShearX" min="-2" max="2" step="0.05" value="0">
+          <span class="ctrl-val" id="vShearX">0.00</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Shear Y</span>
+          <input type="range" class="ctrl-slider" id="sShearY" min="-2" max="2" step="0.05" value="0">
+          <span class="ctrl-val" id="vShearY">0.00</span>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn danger" id="btnReset">↺ Reiniciar</button>
+          <button class="btn primary" id="btnCompose">⊗ Componer matriz</button>
+        </div>
+
+        <div style="margin-top:0.25rem;">
+          <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem;">Matriz 2×2 actual</div>
+          <div class="matrix-grid-2x2">
+            <span class="mc" id="mm00">1.000</span>
+            <span class="mc" id="mm01">0.000</span>
+            <span class="mc" id="mm10">0.000</span>
+            <span class="mc" id="mm11">1.000</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <section class="demo-application">
+    <p class="app-eyebrow">Aplicación en Ciencia de la Computación</p>
+    <h2>Sprites en Videojuegos</h2>
+    <p>Los motores de videojuegos aplican matrices de transformación a cada sprite para rotarlo, escalarlo y deformarlo. Aquí un personaje de polígonos recibe distintas transformaciones combinadas. Selecciona una pose para ver la matriz compuesta.</p>
+    <div class="app-content">
+      <div class="app-canvas-wrap">
+        <canvas id="canvasSprite" width="500" height="300"></canvas>
+      </div>
+      <div class="app-controls">
+        <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;color:var(--muted);margin-bottom:0.3rem;">Poses del sprite</div>
+        <div class="pose-btn-grid">
+          <button class="pose-btn active" data-pose="idle">Reposo</button>
+          <button class="pose-btn" data-pose="run">Correr</button>
+          <button class="pose-btn" data-pose="jump">Saltar</button>
+          <button class="pose-btn" data-pose="crouch">Agacharse</button>
+          <button class="pose-btn" data-pose="mirror">Espejo</button>
+          <button class="pose-btn" data-pose="attack">Atacar</button>
+        </div>
+        <div class="app-matrix-display">
+          <div class="mat-title">Matriz Compuesta M</div>
+          <div id="spriteMat">
+            <div class="mat-row"><span class="mat-cell" id="sm00">1.000</span><span class="mat-cell" id="sm01">0.000</span></div>
+            <div class="mat-row"><span class="mat-cell" id="sm10">0.000</span><span class="mat-cell" id="sm11">1.000</span></div>
+          </div>
+        </div>
+        <div style="font-size:0.82rem;color:var(--muted);line-height:1.55;padding:0.6rem 0.8rem;background:var(--surface2);border-radius:6px;border:1px solid var(--border);">
+          <strong style="color:var(--text);">Operación:</strong><br>
+          <span id="spriteOp" style="font-family:var(--font-mono);font-size:0.78rem;color:var(--accent2);">M = I</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div><!-- /demo-page -->
+
+<script>
+// ============================================================
+//  TRANSFORMACIONES 2D — Main interactive canvas
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvas2d');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const CX = W/2, CY = H/2;
+  const SCALE = 70; // pixels per unit
+
+  // House shape vertices (in local coords, centered at origin)
+  const houseVerts = [
+    [-1.2, 0.8], [1.2, 0.8], [1.2, -0.2], [0.6, -0.2],
+    [0.6, 0.4], [-0.6, 0.4], [-0.6, -0.2], [-1.2, -0.2],
+    [-1.2, 0.8]
+  ];
+  // Roof
+  const roofVerts = [
+    [-1.4, 0.8], [0, -0.8], [1.4, 0.8]
+  ];
+  // Door
+  const doorVerts = [
+    [-0.2, 0.8], [-0.2, 0.2], [0.2, 0.2], [0.2, 0.8]
+  ];
+  // Window
+  const winVerts = [
+    [0.4, 0.4], [0.4, 0.1], [0.85, 0.1], [0.85, 0.4]
+  ];
+
+  let rotation = 0, scaleX = 1, scaleY = 1, shearX = 0, shearY = 0;
+  let composedM = [[1,0],[0,1]]; // accumulated composed matrix
+
+  function getSliderMatrix() {
+    const th = rotation * Math.PI / 180;
+    const cosT = Math.cos(th), sinT = Math.sin(th);
+    // R * S * H
+    const R = [[cosT, -sinT],[sinT, cosT]];
+    const S = [[scaleX, 0],[0, scaleY]];
+    const H = [[1, shearX],[shearY, 1]];
+    return mat2Mul(mat2Mul(R, S), H);
+  }
+
+  function mat2Mul(A, B) {
+    return [
+      [A[0][0]*B[0][0]+A[0][1]*B[1][0], A[0][0]*B[0][1]+A[0][1]*B[1][1]],
+      [A[1][0]*B[0][0]+A[1][1]*B[1][0], A[1][0]*B[0][1]+A[1][1]*B[1][1]]
+    ];
+  }
+
+  function applyM(M, v) {
+    return [M[0][0]*v[0]+M[0][1]*v[1], M[1][0]*v[0]+M[1][1]*v[1]];
+  }
+
+  function det2(M) { return M[0][0]*M[1][1] - M[0][1]*M[1][0]; }
+
+  function toCanvas(v) {
+    return [CX + v[0]*SCALE, CY - v[1]*SCALE];
+  }
+
+  function drawGrid() {
+    ctx.strokeStyle = '#21262d';
+    ctx.lineWidth = 1;
+    for(let x = -5; x <= 5; x++) {
+      const px = CX + x*SCALE;
+      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+    }
+    for(let y = -4; y <= 4; y++) {
+      const py = CY - y*SCALE;
+      ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
+    }
+    // Axes
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, CY); ctx.lineTo(W, CY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(CX, 0); ctx.lineTo(CX, H); ctx.stroke();
+    // Labels
+    ctx.fillStyle = '#484f58';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    for(let x = -5; x<=5; x++) {
+      if(x!==0) ctx.fillText(x, CX+x*SCALE, CY+14);
+    }
+    ctx.textAlign = 'right';
+    for(let y = -3; y<=3; y++) {
+      if(y!==0) ctx.fillText(y, CX-6, CY-y*SCALE+4);
+    }
+  }
+
+  function drawPoly(verts, M, color, dash=false, fill=null) {
+    if(verts.length < 2) return;
+    ctx.beginPath();
+    const p0 = toCanvas(applyM(M, verts[0]));
+    ctx.moveTo(p0[0], p0[1]);
+    for(let i=1;i<verts.length;i++) {
+      const p = toCanvas(applyM(M, verts[i]));
+      ctx.lineTo(p[0], p[1]);
+    }
+    ctx.closePath();
+    if(dash) ctx.setLineDash([5,4]); else ctx.setLineDash([]);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    if(fill) { ctx.fillStyle = fill; ctx.fill(); }
+  }
+
+  function drawBasisVectors(M) {
+    const origin = toCanvas([0,0]);
+    const basisColors = ['#f85149','#3fb950'];
+    const labels = ['î', 'ĵ'];
+    [[1,0],[0,1]].forEach((v,i) => {
+      const tv = applyM(M, v);
+      const tip = toCanvas(tv);
+      ctx.strokeStyle = basisColors[i];
+      ctx.fillStyle = basisColors[i];
+      ctx.lineWidth = 2;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(origin[0], origin[1]);
+      ctx.lineTo(tip[0], tip[1]);
+      ctx.stroke();
+      // arrowhead
+      const ang = Math.atan2(origin[1]-tip[1], origin[0]-tip[0]);
+      ctx.beginPath();
+      ctx.moveTo(tip[0], tip[1]);
+      ctx.lineTo(tip[0]+10*Math.cos(ang-0.4), tip[1]+10*Math.sin(ang-0.4));
+      ctx.lineTo(tip[0]+10*Math.cos(ang+0.4), tip[1]+10*Math.sin(ang+0.4));
+      ctx.closePath(); ctx.fill();
+      ctx.font = 'bold 13px Inter, system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(labels[i], tip[0]+12*Math.cos(ang+Math.PI), tip[1]+12*Math.sin(ang+Math.PI));
+    });
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    drawGrid();
+
+    const idM = [[1,0],[0,1]];
+    const M = getSliderMatrix();
+    const FM = mat2Mul(composedM, M);
+
+    // Original shapes (dashed)
+    drawPoly(houseVerts, idM, 'rgba(88,166,255,0.35)', true);
+    drawPoly(roofVerts,  idM, 'rgba(88,166,255,0.35)', true);
+    drawPoly(doorVerts,  idM, 'rgba(88,166,255,0.25)', true);
+
+    // Transformed shapes (solid)
+    drawPoly(houseVerts, FM, '#58a6ff', false, 'rgba(88,166,255,0.08)');
+    drawPoly(roofVerts,  FM, '#bc8cff', false, 'rgba(188,140,255,0.1)');
+    drawPoly(doorVerts,  FM, '#3fb950', false, 'rgba(63,185,80,0.1)');
+    drawPoly(winVerts,   FM, '#d29922', false, 'rgba(210,153,34,0.15)');
+
+    drawBasisVectors(FM);
+
+    // Update UI
+    document.getElementById('m00').textContent = FM[0][0].toFixed(2);
+    document.getElementById('m01').textContent = FM[0][1].toFixed(2);
+    document.getElementById('m10').textContent = FM[1][0].toFixed(2);
+    document.getElementById('m11').textContent = FM[1][1].toFixed(2);
+    document.getElementById('mm00').textContent = FM[0][0].toFixed(3);
+    document.getElementById('mm01').textContent = FM[0][1].toFixed(3);
+    document.getElementById('mm10').textContent = FM[1][0].toFixed(3);
+    document.getElementById('mm11').textContent = FM[1][1].toFixed(3);
+
+    const d = det2(FM);
+    document.getElementById('livedet').textContent = d.toFixed(4);
+    const invEl = document.getElementById('liveinv');
+    if(Math.abs(d) < 0.001) {
+      invEl.textContent = 'No existe';
+      invEl.style.color = 'var(--danger)';
+    } else {
+      invEl.textContent = 'Existe';
+      invEl.style.color = 'var(--accent3)';
+    }
+    const areaEl = document.getElementById('livearea');
+    if(Math.abs(Math.abs(d)-1) < 0.02) {
+      areaEl.textContent = 'Sí (det≈1)';
+      areaEl.style.color = 'var(--accent3)';
+    } else if(Math.abs(d) < 1) {
+      areaEl.textContent = `Reducida (×${Math.abs(d).toFixed(2)})`;
+      areaEl.style.color = 'var(--warn)';
+    } else {
+      areaEl.textContent = `Aumentada (×${Math.abs(d).toFixed(2)})`;
+      areaEl.style.color = 'var(--accent2)';
+    }
+  }
+
+  function bindSlider(id, valId, suffix, dec, setter) {
+    const s = document.getElementById(id);
+    const v = document.getElementById(valId);
+    s.addEventListener('input', () => {
+      setter(parseFloat(s.value));
+      v.textContent = parseFloat(s.value).toFixed(dec) + suffix;
+      draw();
+    });
+  }
+
+  bindSlider('sRotation','vRotation','°',0, v => { rotation = v; });
+  bindSlider('sScaleX','vScaleX','×',2, v => { scaleX = v; });
+  bindSlider('sScaleY','vScaleY','×',2, v => { scaleY = v; });
+  bindSlider('sShearX','vShearX','',2, v => { shearX = v; });
+  bindSlider('sShearY','vShearY','',2, v => { shearY = v; });
+
+  document.getElementById('btnReset').addEventListener('click', () => {
+    composedM = [[1,0],[0,1]];
+    rotation = scaleX = scaleY = 1;
+    rotation = shearX = shearY = 0;
+    scaleX = scaleY = 1;
+    document.getElementById('sRotation').value = 0;
+    document.getElementById('sScaleX').value = 1;
+    document.getElementById('sScaleY').value = 1;
+    document.getElementById('sShearX').value = 0;
+    document.getElementById('sShearY').value = 0;
+    document.getElementById('vRotation').textContent = '0°';
+    document.getElementById('vScaleX').textContent = '1.00×';
+    document.getElementById('vScaleY').textContent = '1.00×';
+    document.getElementById('vShearX').textContent = '0.00';
+    document.getElementById('vShearY').textContent = '0.00';
+    draw();
+  });
+
+  document.getElementById('btnCompose').addEventListener('click', () => {
+    const M = getSliderMatrix();
+    composedM = mat2Mul(M, composedM);
+    draw();
+  });
+
+  draw();
+})();
+
+// ============================================================
+//  SPRITE APPLICATION CANVAS
+// ============================================================
+(function() {
+  const canvas = document.getElementById('canvasSprite');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // Sprite body parts in local coords
+  function drawCharacter(ctx, M, cx, cy, color) {
+    function tp(x, y) {
+      const tx = M[0][0]*x + M[0][1]*y + cx;
+      const ty = M[1][0]*x + M[1][1]*y + cy;
+      return [tx, ty];
+    }
+    function poly(pts, stroke, fill) {
+      ctx.beginPath();
+      ctx.moveTo(...tp(...pts[0]));
+      for(let i=1;i<pts.length;i++) ctx.lineTo(...tp(...pts[i]));
+      ctx.closePath();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = stroke;
+      ctx.fillStyle = fill;
+      ctx.lineWidth = 1.5;
+      ctx.fill(); ctx.stroke();
+    }
+    // Body
+    poly([[-15,-40],[ 15,-40],[15,10],[-15,10]], color, color+'33');
+    // Head
+    poly([[-12,-60],[ 12,-60],[12,-42],[-12,-42]], color, color+'44');
+    // Left arm
+    poly([[-15,-38],[-30,-38],[-30,-10],[-15,-10]], '#bc8cff', 'rgba(188,140,255,0.2)');
+    // Right arm
+    poly([[ 15,-38],[ 30,-38],[ 30,-10],[ 15,-10]], '#bc8cff', 'rgba(188,140,255,0.2)');
+    // Left leg
+    poly([[-13,10],[-5,10],[-5,40],[-13,40]], '#3fb950', 'rgba(63,185,80,0.2)');
+    // Right leg
+    poly([[ 13,10],[5,10],[5,40],[13,40]], '#3fb950', 'rgba(63,185,80,0.2)');
+    // Eyes
+    const e1 = tp(-5,-53), e2 = tp(5,-53);
+    ctx.beginPath(); ctx.arc(e1[0],e1[1],3,0,Math.PI*2); ctx.fillStyle = color; ctx.fill();
+    ctx.beginPath(); ctx.arc(e2[0],e2[1],3,0,Math.PI*2); ctx.fill();
+  }
+
+  const poses = {
+    idle:   { M: [[1,0],[0,1]], label: 'M = I', op: 'M = I (identidad)' },
+    run:    { M: [[0.9,-0.15],[0.1,1.05]], label: 'M = R·S', op: 'M = Rotate(10°)·Scale(0.9,1.05)' },
+    jump:   { M: [[1,0],[0,1.3]], label: 'M = S(1,1.3)', op: 'M = Scale(1, 1.3) — estirar vertical' },
+    crouch: { M: [[1.2,0],[0,0.6]], label: 'M = S(1.2,0.6)', op: 'M = Scale(1.2, 0.6) — aplanar' },
+    mirror: { M: [[-1,0],[0,1]], label: 'M = Flip X', op: 'M = Reflect(x) — espejo horizontal' },
+    attack: { M: [[1,0.4],[0,1]], label: 'M = H(0.4)', op: 'M = Shear(0.4, 0) — inclinar' }
+  };
+
+  let currentPose = 'idle';
+
+  function mat2Str(M) {
+    return [
+      [M[0][0].toFixed(3), M[0][1].toFixed(3)],
+      [M[1][0].toFixed(3), M[1][1].toFixed(3)]
+    ];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    // Background
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Ground
+    ctx.fillStyle = '#21262d';
+    ctx.fillRect(0, H-40, W, 40);
+    ctx.fillStyle = '#30363d';
+    ctx.fillRect(0, H-40, W, 2);
+
+    // Grid lines on background
+    ctx.strokeStyle = '#161b22';
+    ctx.lineWidth = 1;
+    for(let x=0;x<W;x+=40) {
+      ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H-40); ctx.stroke();
+    }
+
+    const pose = poses[currentPose];
+    const M = pose.M;
+    // Draw 3 sprites side by side
+    const positions = [[130, H-40], [250, H-40], [370, H-40]];
+    const colors = ['#58a6ff', '#bc8cff', '#3fb950'];
+    positions.forEach((pos, i) => {
+      const alpha = i === 1 ? 1.0 : 0.4;
+      ctx.globalAlpha = alpha;
+      drawCharacter(ctx, M, pos[0], pos[1], colors[i]);
+    });
+    ctx.globalAlpha = 1;
+
+    // Update matrix display
+    const ms = mat2Str(M);
+    document.getElementById('sm00').textContent = ms[0][0];
+    document.getElementById('sm01').textContent = ms[0][1];
+    document.getElementById('sm10').textContent = ms[1][0];
+    document.getElementById('sm11').textContent = ms[1][1];
+    document.getElementById('spriteOp').textContent = pose.op;
+  }
+
+  document.querySelectorAll('.pose-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.pose-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPose = btn.dataset.pose;
+      draw();
+    });
+  });
+
+  draw();
+})();
+</script>
