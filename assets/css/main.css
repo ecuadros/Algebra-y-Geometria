@@ -685,3 +685,93 @@ code, pre, .mono {
     padding: 0 1rem 1.5rem;
   }
 }
+
+/* ============================================================
+   Demo Navigation (anterior / siguiente)
+   ============================================================ */
+.demo-nav {
+  margin: 1.5rem 0;
+}
+
+.demo-nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1rem;
+}
+
+.demo-nav-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background var(--transition), border-color var(--transition);
+  border: 1px solid var(--border);
+  min-width: 160px;
+  color: var(--text);
+}
+
+.demo-nav-btn.prev { flex-direction: row; }
+.demo-nav-btn.next { flex-direction: row-reverse; text-align: right; }
+
+.demo-nav-btn:hover {
+  background: var(--surface2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.demo-nav-btn.disabled {
+  opacity: 0.3;
+  cursor: default;
+  pointer-events: none;
+}
+
+.demo-nav-arrow {
+  font-size: 1.1rem;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.demo-nav-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.demo-nav-hint {
+  font-size: 0.68rem;
+  font-family: var(--font-mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.demo-nav-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: inherit;
+}
+
+.demo-nav-index {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: color var(--transition), border-color var(--transition);
+  white-space: nowrap;
+}
+
+.demo-nav-index:hover {
+  color: var(--accent2);
+  border-color: var(--accent2);
+}
