@@ -158,6 +158,15 @@ code, pre, .mono {
   align-items: center;
 }
 
+.nav-author {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  padding-right: 1.25rem;
+  border-right: 1px solid var(--border);
+  margin-right: 0.25rem;
+}
+
 .nav-link {
   color: var(--muted);
   font-size: 0.9rem;
