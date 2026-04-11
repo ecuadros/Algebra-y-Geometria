@@ -1,0 +1,959 @@
+---
+layout: default
+title: Producto Cruz
+---
+
+<style>
+  .demo-page {
+    max-width: 1200px;
+    margin: auto;
+    padding: 2rem 1.5rem 5rem;
+  }
+
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  .breadcrumb a {
+    color: var(--muted);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--text);
+  }
+
+  .breadcrumb .sep {
+    color: var(--accent);
+    margin: 0 0.4rem;
+  }
+
+  .demo-header {
+    margin-bottom: 2.5rem;
+  }
+
+  .module-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88,166,255,0.1);
+    border: 1px solid rgba(88,166,255,0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .demo-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin: 0 0 0.25rem;
+  }
+
+  .demo-lead {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 600px;
+    margin-top: 0.5rem;
+  }
+
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  .demo-theory {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .theory-block h3 {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.75rem;
+  }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88,166,255,0.25);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.25rem;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-size: 0.95rem;
+    line-height: 1.8;
+  }
+
+  .props-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .props-list li {
+    font-size: 0.9rem;
+    color: var(--text);
+    padding-left: 1.2rem;
+    position: relative;
+  }
+
+  .props-list li::before {
+    content: '›';
+    color: var(--accent);
+    position: absolute;
+    left: 0;
+    font-weight: 700;
+  }
+
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .live-panel-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.25rem;
+  }
+
+  .live-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+
+  .live-label {
+    color: var(--muted);
+  }
+
+  .live-value {
+    font-family: var(--font-mono);
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .live-result {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent3);
+    font-family: var(--font-mono);
+    text-align: center;
+    padding: 0.5rem;
+    background: rgba(63,185,80,0.08);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(63,185,80,0.2);
+  }
+
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  canvas {
+    display: block;
+    border-radius: var(--radius-md);
+  }
+
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+
+  .slider-group label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-family: var(--font-mono);
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .slider-group input[type=range] {
+    width: 100%;
+    accent-color: var(--accent);
+  }
+
+  .rotate-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 0 0.25rem;
+  }
+
+  .rotate-toggle input[type=checkbox] {
+    accent-color: var(--accent);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+  }
+
+  .demo-application {
+    margin-top: 3rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+
+  .app-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.5rem;
+  }
+
+  .app-description {
+    color: var(--muted);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    max-width: 700px;
+  }
+
+  .app-use-cases {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+
+  .use-case-pill {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.8rem;
+    color: var(--accent);
+  }
+
+  .app-canvas-row {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .normal-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    min-width: 180px;
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .normal-panel-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.25rem;
+    font-family: var(--font-sans);
+  }
+
+  .normal-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .normal-key {
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .normal-val {
+    color: var(--accent);
+  }
+
+  .orientation-badge {
+    margin-top: 0.25rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .orientation-badge.front {
+    background: rgba(63,185,80,0.12);
+    color: var(--accent3);
+    border: 1px solid rgba(63,185,80,0.25);
+  }
+
+  .orientation-badge.back {
+    background: rgba(248,81,73,0.1);
+    color: var(--danger);
+    border: 1px solid rgba(248,81,73,0.2);
+  }
+
+  @media (max-width: 900px) {
+    .demo-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<div class="demo-page">
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a>
+    <span class="sep">&gt;</span>
+    <a href="/modulo-01/">Módulo 01 — Vectores</a>
+    <span class="sep">&gt;</span>
+    <span>Producto Cruz</span>
+  </nav>
+
+  <header class="demo-header">
+    <div class="module-eyebrow">Módulo 01 · Operaciones Vectoriales</div>
+    <h1>Producto Cruz</h1>
+    <p class="demo-lead">
+      El producto vectorial de dos vectores en ℝ³ produce un nuevo vector perpendicular a ambos, cuya magnitud representa el área del paralelogramo que forman.
+    </p>
+  </header>
+
+  <div class="demo-layout">
+
+    <!-- LEFT: Theory -->
+    <div class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Definición</h3>
+        <div class="formula-box">
+          a × b = ( a₂b₃ − a₃b₂,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a₃b₁ − a₁b₃,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;a₁b₂ − a₂b₁ )
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Interpretación Geométrica</h3>
+        <ul class="props-list">
+          <li>El resultado es un vector <strong>perpendicular</strong> a <strong>a</strong> y <strong>b</strong></li>
+          <li>Su magnitud es el <strong>área del paralelogramo</strong> formado por <strong>a</strong> y <strong>b</strong></li>
+          <li>|a × b| = |a| · |b| · sin(θ)</li>
+          <li>La dirección sigue la <strong>regla de la mano derecha</strong></li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades</h3>
+        <ul class="props-list">
+          <li><strong>Anticonmutativo:</strong> a × b = −(b × a)</li>
+          <li><strong>Distributivo</strong> respecto a la suma</li>
+          <li><strong>NO es asociativo:</strong> (a × b) × c ≠ a × (b × c)</li>
+          <li><strong>a × a = 0</strong> (vector cero)</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Valores en Tiempo Real</h3>
+        <div class="live-panel">
+          <div class="live-row">
+            <span class="live-label">Vector a</span>
+            <span class="live-value" id="liveA">(2.0, 0.0, 0.0)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Vector b</span>
+            <span class="live-value" id="liveB">(0.0, 2.0, 0.0)</span>
+          </div>
+          <div class="live-result" id="liveC">a × b = (0.0, 0.0, 4.0)</div>
+          <div class="live-row">
+            <span class="live-label">|a × b| (área)</span>
+            <span class="live-value" id="liveMag">4.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Ángulo θ</span>
+            <span class="live-value" id="liveAngle">90.0°</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Interactive -->
+    <div class="demo-interactive">
+
+      <div class="canvas-wrapper">
+        <canvas id="crossCanvas" width="420" height="420"></canvas>
+      </div>
+
+      <label class="rotate-toggle">
+        <input type="checkbox" id="rotateCheck"> Rotar vista automáticamente
+      </label>
+
+      <div class="controls">
+        <div class="slider-group">
+          <label id="lbl-ax">ax = 2.0</label>
+          <input type="range" id="sl-ax" min="-3" max="3" step="0.1" value="2">
+        </div>
+        <div class="slider-group">
+          <label id="lbl-bx">bx = 0.0</label>
+          <input type="range" id="sl-bx" min="-3" max="3" step="0.1" value="0">
+        </div>
+        <div class="slider-group">
+          <label id="lbl-ay">ay = 0.0</label>
+          <input type="range" id="sl-ay" min="-3" max="3" step="0.1" value="0">
+        </div>
+        <div class="slider-group">
+          <label id="lbl-by">by = 2.0</label>
+          <input type="range" id="sl-by" min="-3" max="3" step="0.1" value="2">
+        </div>
+        <div class="slider-group">
+          <label id="lbl-az">az = 0.0</label>
+          <input type="range" id="sl-az" min="-3" max="3" step="0.1" value="0">
+        </div>
+        <div class="slider-group">
+          <label id="lbl-bz">bz = 0.0</label>
+          <input type="range" id="sl-bz" min="-3" max="3" step="0.1" value="0">
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- end demo-layout -->
+
+  <!-- Application Section -->
+  <section class="demo-application">
+
+    <div class="app-header">
+      <h2>Aplicación en CS: Normales de Superficie en Gráficos 3D</h2>
+    </div>
+
+    <p class="app-description">
+      Al renderizar una malla 3D, cada triángulo está definido por tres vértices. Los vectores de sus aristas (e₁ = V₁ − V₀, e₂ = V₂ − V₀) generan mediante el producto cruz la <strong>normal de superficie</strong>. Esta normal es fundamental para el cálculo de iluminación (Phong shading), la eliminación de caras traseras (back-face culling) y la detección de colisiones. Arrastra los vértices del triángulo para observar cómo cambia la orientación de la normal en tiempo real.
+    </p>
+
+    <div class="app-use-cases">
+      <span class="use-case-pill">Phong Shading</span>
+      <span class="use-case-pill">Back-face Culling</span>
+      <span class="use-case-pill">Detección de Colisiones</span>
+      <span class="use-case-pill">Ray Tracing</span>
+    </div>
+
+    <div class="app-canvas-row">
+      <canvas id="normalCanvas" width="480" height="300" style="cursor:default;"></canvas>
+      <div class="normal-panel">
+        <div class="normal-panel-title">Vectores de Arista</div>
+        <div class="normal-row">
+          <span class="normal-key">e₁ = V₁ − V₀</span>
+          <span class="normal-val" id="nE1">(200, -180, 0)</span>
+        </div>
+        <div class="normal-row">
+          <span class="normal-key">e₂ = V₂ − V₀</span>
+          <span class="normal-val" id="nE2">(320, 0, 0)</span>
+        </div>
+        <div class="normal-row">
+          <span class="normal-key">N = e₁ × e₂</span>
+          <span class="normal-val" id="nN">(0, 0, 0)</span>
+        </div>
+        <div class="orientation-badge front" id="nOrient">Frente a la cámara ✓</div>
+      </div>
+    </div>
+
+  </section>
+
+</div><!-- end demo-page -->
+
+<script>
+// ─── Cross Product Canvas ──────────────────────────────────────────────────
+
+const canvas = document.getElementById('crossCanvas');
+const ctx = canvas.getContext('2d');
+
+let vec = { ax: 2, ay: 0, az: 0, bx: 0, by: 2, bz: 0 };
+let angle = Math.PI / 6;
+let rotating = false;
+let animId = null;
+
+const originX = 210;
+const originY = 240;
+const scale = 55;
+
+function cross(a, b) {
+  return {
+    x: a.y * b.z - a.z * b.y,
+    y: a.z * b.x - a.x * b.z,
+    z: a.x * b.y - a.y * b.x
+  };
+}
+
+function dot(a, b) {
+  return a.x * b.x + a.y * b.y + a.z * b.z;
+}
+
+function magnitude(v) {
+  return Math.sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+}
+
+function project(x, y, z) {
+  const cosA = Math.cos(angle);
+  const sinA = Math.sin(angle);
+  return {
+    sx: originX + (x - y) * cosA * scale,
+    sy: originY - z * scale + (x + y) * sinA * scale
+  };
+}
+
+function drawArrowHead(ctx, fromS, toS, color, size) {
+  const dx = toS.sx - fromS.sx;
+  const dy = toS.sy - fromS.sy;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 0.001) return;
+  const ux = dx / len;
+  const uy = dy / len;
+  const px = -uy;
+  const py = ux;
+  ctx.beginPath();
+  ctx.moveTo(toS.sx, toS.sy);
+  ctx.lineTo(toS.sx - ux * size + px * size * 0.45, toS.sy - uy * size + py * size * 0.45);
+  ctx.lineTo(toS.sx - ux * size - px * size * 0.45, toS.sy - uy * size - py * size * 0.45);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.fill();
+}
+
+function drawVector(ctx, tx, ty, tz, color, label) {
+  const origin3 = project(0, 0, 0);
+  const tip3 = project(tx, ty, tz);
+  ctx.beginPath();
+  ctx.moveTo(origin3.sx, origin3.sy);
+  ctx.lineTo(tip3.sx, tip3.sy);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
+  drawArrowHead(ctx, origin3, tip3, color, 9);
+  ctx.fillStyle = color;
+  ctx.font = 'bold 13px Inter, system-ui, sans-serif';
+  ctx.fillText(label, tip3.sx + 6, tip3.sy - 6);
+}
+
+function drawAxis(ctx, dx, dy, dz, color, label) {
+  const origin3 = project(-0.2 * dx, -0.2 * dy, -0.2 * dz);
+  const tip3 = project(3.5 * dx, 3.5 * dy, 3.5 * dz);
+  ctx.beginPath();
+  ctx.moveTo(origin3.sx, origin3.sy);
+  ctx.lineTo(tip3.sx, tip3.sy);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.globalAlpha = 0.7;
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+  drawArrowHead(ctx, origin3, tip3, color, 7);
+  ctx.fillStyle = color;
+  ctx.font = '12px Inter, system-ui, sans-serif';
+  ctx.globalAlpha = 0.85;
+  ctx.fillText(label, tip3.sx + 5, tip3.sy + 4);
+  ctx.globalAlpha = 1;
+}
+
+function drawScene() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Background
+  ctx.fillStyle = '#0d1117';
+  ctx.beginPath();
+  ctx.roundRect(0, 0, canvas.width, canvas.height, 10);
+  ctx.fill();
+
+  // Grid (XY plane)
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = -3; i <= 3; i++) {
+    const a = project(i, -3, 0);
+    const b = project(i, 3, 0);
+    ctx.beginPath();
+    ctx.moveTo(a.sx, a.sy);
+    ctx.lineTo(b.sx, b.sy);
+    ctx.stroke();
+
+    const c = project(-3, i, 0);
+    const d = project(3, i, 0);
+    ctx.beginPath();
+    ctx.moveTo(c.sx, c.sy);
+    ctx.lineTo(d.sx, d.sy);
+    ctx.stroke();
+  }
+
+  // Axes
+  drawAxis(ctx, 1, 0, 0, '#ff6b6b', 'X');
+  drawAxis(ctx, 0, 1, 0, '#51cf66', 'Y');
+  drawAxis(ctx, 0, 0, 1, '#74c0fc', 'Z');
+
+  const A = { x: vec.ax, y: vec.ay, z: vec.az };
+  const B = { x: vec.bx, y: vec.by, z: vec.bz };
+  const C = cross(A, B);
+
+  // Parallelogram fill
+  const o = project(0, 0, 0);
+  const pA = project(A.x, A.y, A.z);
+  const pB = project(B.x, B.y, B.z);
+  const pAB = project(A.x + B.x, A.y + B.y, A.z + B.z);
+  ctx.beginPath();
+  ctx.moveTo(o.sx, o.sy);
+  ctx.lineTo(pA.sx, pA.sy);
+  ctx.lineTo(pAB.sx, pAB.sy);
+  ctx.lineTo(pB.sx, pB.sy);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(88,166,255,0.12)';
+  ctx.fill();
+  ctx.strokeStyle = 'rgba(88,166,255,0.3)';
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  // Vector A
+  drawVector(ctx, A.x, A.y, A.z, '#58a6ff', 'a');
+  // Vector B
+  drawVector(ctx, B.x, B.y, B.z, '#bc8cff', 'b');
+  // Cross product (scaled 0.5 for visibility)
+  drawVector(ctx, C.x * 0.5, C.y * 0.5, C.z * 0.5, '#3fb950', 'a×b');
+
+  updateLivePanel(A, B, C);
+}
+
+function updateLivePanel(A, B, C) {
+  const fmt = v => v.toFixed(1);
+  document.getElementById('liveA').textContent =
+    `(${fmt(A.x)}, ${fmt(A.y)}, ${fmt(A.z)})`;
+  document.getElementById('liveB').textContent =
+    `(${fmt(B.x)}, ${fmt(B.y)}, ${fmt(B.z)})`;
+  document.getElementById('liveC').textContent =
+    `a × b = (${fmt(C.x)}, ${fmt(C.y)}, ${fmt(C.z)})`;
+
+  const mag = magnitude(C);
+  document.getElementById('liveMag').textContent = mag.toFixed(2);
+
+  const magA = magnitude(A);
+  const magB = magnitude(B);
+  let theta = 0;
+  if (magA > 0.001 && magB > 0.001) {
+    const sinTheta = mag / (magA * magB);
+    theta = Math.asin(Math.min(1, sinTheta)) * 180 / Math.PI;
+    // Use dot product sign to determine if angle is obtuse
+    const dotAB = dot(A, B);
+    if (dotAB < 0) theta = 180 - theta;
+  }
+  document.getElementById('liveAngle').textContent = theta.toFixed(1) + '°';
+}
+
+function animate() {
+  if (!rotating) return;
+  angle += 0.008;
+  drawScene();
+  animId = requestAnimationFrame(animate);
+}
+
+// Sliders
+const sliders = [
+  { id: 'sl-ax', lbl: 'lbl-ax', key: 'ax', name: 'ax' },
+  { id: 'sl-ay', lbl: 'lbl-ay', key: 'ay', name: 'ay' },
+  { id: 'sl-az', lbl: 'lbl-az', key: 'az', name: 'az' },
+  { id: 'sl-bx', lbl: 'lbl-bx', key: 'bx', name: 'bx' },
+  { id: 'sl-by', lbl: 'lbl-by', key: 'by', name: 'by' },
+  { id: 'sl-bz', lbl: 'lbl-bz', key: 'bz', name: 'bz' },
+];
+
+sliders.forEach(({ id, lbl, key, name }) => {
+  const el = document.getElementById(id);
+  const lblEl = document.getElementById(lbl);
+  el.addEventListener('input', () => {
+    const val = parseFloat(el.value);
+    vec[key] = val;
+    lblEl.textContent = `${name} = ${val.toFixed(1)}`;
+    if (!rotating) drawScene();
+  });
+});
+
+document.getElementById('rotateCheck').addEventListener('change', function () {
+  rotating = this.checked;
+  if (rotating) {
+    animate();
+  } else {
+    if (animId) cancelAnimationFrame(animId);
+    animId = null;
+    drawScene();
+  }
+});
+
+// ─── Normal Canvas ─────────────────────────────────────────────────────────
+
+const nCanvas = document.getElementById('normalCanvas');
+const nCtx = nCanvas.getContext('2d');
+
+let vertices = [
+  { x: 80, y: 240 },
+  { x: 280, y: 60 },
+  { x: 400, y: 240 }
+];
+let dragging = null;
+const HANDLE_RADIUS = 8;
+
+function cross2D(e1, e2) {
+  // Z component of 3D cross product (treating as z=0 vectors)
+  return e1.x * e2.y - e1.y * e2.x;
+}
+
+function drawNormalScene() {
+  nCtx.clearRect(0, 0, nCanvas.width, nCanvas.height);
+
+  // Background
+  nCtx.fillStyle = '#0d1117';
+  nCtx.beginPath();
+  nCtx.roundRect(0, 0, nCanvas.width, nCanvas.height, 10);
+  nCtx.fill();
+
+  const v0 = vertices[0];
+  const v1 = vertices[1];
+  const v2 = vertices[2];
+
+  // Edge vectors (2D, z=0)
+  const e1 = { x: v1.x - v0.x, y: v1.y - v0.y };
+  const e2 = { x: v2.x - v0.x, y: v2.y - v0.y };
+
+  // Cross product Z component
+  // In canvas: Y axis points DOWN, so a positive cross2D means CW winding (back face)
+  const crossZ = cross2D(e1, e2);
+  const isFront = crossZ < 0; // CCW in screen coords = front face
+
+  // Triangle fill
+  nCtx.beginPath();
+  nCtx.moveTo(v0.x, v0.y);
+  nCtx.lineTo(v1.x, v1.y);
+  nCtx.lineTo(v2.x, v2.y);
+  nCtx.closePath();
+  nCtx.fillStyle = isFront ? 'rgba(88,166,255,0.3)' : 'rgba(255,100,100,0.15)';
+  nCtx.fill();
+  nCtx.strokeStyle = '#58a6ff';
+  nCtx.lineWidth = 1.5;
+  nCtx.stroke();
+
+  // Edge vectors as thin arrows (muted)
+  function drawThinArrow(from, to, color) {
+    nCtx.beginPath();
+    nCtx.moveTo(from.x, from.y);
+    nCtx.lineTo(to.x, to.y);
+    nCtx.strokeStyle = color;
+    nCtx.lineWidth = 1;
+    nCtx.globalAlpha = 0.5;
+    nCtx.stroke();
+    nCtx.globalAlpha = 1;
+    // arrowhead
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1) return;
+    const ux = dx / len;
+    const uy = dy / len;
+    const px = -uy;
+    const py = ux;
+    const sz = 6;
+    nCtx.beginPath();
+    nCtx.moveTo(to.x, to.y);
+    nCtx.lineTo(to.x - ux * sz + px * sz * 0.4, to.y - uy * sz + py * sz * 0.4);
+    nCtx.lineTo(to.x - ux * sz - px * sz * 0.4, to.y - uy * sz - py * sz * 0.4);
+    nCtx.closePath();
+    nCtx.fillStyle = color;
+    nCtx.globalAlpha = 0.5;
+    nCtx.fill();
+    nCtx.globalAlpha = 1;
+  }
+
+  drawThinArrow(v0, v1, '#8b949e');
+  drawThinArrow(v0, v2, '#8b949e');
+
+  // Normal arrow from centroid
+  const cx = (v0.x + v1.x + v2.x) / 3;
+  const cy = (v0.y + v1.y + v2.y) / 3;
+  const normalLen = 60;
+  // Normalize crossZ direction. If front: normal points "out of screen" — draw UP.
+  // Represent in 2D by drawing upward arrow.
+  const normalDir = isFront ? -1 : 1; // -1 = up (out of screen), +1 = down (into screen)
+  const nx = cx;
+  const ny = cy + normalDir * normalLen;
+
+  if (isFront) {
+    // solid arrow
+    nCtx.beginPath();
+    nCtx.moveTo(cx, cy);
+    nCtx.lineTo(nx, ny);
+    nCtx.strokeStyle = '#3fb950';
+    nCtx.lineWidth = 2;
+    nCtx.setLineDash([]);
+    nCtx.stroke();
+    const dx2 = nx - cx;
+    const dy2 = ny - cy;
+    const len2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+    const ux2 = dx2 / len2;
+    const uy2 = dy2 / len2;
+    const px2 = -uy2;
+    const py2 = ux2;
+    nCtx.beginPath();
+    nCtx.moveTo(nx, ny);
+    nCtx.lineTo(nx - ux2 * 9 + px2 * 4, ny - uy2 * 9 + py2 * 4);
+    nCtx.lineTo(nx - ux2 * 9 - px2 * 4, ny - uy2 * 9 - py2 * 4);
+    nCtx.closePath();
+    nCtx.fillStyle = '#3fb950';
+    nCtx.fill();
+    nCtx.fillStyle = '#3fb950';
+    nCtx.font = '11px Inter, system-ui, sans-serif';
+    nCtx.fillText('N', nx + 6, ny - 4);
+  } else {
+    // dashed arrow (pointing "into" screen, drawn downward)
+    nCtx.beginPath();
+    nCtx.moveTo(cx, cy);
+    nCtx.lineTo(nx, ny);
+    nCtx.strokeStyle = '#f85149';
+    nCtx.lineWidth = 1.5;
+    nCtx.setLineDash([4, 4]);
+    nCtx.stroke();
+    nCtx.setLineDash([]);
+    nCtx.fillStyle = '#f85149';
+    nCtx.font = '11px Inter, system-ui, sans-serif';
+    nCtx.fillText('N', nx + 6, ny + 12);
+  }
+
+  // Vertex handles
+  const colors = ['#58a6ff', '#bc8cff', '#3fb950'];
+  const labels = ['V₀', 'V₁', 'V₂'];
+  vertices.forEach((v, i) => {
+    nCtx.beginPath();
+    nCtx.arc(v.x, v.y, HANDLE_RADIUS, 0, Math.PI * 2);
+    nCtx.fillStyle = colors[i];
+    nCtx.globalAlpha = 0.9;
+    nCtx.fill();
+    nCtx.globalAlpha = 1;
+    nCtx.strokeStyle = '#0d1117';
+    nCtx.lineWidth = 1.5;
+    nCtx.stroke();
+    nCtx.fillStyle = '#e6edf3';
+    nCtx.font = 'bold 11px Inter, system-ui, sans-serif';
+    nCtx.fillText(labels[i], v.x + 10, v.y - 8);
+  });
+
+  // Update panel
+  const fmtV = v => `(${Math.round(v.x)}, ${Math.round(v.y)}, 0)`;
+  document.getElementById('nE1').textContent = fmtV(e1);
+  document.getElementById('nE2').textContent = fmtV(e2);
+  document.getElementById('nN').textContent = `(0, 0, ${Math.round(crossZ)})`;
+
+  const orientEl = document.getElementById('nOrient');
+  if (isFront) {
+    orientEl.textContent = 'Frente a la cámara ✓';
+    orientEl.className = 'orientation-badge front';
+  } else {
+    orientEl.textContent = 'Espalda (culled) ✗';
+    orientEl.className = 'orientation-badge back';
+  }
+}
+
+// Mouse / touch drag on normal canvas
+function getCanvasPos(canvas, evt) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  return {
+    x: (evt.clientX - rect.left) * scaleX,
+    y: (evt.clientY - rect.top) * scaleY
+  };
+}
+
+nCanvas.addEventListener('mousedown', e => {
+  const pos = getCanvasPos(nCanvas, e);
+  for (let i = 0; i < vertices.length; i++) {
+    const dx = pos.x - vertices[i].x;
+    const dy = pos.y - vertices[i].y;
+    if (Math.sqrt(dx * dx + dy * dy) <= HANDLE_RADIUS + 4) {
+      dragging = i;
+      nCanvas.style.cursor = 'grabbing';
+      break;
+    }
+  }
+});
+
+nCanvas.addEventListener('mousemove', e => {
+  const pos = getCanvasPos(nCanvas, e);
+  if (dragging !== null) {
+    vertices[dragging].x = Math.max(HANDLE_RADIUS, Math.min(nCanvas.width - HANDLE_RADIUS, pos.x));
+    vertices[dragging].y = Math.max(HANDLE_RADIUS, Math.min(nCanvas.height - HANDLE_RADIUS, pos.y));
+    drawNormalScene();
+  } else {
+    // Cursor feedback
+    let hover = false;
+    for (let i = 0; i < vertices.length; i++) {
+      const dx = pos.x - vertices[i].x;
+      const dy = pos.y - vertices[i].y;
+      if (Math.sqrt(dx * dx + dy * dy) <= HANDLE_RADIUS + 4) { hover = true; break; }
+    }
+    nCanvas.style.cursor = hover ? 'grab' : 'default';
+  }
+});
+
+nCanvas.addEventListener('mouseup', () => {
+  dragging = null;
+  nCanvas.style.cursor = 'default';
+});
+
+nCanvas.addEventListener('mouseleave', () => {
+  dragging = null;
+});
+
+// ─── Init ──────────────────────────────────────────────────────────────────
+drawScene();
+drawNormalScene();
+</script>
