@@ -1,0 +1,1282 @@
+---
+layout: default
+title: Campo de Fuerzas y Combinación Lineal
+---
+
+<style>
+  /* ============================================================
+     DEMO PAGE — CAMPO DE FUERZAS Y COMBINACIÓN LINEAL
+     Extends the global design system variables
+  ============================================================ */
+  .demo-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 5rem;
+    font-family: var(--font-sans);
+    color: var(--text);
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.02em;
+  }
+  .breadcrumb a { color: var(--accent); text-decoration: none; }
+  .breadcrumb a:hover { text-decoration: underline; }
+  .breadcrumb .sep { color: var(--accent); margin: 0 0.4rem; }
+
+  /* Header */
+  .demo-header { margin-bottom: 2.5rem; }
+  .module-eyebrow {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(88, 166, 255, 0.1);
+    border: 1px solid rgba(88, 166, 255, 0.25);
+    border-radius: 20px;
+    padding: 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+  .demo-header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 700;
+    margin: 0.25rem 0 0.75rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.15;
+  }
+  .demo-lead {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 620px;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* Two-column layout */
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.15fr;
+    gap: 2.5rem;
+    align-items: start;
+    margin-bottom: 3rem;
+  }
+  @media (max-width: 900px) {
+    .demo-layout { grid-template-columns: 1fr; }
+  }
+
+  /* Theory column */
+  .demo-theory {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .theory-block {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.25rem 1.5rem;
+  }
+  .theory-block h3 {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin: 0 0 0.85rem;
+  }
+  .theory-block p {
+    font-size: 0.91rem;
+    color: var(--muted);
+    line-height: 1.65;
+    margin: 0 0 0.5rem;
+  }
+  .theory-block p:last-child { margin-bottom: 0; }
+
+  .formula-box {
+    background: #0d1117;
+    border: 1px solid rgba(88, 166, 255, 0.35);
+    border-radius: 8px;
+    padding: 0.85rem 1.2rem;
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    color: var(--accent);
+    text-align: center;
+    margin: 0.75rem 0;
+    letter-spacing: 0.03em;
+    white-space: pre-line;
+    line-height: 1.7;
+  }
+  .formula-box.violet { color: var(--accent2); border-color: rgba(188, 140, 255, 0.35); }
+
+  /* Live panel */
+  .live-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    margin-top: 0.5rem;
+  }
+  .live-panel-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent3);
+    box-shadow: 0 0 6px var(--accent3);
+    animation: pulse-dot 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+  .live-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .live-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.87rem;
+  }
+  .live-label { color: var(--muted); font-family: var(--font-mono); }
+  .live-value { color: var(--text); font-family: var(--font-mono); font-size: 0.9rem; }
+  .live-result-block {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: rgba(63, 185, 80, 0.08);
+    border: 1px solid rgba(63, 185, 80, 0.25);
+    border-radius: 8px;
+    text-align: center;
+  }
+  .live-result-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent3);
+    margin-bottom: 0.3rem;
+  }
+  .live-result-value {
+    font-family: var(--font-mono);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent3);
+  }
+  .live-result-sub {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--accent3);
+    opacity: 0.8;
+    margin-top: 0.2rem;
+  }
+
+  /* Right column — interactive */
+  .demo-interactive {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .canvas-wrapper {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+  }
+  canvas { display: block; }
+
+  /* Controls */
+  .controls-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1.1rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .controls-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
+  .force-control-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  /* Toggle switch */
+  .toggle-switch {
+    position: relative;
+    width: 38px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute;
+    inset: 0;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .toggle-track::after {
+    content: '';
+    position: absolute;
+    left: 3px; top: 3px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: transform 0.2s, background 0.2s;
+  }
+  .toggle-switch input:checked + .toggle-track { background: rgba(88,166,255,0.2); border-color: var(--accent); }
+  .toggle-switch input:checked + .toggle-track::after { transform: translateX(18px); background: var(--accent); }
+
+  .force-color-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .force-name {
+    font-family: var(--font-mono);
+    font-size: 0.88rem;
+    font-weight: 600;
+    min-width: 20px;
+  }
+  .force-alpha-label {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    min-width: 36px;
+  }
+  .force-slider {
+    flex: 1;
+    min-width: 80px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    height: 4px;
+  }
+  .force-alpha-val {
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    color: var(--text);
+    min-width: 36px;
+    text-align: right;
+  }
+  .tip-tail-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    padding-top: 0.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .tip-tail-row label { cursor: pointer; }
+
+  /* Application section */
+  .demo-application {
+    margin-top: 3rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+  .demo-application h2 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 0.5rem;
+  }
+  .demo-application .section-lead {
+    font-size: 0.92rem;
+    color: var(--muted);
+    line-height: 1.65;
+    max-width: 780px;
+    margin: 0 0 1.75rem;
+  }
+  .steering-layout {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 900px) {
+    .steering-layout { grid-template-columns: 1fr; }
+  }
+  .steering-canvas-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+  }
+  .steering-controls {
+    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+  }
+  .steering-ctrl-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 1rem 1.2rem;
+  }
+  .steering-ctrl-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 0.85rem;
+  }
+  .weight-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.85rem;
+  }
+  .weight-row:last-child { margin-bottom: 0; }
+  .weight-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .weight-name {
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    font-weight: 600;
+  }
+  .weight-val {
+    font-family: var(--font-mono);
+    font-size: 0.83rem;
+    color: var(--text);
+  }
+  .weight-slider {
+    width: 100%;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .btn-reset {
+    width: 100%;
+    padding: 0.6rem 1rem;
+    background: rgba(248, 81, 73, 0.1);
+    border: 1px solid rgba(248, 81, 73, 0.3);
+    border-radius: var(--radius-md);
+    color: var(--danger);
+    font-family: var(--font-sans);
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+    letter-spacing: 0.03em;
+  }
+  .btn-reset:hover {
+    background: rgba(248, 81, 73, 0.2);
+    border-color: var(--danger);
+  }
+  .legend-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 0.9rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .legend-swatch {
+    width: 28px; height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  .legend-swatch.dashed {
+    background: repeating-linear-gradient(
+      to right,
+      currentColor 0, currentColor 5px,
+      transparent 5px, transparent 9px
+    );
+  }
+</style>
+
+<div class="demo-page">
+
+  <!-- Breadcrumb -->
+  <nav class="breadcrumb">
+    <a href="{{ '/' | relative_url }}">Inicio</a>
+    <span class="sep">&gt;</span>
+    <a href="{{ '/modulo-01/' | relative_url }}">Módulo 01 — Vectores</a>
+    <span class="sep">&gt;</span>
+    Campo de Fuerzas y Combinación Lineal
+  </nav>
+
+  <!-- Header -->
+  <header class="demo-header">
+    <div class="module-eyebrow">Módulo 01 · Lección 05</div>
+    <h1>Campo de Fuerzas y Combinación Lineal</h1>
+    <p class="demo-lead">
+      Toda fuerza resultante es una combinación lineal de fuerzas individuales.
+      Explora cómo los escalares y la dirección de cada vector determinan
+      el movimiento — desde la física clásica hasta la IA de videojuegos.
+    </p>
+  </header>
+
+  <!-- Two-column layout -->
+  <div class="demo-layout">
+
+    <!-- LEFT: Theory -->
+    <div class="demo-theory">
+
+      <!-- Block 1: Combinación Lineal -->
+      <div class="theory-block">
+        <h3>Combinación Lineal</h3>
+        <p>
+          Una combinación lineal de vectores <strong>v₁, v₂, …, vₙ</strong>
+          con escalares <strong>α₁, α₂, …, αₙ</strong> produce un nuevo vector:
+        </p>
+        <div class="formula-box">R = α₁v₁ + α₂v₂ + … + αₙvₙ</div>
+        <p>
+          En física, la fuerza neta sobre un cuerpo es exactamente la combinación
+          lineal de todas las fuerzas que actúan sobre él. El escalar αᵢ amplifica,
+          reduce o invierte cada fuerza.
+        </p>
+      </div>
+
+      <!-- Block 2: Independencia Lineal -->
+      <div class="theory-block">
+        <h3>Independencia Lineal</h3>
+        <p>
+          Vectores son <em>linealmente independientes</em> si ninguno puede expresarse
+          como combinación de los demás. Un conjunto de vectores es una
+          <em>base</em> de ℝ² si son independientes y generan todo el espacio.
+        </p>
+        <div class="formula-box violet">{v₁, v₂} forman base de ℝ² si:
+  α₁v₁ + α₂v₂ = 0  ⟹  α₁ = α₂ = 0</div>
+        <p>
+          Si dos fuerzas son paralelas (linealmente dependientes), no pueden
+          alcanzar cualquier dirección — pierden un grado de libertad.
+        </p>
+      </div>
+
+      <!-- Block 3: Aplicación en IA -->
+      <div class="theory-block">
+        <h3>Aplicación en IA</h3>
+        <p>
+          En la IA de videojuegos, el comportamiento de movimiento de un NPC
+          (<em>steering behavior</em>) se calcula como combinación lineal de
+          vectores fuerza individuales:
+        </p>
+        <ul style="font-size:0.88rem;color:var(--muted);line-height:1.7;padding-left:1.2rem;margin:0.5rem 0;">
+          <li><strong style="color:#3fb950">Seek</strong> — atracción hacia el objetivo</li>
+          <li><strong style="color:#f85149">Avoid</strong> — repulsión de obstáculos</li>
+          <li><strong style="color:#8b949e">Wander</strong> — perturbación aleatoria suave</li>
+        </ul>
+        <p>
+          La dirección final emerge de su combinación — sin lógica condicional compleja.
+          Álgebra lineal como motor de comportamiento inteligente.
+        </p>
+      </div>
+
+      <!-- Block 4: Live panel -->
+      <div class="live-panel">
+        <div class="live-panel-title">
+          <div class="live-dot"></div>
+          Valores en tiempo real
+        </div>
+        <div class="live-rows" id="liveRows">
+          <div class="live-row">
+            <span class="live-label" style="color:#58a6ff">F₁ × α₁</span>
+            <span class="live-value" id="lv1">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label" style="color:#bc8cff">F₂ × α₂</span>
+            <span class="live-value" id="lv2">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label" style="color:#d29922">F₃ × α₃</span>
+            <span class="live-value" id="lv3">—</span>
+          </div>
+        </div>
+        <div class="live-result-block">
+          <div class="live-result-label">Resultante R</div>
+          <div class="live-result-value" id="lvR">—</div>
+          <div class="live-result-sub" id="lvMag">|R| = — &nbsp;·&nbsp; θ = —°</div>
+        </div>
+      </div>
+
+    </div><!-- /demo-theory -->
+
+    <!-- RIGHT: Interactive canvas -->
+    <div class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="forcesCanvas" width="460" height="460"></canvas>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-panel">
+        <div class="controls-title">Controles — arrastra las puntas de las flechas</div>
+
+        <!-- F1 -->
+        <div class="force-control-row" id="ctrl1">
+          <label class="toggle-switch">
+            <input type="checkbox" id="chk1" checked>
+            <span class="toggle-track"></span>
+          </label>
+          <span class="force-color-dot" style="background:#58a6ff"></span>
+          <span class="force-name" style="color:#58a6ff">F₁</span>
+          <span class="force-alpha-label">α₁</span>
+          <input type="range" class="force-slider" id="sl1" min="-2" max="2" step="0.05" value="1">
+          <span class="force-alpha-val" id="slv1">1.00</span>
+        </div>
+
+        <!-- F2 -->
+        <div class="force-control-row" id="ctrl2">
+          <label class="toggle-switch">
+            <input type="checkbox" id="chk2" checked>
+            <span class="toggle-track"></span>
+          </label>
+          <span class="force-color-dot" style="background:#bc8cff"></span>
+          <span class="force-name" style="color:#bc8cff">F₂</span>
+          <span class="force-alpha-label">α₂</span>
+          <input type="range" class="force-slider" id="sl2" min="-2" max="2" step="0.05" value="1" style="accent-color:#bc8cff">
+          <span class="force-alpha-val" id="slv2">1.00</span>
+        </div>
+
+        <!-- F3 -->
+        <div class="force-control-row" id="ctrl3">
+          <label class="toggle-switch">
+            <input type="checkbox" id="chk3">
+            <span class="toggle-track"></span>
+          </label>
+          <span class="force-color-dot" style="background:#d29922"></span>
+          <span class="force-name" style="color:#d29922">F₃</span>
+          <span class="force-alpha-label">α₃</span>
+          <input type="range" class="force-slider" id="sl3" min="-2" max="2" step="0.05" value="1" style="accent-color:#d29922">
+          <span class="force-alpha-val" id="slv3">1.00</span>
+        </div>
+
+        <!-- Tip-to-tail toggle -->
+        <div class="tip-tail-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="chkTipTail" checked>
+            <span class="toggle-track"></span>
+          </label>
+          <label for="chkTipTail">Mostrar método punta-cola</label>
+        </div>
+      </div>
+    </div><!-- /demo-interactive -->
+
+  </div><!-- /demo-layout -->
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación en CS: IA de Personajes — Steering Behaviors</h2>
+    <p class="section-lead">
+      En la IA de videojuegos (The Sims, GTA, Halo), cada NPC calcula simultáneamente varios
+      vectores fuerza: atracción al objetivo, repulsión de obstáculos y una perturbación
+      errante aleatoria. La dirección de movimiento resultante es su combinación lineal —
+      <strong>R = α_seek · F_seek + α_avoid · F_avoid + α_wander · F_wander</strong> —
+      álgebra lineal pura generando comportamiento emergente.
+    </p>
+
+    <div class="steering-layout">
+      <!-- Canvas -->
+      <div>
+        <div class="steering-canvas-wrap">
+          <canvas id="steeringCanvas" width="600" height="340"></canvas>
+        </div>
+        <div class="legend-box" style="margin-top:0.85rem;flex-direction:row;flex-wrap:wrap;gap:0.75rem 1.5rem;">
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#3fb950;height:3px;border-radius:2px;"></div>
+            Seek (atracción)
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#f85149;height:3px;border-radius:2px;"></div>
+            Avoid (repulsión)
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#8b949e;height:3px;border-radius:2px;"></div>
+            Wander (errante)
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#ffffff;height:4px;border-radius:2px;"></div>
+            Resultante R
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#58a6ff;height:10px;width:10px;border-radius:50%;"></div>
+            Agente
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#3fb950;height:10px;width:10px;border-radius:50%;"></div>
+            Objetivo (arrastra)
+          </div>
+          <div class="legend-item">
+            <div class="legend-swatch" style="background:#f85149;height:10px;width:10px;border-radius:50%;"></div>
+            Obstáculo
+          </div>
+        </div>
+      </div>
+
+      <!-- Steering controls -->
+      <div class="steering-controls">
+        <div class="steering-ctrl-block">
+          <div class="steering-ctrl-title">Pesos de la Combinación Lineal</div>
+
+          <div class="weight-row">
+            <div class="weight-header">
+              <span class="weight-name" style="color:#3fb950">α_seek</span>
+              <span class="weight-val" id="wSeekVal">1.20</span>
+            </div>
+            <input type="range" class="weight-slider" id="wSeek" min="0" max="2" step="0.05" value="1.2" style="accent-color:#3fb950">
+          </div>
+
+          <div class="weight-row">
+            <div class="weight-header">
+              <span class="weight-name" style="color:#f85149">α_avoid</span>
+              <span class="weight-val" id="wAvoidVal">2.00</span>
+            </div>
+            <input type="range" class="weight-slider" id="wAvoid" min="0" max="3" step="0.05" value="2.0" style="accent-color:#f85149">
+          </div>
+
+          <div class="weight-row">
+            <div class="weight-header">
+              <span class="weight-name" style="color:#8b949e">α_wander</span>
+              <span class="weight-val" id="wWanderVal">0.30</span>
+            </div>
+            <input type="range" class="weight-slider" id="wWander" min="0" max="1" step="0.02" value="0.3" style="accent-color:#8b949e">
+          </div>
+        </div>
+
+        <button class="btn-reset" id="btnReset">Reiniciar</button>
+
+        <div class="steering-ctrl-block">
+          <div class="steering-ctrl-title">Estado del Agente</div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem;">
+            <div class="live-row">
+              <span class="live-label">Pos</span>
+              <span class="live-value" id="agentPos">—</span>
+            </div>
+            <div class="live-row">
+              <span class="live-label">Vel</span>
+              <span class="live-value" id="agentVel">—</span>
+            </div>
+            <div class="live-row">
+              <span class="live-label">|R|</span>
+              <span class="live-value" id="agentR">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- /demo-page -->
+
+<script>
+/* ================================================================
+   FORCES CANVAS — Combinación Lineal Interactiva
+================================================================ */
+(function() {
+  const canvas = document.getElementById('forcesCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const OX = W / 2, OY = H / 2;
+  const SCALE = 45; // px per unit
+
+  let forces = [
+    { active: true,  x: 2,    y: 1,   alpha: 1, color: '#58a6ff', label: 'F₁' },
+    { active: true,  x: -1,   y: 2,   alpha: 1, color: '#bc8cff', label: 'F₂' },
+    { active: false, x: 1.5,  y: -1,  alpha: 1, color: '#d29922', label: 'F₃' }
+  ];
+  let showTipTail = true;
+  let dragging = null;
+
+  // Convert canvas px to world coords
+  function pxToWorld(px, py) {
+    return { x: (px - OX) / SCALE, y: -(py - OY) / SCALE };
+  }
+  // Convert world to canvas px
+  function worldToPx(wx, wy) {
+    return { x: OX + wx * SCALE, y: OY - wy * SCALE };
+  }
+
+  function computeResultant() {
+    let rx = 0, ry = 0;
+    forces.forEach(f => {
+      if (f.active) { rx += f.alpha * f.x; ry += f.alpha * f.y; }
+    });
+    return { x: rx, y: ry };
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color, width, dashed, alpha) {
+    const dx = toX - fromX, dy = toY - fromY;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1) return;
+    ctx.save();
+    ctx.globalAlpha = alpha ?? 1;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    if (dashed) ctx.setLineDash([6, 5]);
+    else ctx.setLineDash([]);
+
+    // Shaft (stop short for arrowhead)
+    const headLen = Math.min(14, len * 0.35);
+    const ux = dx / len, uy = dy / len;
+    const tipX = toX, tipY = toY;
+    const baseX = tipX - ux * headLen, baseY = tipY - uy * headLen;
+
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(baseX, baseY);
+    ctx.stroke();
+
+    // Arrowhead
+    ctx.setLineDash([]);
+    const angle = Math.atan2(dy, dx);
+    const spread = 0.42;
+    ctx.beginPath();
+    ctx.moveTo(tipX, tipY);
+    ctx.lineTo(tipX - headLen * Math.cos(angle - spread), tipY - headLen * Math.sin(angle - spread));
+    ctx.lineTo(tipX - headLen * Math.cos(angle + spread), tipY - headLen * Math.sin(angle + spread));
+    ctx.closePath();
+    ctx.fillStyle = color;
+    ctx.globalAlpha = alpha ?? 1;
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawGrid() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(48,54,61,0.6)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+    const step = SCALE;
+    // Vertical
+    for (let x = OX % step; x < W; x += step) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke();
+    }
+    // Horizontal
+    for (let y = OY % step; y < H; y += step) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawAxes() {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(139,148,158,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([]);
+    // X
+    ctx.beginPath(); ctx.moveTo(10, OY); ctx.lineTo(W - 10, OY); ctx.stroke();
+    // Y
+    ctx.beginPath(); ctx.moveTo(OX, 10); ctx.lineTo(OX, H - 10); ctx.stroke();
+    // Labels
+    ctx.fillStyle = 'rgba(139,148,158,0.6)';
+    ctx.font = '12px JetBrains Mono, monospace';
+    ctx.fillText('x', W - 18, OY - 8);
+    ctx.fillText('y', OX + 8, 20);
+    // Tick marks
+    ctx.fillStyle = 'rgba(139,148,158,0.4)';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let i = -4; i <= 4; i++) {
+      if (i === 0) continue;
+      const px = OX + i * SCALE;
+      ctx.beginPath(); ctx.moveTo(px, OY - 3); ctx.lineTo(px, OY + 3); ctx.stroke();
+      ctx.fillText(i, px, OY + 14);
+    }
+    ctx.textAlign = 'right';
+    for (let i = -4; i <= 4; i++) {
+      if (i === 0) continue;
+      const py = OY - i * SCALE;
+      ctx.beginPath(); ctx.moveTo(OX - 3, py); ctx.lineTo(OX + 3, py); ctx.stroke();
+      ctx.fillText(i, OX - 6, py + 4);
+    }
+    ctx.restore();
+  }
+
+  function drawForces() {
+    ctx.clearRect(0, 0, W, H);
+    drawGrid();
+    drawAxes();
+
+    const R = computeResultant();
+
+    // Tip-to-tail dashed construction
+    if (showTipTail) {
+      let cx = OX, cy = OY;
+      forces.forEach(f => {
+        if (!f.active) return;
+        const ex = cx + f.alpha * f.x * SCALE;
+        const ey = cy - f.alpha * f.y * SCALE;
+        drawArrow(cx, cy, ex, ey, f.color, 1.5, true, 0.55);
+        cx = ex; cy = ey;
+      });
+    }
+
+    // Individual force vectors from origin
+    forces.forEach(f => {
+      if (!f.active) return;
+      const end = worldToPx(f.alpha * f.x, f.alpha * f.y);
+      drawArrow(OX, OY, end.x, end.y, f.color, 2, false, 1);
+
+      // Label at tip
+      ctx.save();
+      ctx.font = 'bold 13px Inter, system-ui';
+      ctx.fillStyle = f.color;
+      ctx.fillText(f.label, end.x + 8, end.y - 8);
+      ctx.restore();
+
+      // Hit target circle at tip (for dragging)
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(end.x, end.y, 7, 0, Math.PI * 2);
+      ctx.strokeStyle = f.color;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Resultant
+    if (R.x !== 0 || R.y !== 0) {
+      const rEnd = worldToPx(R.x, R.y);
+      drawArrow(OX, OY, rEnd.x, rEnd.y, '#3fb950', 3.5, false, 1);
+      ctx.save();
+      ctx.font = 'bold 14px Inter, system-ui';
+      ctx.fillStyle = '#3fb950';
+      ctx.fillText('R', rEnd.x + 10, rEnd.y + 5);
+      ctx.restore();
+    }
+
+    updatePanel(R);
+  }
+
+  function fmt(v) { return v.toFixed(2); }
+
+  function updatePanel(R) {
+    forces.forEach((f, i) => {
+      const el = document.getElementById('lv' + (i + 1));
+      if (f.active) {
+        el.textContent = `(${fmt(f.alpha * f.x)}, ${fmt(f.alpha * f.y)})`;
+        el.style.color = f.color;
+      } else {
+        el.textContent = 'inactiva';
+        el.style.color = 'var(--muted)';
+      }
+    });
+    const mag = Math.sqrt(R.x * R.x + R.y * R.y);
+    const angle = (Math.atan2(R.y, R.x) * 180 / Math.PI).toFixed(1);
+    document.getElementById('lvR').textContent = `(${fmt(R.x)}, ${fmt(R.y)})`;
+    document.getElementById('lvMag').textContent = `|R| = ${fmt(mag)}  ·  θ = ${angle}°`;
+  }
+
+  // Drag support
+  function getMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+    const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+    return { x: (cx - rect.left) * scaleX, y: (cy - rect.top) * scaleY };
+  }
+
+  function hitTest(pos) {
+    for (let i = forces.length - 1; i >= 0; i--) {
+      const f = forces[i];
+      if (!f.active) continue;
+      const tip = worldToPx(f.alpha * f.x, f.alpha * f.y);
+      const dx = pos.x - tip.x, dy = pos.y - tip.y;
+      if (Math.sqrt(dx * dx + dy * dy) < 14) return i;
+    }
+    return null;
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    const pos = getMousePos(e);
+    const idx = hitTest(pos);
+    if (idx !== null) { dragging = idx; canvas.style.cursor = 'grabbing'; }
+  });
+  canvas.addEventListener('mousemove', e => {
+    const pos = getMousePos(e);
+    if (dragging !== null) {
+      const w = pxToWorld(pos.x, pos.y);
+      const f = forces[dragging];
+      // Set base vector (unscaled) from world position / alpha
+      const a = f.alpha || 1;
+      f.x = w.x / a;
+      f.y = w.y / a;
+      drawForces();
+    } else {
+      canvas.style.cursor = hitTest(pos) !== null ? 'grab' : 'default';
+    }
+  });
+  canvas.addEventListener('mouseup', () => { dragging = null; canvas.style.cursor = 'default'; });
+  canvas.addEventListener('mouseleave', () => { dragging = null; });
+
+  // Checkbox + slider wiring
+  [1, 2, 3].forEach(i => {
+    const chk = document.getElementById('chk' + i);
+    const sl  = document.getElementById('sl' + i);
+    const val = document.getElementById('slv' + i);
+    chk.addEventListener('change', () => {
+      forces[i - 1].active = chk.checked;
+      drawForces();
+    });
+    sl.addEventListener('input', () => {
+      forces[i - 1].alpha = parseFloat(sl.value);
+      val.textContent = parseFloat(sl.value).toFixed(2);
+      drawForces();
+    });
+  });
+
+  document.getElementById('chkTipTail').addEventListener('change', e => {
+    showTipTail = e.target.checked;
+    drawForces();
+  });
+
+  drawForces();
+})();
+
+
+/* ================================================================
+   STEERING CANVAS — IA de Personajes
+================================================================ */
+(function() {
+  const canvas = document.getElementById('steeringCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  const agent = { x: W / 2, y: H / 2, vx: 0, vy: 0, trail: [] };
+  let target = { x: 480, y: 80 };
+  const obstacles = [
+    { x: 200, y: 150, r: 30 },
+    { x: 390, y: 230, r: 25 },
+    { x: 155, y: 270, r: 22 }
+  ];
+  const neighbors = [
+    { x: 300, y: 200 }, { x: 330, y: 160 },
+    { x: 260, y: 240 }, { x: 350, y: 260 }
+  ];
+
+  let weights = { seek: 1.2, avoid: 2.0, wander: 0.3 };
+  let wanderAngle = Math.random() * Math.PI * 2;
+  let lastTime = null;
+
+  // Forces computed this frame (for display)
+  let fSeek = { x: 0, y: 0 };
+  let fAvoid = { x: 0, y: 0 };
+  let fWander = { x: 0, y: 0 };
+  let fResult = { x: 0, y: 0 };
+
+  // Pulse for target
+  let pulseT = 0;
+
+  // Dragging target
+  let draggingTarget = false;
+
+  function normalize(v) {
+    const len = Math.sqrt(v.x * v.x + v.y * v.y);
+    if (len < 0.0001) return { x: 0, y: 0 };
+    return { x: v.x / len, y: v.y / len };
+  }
+  function scale(v, s) { return { x: v.x * s, y: v.y * s }; }
+  function add(a, b) { return { x: a.x + b.x, y: a.y + b.y }; }
+  function dist(a, b) { return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2); }
+
+  function seek(ag, tgt) {
+    const d = { x: tgt.x - ag.x, y: tgt.y - ag.y };
+    return scale(normalize(d), weights.seek);
+  }
+
+  function avoid(ag, obs) {
+    let fx = 0, fy = 0;
+    obs.forEach(o => {
+      const d = dist(ag, o);
+      const safeR = o.r + 55;
+      if (d < safeR && d > 0.01) {
+        const strength = Math.pow(1 - (d - o.r) / (safeR - o.r), 2);
+        const dir = normalize({ x: ag.x - o.x, y: ag.y - o.y });
+        fx += dir.x * strength;
+        fy += dir.y * strength;
+      }
+    });
+    return { x: fx * weights.avoid, y: fy * weights.avoid };
+  }
+
+  function wander() {
+    wanderAngle += (Math.random() - 0.5) * 0.35;
+    return scale({ x: Math.cos(wanderAngle), y: Math.sin(wanderAngle) }, weights.wander);
+  }
+
+  function clamp(v, max) {
+    const len = Math.sqrt(v.x * v.x + v.y * v.y);
+    if (len > max) return scale(normalize(v), max);
+    return v;
+  }
+
+  // Boundary wrap
+  function wrapBounds(ag) {
+    const pad = 20;
+    if (ag.x < -pad) ag.x = W + pad;
+    if (ag.x > W + pad) ag.x = -pad;
+    if (ag.y < -pad) ag.y = H + pad;
+    if (ag.y > H + pad) ag.y = -pad;
+  }
+
+  function drawArrow(fromX, fromY, toX, toY, color, width) {
+    const dx = toX - fromX, dy = toY - fromY;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 2) return;
+    const headLen = Math.min(12, len * 0.4);
+    const ux = dx / len, uy = dy / len;
+    const baseX = toX - ux * headLen, baseY = toY - uy * headLen;
+    const angle = Math.atan2(dy, dx);
+    const sp = 0.4;
+
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.lineCap = 'round';
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(baseX, baseY);
+    ctx.stroke();
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headLen * Math.cos(angle - sp), toY - headLen * Math.sin(angle - sp));
+    ctx.lineTo(toX - headLen * Math.cos(angle + sp), toY - headLen * Math.sin(angle + sp));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function steeringLoop(ts) {
+    if (!lastTime) lastTime = ts;
+    let dt = (ts - lastTime) / 1000;
+    lastTime = ts;
+    dt = Math.min(dt, 0.05);
+    pulseT += dt;
+
+    // Compute forces
+    fSeek   = seek(agent, target);
+    fAvoid  = avoid(agent, obstacles);
+    fWander = wander();
+    fResult = add(add(fSeek, fAvoid), fWander);
+    fResult = clamp(fResult, 4);
+
+    // Update velocity & position
+    const maxSpeed = 110;
+    agent.vx += fResult.x * 60 * dt;
+    agent.vy += fResult.y * 60 * dt;
+    const spd = Math.sqrt(agent.vx ** 2 + agent.vy ** 2);
+    if (spd > maxSpeed) { agent.vx = (agent.vx / spd) * maxSpeed; agent.vy = (agent.vy / spd) * maxSpeed; }
+
+    agent.trail.push({ x: agent.x, y: agent.y });
+    if (agent.trail.length > 35) agent.trail.shift();
+
+    agent.x += agent.vx * dt;
+    agent.y += agent.vy * dt;
+    wrapBounds(agent);
+
+    // Draw
+    ctx.clearRect(0, 0, W, H);
+
+    // Background grid
+    ctx.save();
+    ctx.strokeStyle = 'rgba(48,54,61,0.4)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    ctx.restore();
+
+    // Obstacles
+    obstacles.forEach(o => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(248,81,73,0.12)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(248,81,73,0.5)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      // Safe zone ring
+      ctx.beginPath();
+      ctx.arc(o.x, o.y, o.r + 55, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(248,81,73,0.1)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 5]);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Neighbors
+    neighbors.forEach(n => {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 7, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(139,148,158,0.35)';
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(139,148,158,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    // Target (pulsing)
+    const pulse = 1 + 0.3 * Math.sin(pulseT * 4);
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, 14 * pulse, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(63,185,80,0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(target.x, target.y, 7, 0, Math.PI * 2);
+    ctx.fillStyle = '#3fb950';
+    ctx.fill();
+    ctx.restore();
+
+    // Trail
+    agent.trail.forEach((p, i) => {
+      const alpha = i / agent.trail.length * 0.45;
+      const r = 2 + (i / agent.trail.length) * 4;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = '#58a6ff';
+      ctx.fill();
+      ctx.restore();
+    });
+
+    // Force arrows (from agent center)
+    const FSCALE = 28;
+    if (weights.seek > 0) drawArrow(agent.x, agent.y, agent.x + fSeek.x * FSCALE, agent.y + fSeek.y * FSCALE, '#3fb950', 2);
+    if (weights.avoid > 0) drawArrow(agent.x, agent.y, agent.x + fAvoid.x * FSCALE, agent.y + fAvoid.y * FSCALE, '#f85149', 2);
+    if (weights.wander > 0) drawArrow(agent.x, agent.y, agent.x + fWander.x * FSCALE, agent.y + fWander.y * FSCALE, '#8b949e', 1.5);
+    drawArrow(agent.x, agent.y, agent.x + fResult.x * FSCALE, agent.y + fResult.y * FSCALE, '#ffffff', 3);
+
+    // Agent
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(agent.x, agent.y, 12, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(88,166,255,0.2)';
+    ctx.fill();
+    ctx.strokeStyle = '#58a6ff';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+    // Direction indicator
+    const vlen = Math.sqrt(agent.vx ** 2 + agent.vy ** 2);
+    if (vlen > 0.1) {
+      const nx = agent.vx / vlen, ny = agent.vy / vlen;
+      ctx.beginPath();
+      ctx.moveTo(agent.x, agent.y);
+      ctx.lineTo(agent.x + nx * 12, agent.y + ny * 12);
+      ctx.strokeStyle = '#58a6ff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Update state panel
+    document.getElementById('agentPos').textContent = `(${Math.round(agent.x)}, ${Math.round(agent.y)})`;
+    document.getElementById('agentVel').textContent = `(${agent.vx.toFixed(1)}, ${agent.vy.toFixed(1)})`;
+    const rMag = Math.sqrt(fResult.x ** 2 + fResult.y ** 2);
+    document.getElementById('agentR').textContent = rMag.toFixed(2);
+
+    requestAnimationFrame(steeringLoop);
+  }
+
+  // Target dragging
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const sx = canvas.width / rect.width, sy = canvas.height / rect.height;
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (cx - rect.left) * sx, y: (cy - rect.top) * sy };
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    const p = getPos(e);
+    if (dist(p, target) < 18) { draggingTarget = true; canvas.style.cursor = 'grabbing'; }
+  });
+  canvas.addEventListener('mousemove', e => {
+    const p = getPos(e);
+    if (draggingTarget) {
+      target.x = Math.max(10, Math.min(W - 10, p.x));
+      target.y = Math.max(10, Math.min(H - 10, p.y));
+    } else {
+      canvas.style.cursor = dist(p, target) < 18 ? 'grab' : 'default';
+    }
+  });
+  canvas.addEventListener('mouseup', () => { draggingTarget = false; canvas.style.cursor = 'default'; });
+  canvas.addEventListener('mouseleave', () => { draggingTarget = false; });
+
+  // Weight sliders
+  document.getElementById('wSeek').addEventListener('input', e => {
+    weights.seek = parseFloat(e.target.value);
+    document.getElementById('wSeekVal').textContent = weights.seek.toFixed(2);
+  });
+  document.getElementById('wAvoid').addEventListener('input', e => {
+    weights.avoid = parseFloat(e.target.value);
+    document.getElementById('wAvoidVal').textContent = weights.avoid.toFixed(2);
+  });
+  document.getElementById('wWander').addEventListener('input', e => {
+    weights.wander = parseFloat(e.target.value);
+    document.getElementById('wWanderVal').textContent = weights.wander.toFixed(2);
+  });
+
+  // Reset
+  document.getElementById('btnReset').addEventListener('click', () => {
+    agent.x = W / 2; agent.y = H / 2;
+    agent.vx = 0; agent.vy = 0;
+    agent.trail.length = 0;
+  });
+
+  requestAnimationFrame(steeringLoop);
+})();
+</script>
