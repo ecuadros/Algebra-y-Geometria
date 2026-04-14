@@ -1,0 +1,730 @@
+---
+layout: default
+title: Interpolación Polinómica
+prev_url: /modulo-03/equilibrio-redes.html
+prev_title: Equilibrio de Redes
+next_url: /modulo-03/regresion-lineal.html
+next_title: Regresión Lineal
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent2); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(88,166,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent); font-size:0.85rem; line-height:1.8; overflow-x:auto; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.6rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .live-result { font-family:var(--font-mono); font-size:0.9rem; font-weight:700; color:var(--accent3); text-align:center; padding:0.6rem; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:var(--radius-md); margin-top:0.25rem; word-break:break-all; }
+  .live-result.error { color:var(--danger); background:rgba(248,81,73,0.08); border-color:rgba(248,81,73,0.2); }
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; align-items:center; }
+  canvas { display:block; border-radius:var(--radius-md); cursor:crosshair; }
+  .controls { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.active { border-color:var(--accent3); color:var(--accent3); background:rgba(63,185,80,0.08); }
+  .poly-eq { font-family:var(--font-mono); font-size:0.85rem; color:var(--accent); flex:1; min-width:200px; }
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+  .app-layout { display:flex; flex-direction:column; gap:1.25rem; }
+  .app-controls { display:flex; gap:0.75rem; align-items:center; flex-wrap:wrap; }
+  .app-stat-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; display:flex; gap:1.5rem; flex-wrap:wrap; align-items:center; }
+  .app-stat-panel h4 { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0; white-space:nowrap; }
+  .stat-row { display:flex; flex-direction:column; align-items:center; gap:0.15rem; }
+  .stat-label { color:var(--muted); font-size:0.78rem; }
+  .stat-val { font-family:var(--font-mono); font-weight:600; color:var(--text); font-size:0.88rem; }
+  .stat-val.ok { color:var(--accent3); }
+  .hint { font-size:0.78rem; color:var(--muted); font-family:var(--font-mono); }
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 3: Sistemas de Ecuaciones</a><span class="sep">›</span>Interpolación Polinómica
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 3 · Sistemas de Ecuaciones</span>
+    <h1>Interpolación Polinómica</h1>
+    <p class="demo-lead">Dado un conjunto de puntos, la matriz de Vandermonde convierte el problema de hallar un polinomio interpolante en un sistema de ecuaciones lineales V·c = y.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Sistema de Vandermonde V·c = y</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Para n puntos (x₁,y₁),…,(xₙ,yₙ), exigimos que el polinomio p(xᵢ) = yᵢ. Eso produce el sistema:
+        </p>
+        <div class="formula-box">
+⎡ 1  x₁  x₁²  ···  x₁ⁿ⁻¹ ⎤ ⎡c₀⎤   ⎡y₁⎤
+⎢ 1  x₂  x₂²  ···  x₂ⁿ⁻¹ ⎥ ⎢c₁⎥ = ⎢y₂⎥
+⎢ ·   ·   ·         ·    ⎥ ⎢·· ⎥   ⎢··⎥
+⎣ 1  xₙ  xₙ²  ···  xₙⁿ⁻¹ ⎦ ⎣cₙ⎦   ⎣yₙ⎦
+
+p(x) = c₀ + c₁x + c₂x² + ··· + cₙ₋₁xⁿ⁻¹
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades clave</h3>
+        <ul class="props-list">
+          <li>Solución única si y solo si todos los xᵢ son distintos</li>
+          <li>n puntos determinan exactamente un polinomio de grado ≤ n−1</li>
+          <li>det(V) = ∏ᵢ&lt;ⱼ (xⱼ − xᵢ) — producto de Vandermonde</li>
+          <li>La matriz es mal condicionada para n grande (puntos muy separados)</li>
+          <li>Se resuelve con eliminación Gaussiana con pivoteo parcial</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Evaluación eficiente: Horner</h3>
+        <div class="formula-box">
+p(x) = c₀ + x·(c₁ + x·(c₂ + ··· + x·cₙ₋₁))
+
+// En lugar de calcular xᵏ n veces,
+// se anida: O(n) multiplicaciones
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado en tiempo real</h3>
+        <div class="live-panel">
+          <h3>Sistema actual</h3>
+          <div class="live-row">
+            <span class="live-label">Puntos</span>
+            <span class="live-value" id="livePuntos">0</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Grado del polinomio</span>
+            <span class="live-value" id="liveGrado">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Número de condición (aprox.)</span>
+            <span class="live-value" id="liveCond">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Coeficientes</span>
+            <span class="live-value" id="liveCoefs" style="font-size:0.75rem;text-align:right;max-width:55%;word-break:break-all;">—</span>
+          </div>
+          <div class="live-result" id="liveResult">Agrega ≥ 2 puntos haciendo clic en el canvas</div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="interpCanvas" width="500" height="400"></canvas>
+      </div>
+
+      <div class="controls">
+        <button class="btn" id="btnLimpiar">Limpiar puntos</button>
+        <span class="hint">Clic para agregar punto · Arrastra para mover</span>
+        <div class="poly-eq" id="polyEqDisplay">p(x) = —</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación: Reconstrucción de Trayectorias en Videojuegos</h2>
+    <p class="app-description">
+      Los motores de videojuegos almacenan solo unos pocos <em>keyframes</em> (posiciones clave) para los movimientos de personajes, cámaras y proyectiles. En tiempo de ejecución, la interpolación polinómica reconstruye la trayectoria suave entre esos fotogramas. Se interpolan las componentes X(t) e Y(t) por separado, cada una con su propio polinomio, y se combinan para obtener la curva 2D. Arrastra los keyframes para ver cómo cambia la trayectoria en tiempo real.
+    </p>
+
+    <div class="app-layout">
+      <div class="canvas-wrapper">
+        <canvas id="trajCanvas" width="680" height="280" style="cursor:default;"></canvas>
+      </div>
+
+      <div class="app-controls">
+        <button class="btn" id="btnAnimar">Animar</button>
+        <div class="app-stat-panel">
+          <h4>Posición actual</h4>
+          <div class="stat-row">
+            <span class="stat-label">t</span>
+            <span class="stat-val" id="trajT">0.00</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">x(t)</span>
+            <span class="stat-val ok" id="trajX">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">y(t)</span>
+            <span class="stat-val ok" id="trajY">—</span>
+          </div>
+        </div>
+        <span class="hint">Arrastra los keyframes (diamantes) para modificar la trayectoria</span>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+// ─── Utilidades matemáticas ───────────────────────────────────────────────────
+
+// Eliminación Gaussiana con pivoteo parcial. Resuelve A·x = b.
+// Retorna el vector solución o null si el sistema es singular.
+function gaussianElim(A, b) {
+  const n = b.length;
+  // Clonar para no mutar
+  const M = A.map((row, i) => [...row, b[i]]);
+
+  for (let col = 0; col < n; col++) {
+    // Pivoteo parcial
+    let maxRow = col;
+    let maxVal = Math.abs(M[col][col]);
+    for (let row = col + 1; row < n; row++) {
+      if (Math.abs(M[row][col]) > maxVal) {
+        maxVal = Math.abs(M[row][col]);
+        maxRow = row;
+      }
+    }
+    if (maxVal < 1e-12) return null; // singular
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+
+    for (let row = col + 1; row < n; row++) {
+      const factor = M[row][col] / M[col][col];
+      for (let j = col; j <= n; j++) {
+        M[row][j] -= factor * M[col][j];
+      }
+    }
+  }
+
+  // Sustitución hacia atrás
+  const x = new Array(n).fill(0);
+  for (let i = n - 1; i >= 0; i--) {
+    x[i] = M[i][n];
+    for (let j = i + 1; j < n; j++) {
+      x[i] -= M[i][j] * x[j];
+    }
+    x[i] /= M[i][i];
+  }
+  return x;
+}
+
+// Construye la matriz de Vandermonde para xs dado.
+function vandermonde(xs) {
+  const n = xs.length;
+  return xs.map(x => Array.from({length: n}, (_, k) => Math.pow(x, k)));
+}
+
+// Evalúa el polinomio con coeficientes [c0, c1, c2, ...] usando el método de Horner.
+function horner(coeffs, x) {
+  let result = 0;
+  for (let i = coeffs.length - 1; i >= 0; i--) {
+    result = result * x + coeffs[i];
+  }
+  return result;
+}
+
+// Calcula un número de condición aproximado (norma-1).
+function condNumber(A) {
+  const n = A.length;
+  // Norma-1: max suma de columnas
+  let norm1 = 0;
+  for (let j = 0; j < n; j++) {
+    let s = 0;
+    for (let i = 0; i < n; i++) s += Math.abs(A[i][j]);
+    norm1 = Math.max(norm1, s);
+  }
+  // Invertimos A y calculamos su norma-1
+  const invCols = [];
+  for (let j = 0; j < n; j++) {
+    const e = new Array(n).fill(0);
+    e[j] = 1;
+    const col = gaussianElim(A, e);
+    if (!col) return Infinity;
+    invCols.push(col);
+  }
+  let normInv = 0;
+  for (let j = 0; j < n; j++) {
+    let s = 0;
+    for (let i = 0; i < n; i++) s += Math.abs(invCols[j][i]);
+    normInv = Math.max(normInv, s);
+  }
+  return norm1 * normInv;
+}
+
+// Formatea un número mostrando hasta 3 decimales significativos.
+function fmt(v) {
+  if (Math.abs(v) < 1e-9) return '0';
+  return parseFloat(v.toFixed(3)).toString();
+}
+
+// Construye la cadena "p(x) = c₀ + c₁x + c₂x² + …"
+function polyString(coeffs) {
+  if (!coeffs || coeffs.length === 0) return 'p(x) = —';
+  const superscripts = ['', '', '²', '³', '⁴', '⁵'];
+  let terms = [];
+  for (let i = coeffs.length - 1; i >= 0; i--) {
+    const c = coeffs[i];
+    if (Math.abs(c) < 1e-9) continue;
+    let term = '';
+    const absC = Math.abs(c);
+    const sign = c < 0 ? '−' : '+';
+    const cStr = absC === 1 && i > 0 ? '' : fmt(absC);
+    if (i === 0) term = cStr || fmt(absC);
+    else if (i === 1) term = `${cStr}x`;
+    else term = `${cStr}x${superscripts[i] || ('^' + i)}`;
+    terms.push({sign, term});
+  }
+  if (terms.length === 0) return 'p(x) = 0';
+  let str = 'p(x) = ';
+  terms.forEach((t, idx) => {
+    if (idx === 0) {
+      str += (t.sign === '−' ? '−' : '') + t.term;
+    } else {
+      str += ` ${t.sign} ${t.term}`;
+    }
+  });
+  return str;
+}
+
+// ─── Canvas principal: Interpolación interactiva ──────────────────────────────
+
+(function() {
+  const canvas = document.getElementById('interpCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MATH_MIN = -5, MATH_MAX = 5;
+  const MAX_POINTS = 6;
+  const POINT_RADIUS = 8;
+
+  let points = []; // [{mx, my}] en coordenadas matemáticas
+  let coeffs = null;
+  let dragging = null; // índice del punto arrastrado
+
+  // Coordenada matemática → píxel
+  function toPixel(mx, my) {
+    const px = (mx - MATH_MIN) / (MATH_MAX - MATH_MIN) * W;
+    const py = H - (my - MATH_MIN) / (MATH_MAX - MATH_MIN) * H;
+    return [px, py];
+  }
+
+  // Píxel → coordenada matemática
+  function toMath(px, py) {
+    const mx = (px / W) * (MATH_MAX - MATH_MIN) + MATH_MIN;
+    const my = ((H - py) / H) * (MATH_MAX - MATH_MIN) + MATH_MIN;
+    return [mx, my];
+  }
+
+  function clampMath(v) {
+    return Math.max(MATH_MIN + 0.01, Math.min(MATH_MAX - 0.01, v));
+  }
+
+  function solve() {
+    if (points.length < 2) { coeffs = null; return; }
+    const xs = points.map(p => p.mx);
+    const ys = points.map(p => p.my);
+    // Verificar x distintos
+    const unique = new Set(xs.map(x => Math.round(x * 1000)));
+    if (unique.size < xs.length) { coeffs = null; return; }
+    const V = vandermonde(xs);
+    coeffs = gaussianElim(V, ys);
+  }
+
+  function updatePanel() {
+    document.getElementById('livePuntos').textContent = points.length;
+    if (points.length < 2) {
+      document.getElementById('liveGrado').textContent = '—';
+      document.getElementById('liveCond').textContent = '—';
+      document.getElementById('liveCoefs').textContent = '—';
+      document.getElementById('liveResult').textContent = 'Agrega ≥ 2 puntos haciendo clic en el canvas';
+      document.getElementById('liveResult').className = 'live-result';
+      document.getElementById('polyEqDisplay').textContent = 'p(x) = —';
+      return;
+    }
+    if (!coeffs) {
+      document.getElementById('liveGrado').textContent = '—';
+      document.getElementById('liveCond').textContent = '—';
+      document.getElementById('liveCoefs').textContent = '—';
+      document.getElementById('liveResult').textContent = 'Error: puntos con x duplicados';
+      document.getElementById('liveResult').className = 'live-result error';
+      document.getElementById('polyEqDisplay').textContent = 'p(x) = —';
+      return;
+    }
+    const n = points.length;
+    document.getElementById('liveGrado').textContent = `${n - 1}`;
+    // Condición número
+    const xs = points.map(p => p.mx);
+    const V = vandermonde(xs);
+    const cond = condNumber(V);
+    const condStr = cond > 1e6 ? cond.toExponential(2) : fmt(cond);
+    document.getElementById('liveCond').textContent = condStr;
+    // Coeficientes
+    document.getElementById('liveCoefs').textContent = coeffs.map(fmt).join(', ');
+    // Ecuación
+    const eq = polyString(coeffs);
+    document.getElementById('liveResult').textContent = eq;
+    document.getElementById('liveResult').className = 'live-result';
+    document.getElementById('polyEqDisplay').textContent = eq;
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Fondo
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(48,54,61,0.8)';
+    ctx.lineWidth = 1;
+    for (let v = MATH_MIN; v <= MATH_MAX; v++) {
+      const [px] = toPixel(v, 0);
+      const [, py] = toPixel(0, v);
+      ctx.beginPath(); ctx.moveTo(px, 0); ctx.lineTo(px, H); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0, py); ctx.lineTo(W, py); ctx.stroke();
+    }
+
+    // Ejes
+    const [ox, oy] = toPixel(0, 0);
+    ctx.strokeStyle = 'rgba(139,148,158,0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(W, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, 0); ctx.lineTo(ox, H); ctx.stroke();
+
+    // Etiquetas de ejes
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let v = MATH_MIN + 1; v < MATH_MAX; v++) {
+      if (v === 0) continue;
+      const [px] = toPixel(v, 0);
+      ctx.fillText(v, px, oy + 14);
+      const [, py] = toPixel(0, v);
+      ctx.textAlign = 'right';
+      ctx.fillText(v, ox - 5, py + 4);
+      ctx.textAlign = 'center';
+    }
+
+    // Curva interpolante
+    if (coeffs) {
+      ctx.strokeStyle = '#58a6ff';
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = 'rgba(88,166,255,0.4)';
+      ctx.shadowBlur = 6;
+      ctx.beginPath();
+      let started = false;
+      const STEPS = 400;
+      for (let i = 0; i <= STEPS; i++) {
+        const mx = MATH_MIN + (MATH_MAX - MATH_MIN) * (i / STEPS);
+        const my = horner(coeffs, mx);
+        const [px, py] = toPixel(mx, my);
+        if (!started) { ctx.moveTo(px, py); started = true; }
+        else ctx.lineTo(px, py);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Puntos
+    const COLORS = ['#58a6ff', '#bc8cff', '#3fb950', '#d29922', '#f85149', '#79c0ff'];
+    points.forEach((p, i) => {
+      const [px, py] = toPixel(p.mx, p.my);
+      // Sombra
+      ctx.shadowColor = COLORS[i % COLORS.length];
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = COLORS[i % COLORS.length];
+      ctx.beginPath();
+      ctx.arc(px, py, POINT_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // Borde blanco
+      ctx.strokeStyle = '#e6edf3';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      // Etiqueta
+      ctx.fillStyle = '#e6edf3';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`(${fmt(p.mx)}, ${fmt(p.my)})`, px + 12, py - 4);
+    });
+  }
+
+  function hitTest(px, py) {
+    for (let i = points.length - 1; i >= 0; i--) {
+      const [cx, cy] = toPixel(points[i].mx, points[i].my);
+      const dx = px - cx, dy = py - cy;
+      if (Math.sqrt(dx*dx + dy*dy) <= POINT_RADIUS + 4) return i;
+    }
+    return -1;
+  }
+
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    if (e.touches) {
+      return [(e.touches[0].clientX - rect.left) * scaleX,
+              (e.touches[0].clientY - rect.top) * scaleY];
+    }
+    return [(e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY];
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    const [px, py] = getCanvasPos(e);
+    const hit = hitTest(px, py);
+    if (hit >= 0) {
+      dragging = hit;
+    } else {
+      if (points.length >= MAX_POINTS) return;
+      const [mx, my] = toMath(px, py);
+      points.push({mx: clampMath(mx), my: clampMath(my)});
+      solve();
+      updatePanel();
+      draw();
+    }
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (dragging === null) return;
+    const [px, py] = getCanvasPos(e);
+    const [mx, my] = toMath(px, py);
+    points[dragging] = {mx: clampMath(mx), my: clampMath(my)};
+    solve();
+    updatePanel();
+    draw();
+  });
+
+  canvas.addEventListener('mouseup', () => { dragging = null; });
+  canvas.addEventListener('mouseleave', () => { dragging = null; });
+
+  document.getElementById('btnLimpiar').addEventListener('click', () => {
+    points = [];
+    coeffs = null;
+    updatePanel();
+    draw();
+  });
+
+  draw();
+  updatePanel();
+})();
+
+
+// ─── Canvas de trayectorias ───────────────────────────────────────────────────
+
+(function() {
+  const canvas = document.getElementById('trajCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const MARGIN = 40;
+
+  // Keyframes: tiempo t ∈ [0,1], posición (x,y) en espacio canvas
+  let keyframes = [
+    {t: 0,    cx: 80,  cy: 200},
+    {t: 0.33, cx: 230, cy: 80},
+    {t: 0.66, cx: 430, cy: 220},
+    {t: 1,    cx: 600, cy: 100},
+  ];
+
+  let animating = false;
+  let animT = 0;
+  let animRAF = null;
+  let dragging = null;
+
+  function solveAxis(ts, vals) {
+    const V = vandermonde(ts);
+    return gaussianElim(V, vals);
+  }
+
+  function getCoeffs() {
+    const ts = keyframes.map(k => k.t);
+    const cxs = keyframes.map(k => k.cx);
+    const cys = keyframes.map(k => k.cy);
+    const cx = solveAxis(ts, cxs);
+    const cy = solveAxis(ts, cys);
+    return {cx, cy};
+  }
+
+  function evalPath(t, cx, cy) {
+    return [horner(cx, t), horner(cy, t)];
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Fondo
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Título
+    ctx.fillStyle = '#8b949e';
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('Trayectoria interpolada (espacio de pantalla)', 12, 20);
+
+    const {cx, cy} = getCoeffs();
+    if (!cx || !cy) return;
+
+    // Curva suave
+    ctx.strokeStyle = 'rgba(88,166,255,0.5)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    const STEPS = 300;
+    for (let i = 0; i <= STEPS; i++) {
+      const t = i / STEPS;
+      const [px, py] = evalPath(t, cx, cy);
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+
+    // Keyframes unidos por líneas punteadas
+    ctx.strokeStyle = 'rgba(139,148,158,0.3)';
+    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    keyframes.forEach((k, i) => {
+      if (i === 0) ctx.moveTo(k.cx, k.cy);
+      else ctx.lineTo(k.cx, k.cy);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Keyframe diamonds
+    keyframes.forEach((k, i) => {
+      const colors = ['#58a6ff', '#bc8cff', '#3fb950', '#d29922'];
+      ctx.save();
+      ctx.translate(k.cx, k.cy);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillStyle = colors[i % colors.length];
+      ctx.shadowColor = colors[i % colors.length];
+      ctx.shadowBlur = 8;
+      ctx.fillRect(-7, -7, 14, 14);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      // Etiqueta t
+      ctx.fillStyle = '#8b949e';
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(`t=${k.t.toFixed(2)}`, k.cx, k.cy + 22);
+    });
+
+    // Punto animado
+    const [ax, ay] = evalPath(animT, cx, cy);
+    ctx.fillStyle = '#f85149';
+    ctx.shadowColor = '#f85149';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(ax, ay, 8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#e6edf3';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Actualizar panel
+    document.getElementById('trajT').textContent = animT.toFixed(3);
+    document.getElementById('trajX').textContent = fmt(ax);
+    document.getElementById('trajY').textContent = fmt(H - ay); // y invertida para display
+  }
+
+  function animate() {
+    animT += 0.004;
+    if (animT > 1) animT = 0;
+    draw();
+    if (animating) animRAF = requestAnimationFrame(animate);
+  }
+
+  document.getElementById('btnAnimar').addEventListener('click', () => {
+    animating = !animating;
+    const btn = document.getElementById('btnAnimar');
+    if (animating) {
+      btn.textContent = 'Pausar';
+      btn.classList.add('active');
+      animRAF = requestAnimationFrame(animate);
+    } else {
+      btn.textContent = 'Animar';
+      btn.classList.remove('active');
+      cancelAnimationFrame(animRAF);
+    }
+  });
+
+  // Drag de keyframes
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    if (e.touches) {
+      return [(e.touches[0].clientX - rect.left) * scaleX,
+              (e.touches[0].clientY - rect.top) * scaleY];
+    }
+    return [(e.clientX - rect.left) * scaleX, (e.clientY - rect.top) * scaleY];
+  }
+
+  function hitKeyframe(px, py) {
+    for (let i = keyframes.length - 1; i >= 0; i--) {
+      const dx = px - keyframes[i].cx, dy = py - keyframes[i].cy;
+      if (Math.sqrt(dx*dx + dy*dy) <= 14) return i;
+    }
+    return -1;
+  }
+
+  canvas.style.cursor = 'default';
+  canvas.addEventListener('mousedown', e => {
+    const [px, py] = getPos(e);
+    dragging = hitKeyframe(px, py);
+    if (dragging >= 0) canvas.style.cursor = 'grabbing';
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    const [px, py] = getPos(e);
+    if (dragging !== null && dragging >= 0) {
+      keyframes[dragging].cx = Math.max(MARGIN, Math.min(W - MARGIN, px));
+      keyframes[dragging].cy = Math.max(MARGIN, Math.min(H - MARGIN, py));
+      if (!animating) draw();
+    } else {
+      canvas.style.cursor = hitKeyframe(px, py) >= 0 ? 'grab' : 'default';
+    }
+  });
+
+  canvas.addEventListener('mouseup', () => { dragging = null; canvas.style.cursor = 'default'; });
+  canvas.addEventListener('mouseleave', () => { dragging = null; });
+
+  draw();
+})();
+</script>

@@ -1,0 +1,764 @@
+---
+layout: default
+title: Regresión Lineal
+prev_url: /modulo-03/interpolacion-polinomica.html
+prev_title: Interpolación Polinómica
+next_url: /modulo-04/deformacion-sprites.html
+next_title: Deformación de Sprites
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent2); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(88,166,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent); font-size:0.9rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.6rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .live-result { font-family:var(--font-mono); font-size:1rem; font-weight:700; color:var(--accent3); text-align:center; padding:0.6rem; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:var(--radius-md); margin-top:0.25rem; word-break:break-all; }
+  .live-result.error { color:var(--danger); background:rgba(248,81,73,0.08); border-color:rgba(248,81,73,0.2); }
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; align-items:center; }
+  canvas { display:block; border-radius:var(--radius-md); cursor:crosshair; }
+  .controls { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; display:flex; flex-wrap:wrap; gap:0.75rem 1.5rem; align-items:center; }
+  .control-group { display:flex; flex-direction:column; gap:0.3rem; }
+  .control-group label { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); }
+  .degree-btns { display:flex; gap:0.4rem; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.active { border-color:var(--accent); background:rgba(88,166,255,0.12); color:var(--accent); }
+  .btn.danger:hover { border-color:var(--danger); color:var(--danger); }
+  .eq-display { font-family:var(--font-mono); font-size:0.82rem; color:var(--accent3); background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:var(--radius-md); padding:0.5rem 0.9rem; margin-top:0.25rem; min-height:2rem; word-break:break-all; }
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+  .app-layout { display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:start; }
+  .app-controls { display:flex; flex-direction:column; gap:1rem; min-width:220px; }
+  .app-stat-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; display:flex; flex-direction:column; gap:0.5rem; }
+  .app-stat-panel h4 { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .stat-row { display:flex; justify-content:space-between; font-size:0.82rem; }
+  .stat-label { color:var(--muted); }
+  .stat-val { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .stat-val.ok { color:var(--accent3); }
+  .stat-val.warn { color:var(--warn); }
+  .coeff-table { width:100%; border-collapse:collapse; font-family:var(--font-mono); font-size:0.8rem; }
+  .coeff-table th { font-size:0.7rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); padding:0.3rem 0.5rem; border-bottom:1px solid var(--border); text-align:left; }
+  .coeff-table td { padding:0.3rem 0.5rem; color:var(--text); border-bottom:1px solid rgba(48,54,61,0.5); }
+  .coeff-table td:last-child { color:var(--accent); }
+  .slider-group { display:flex; flex-direction:column; gap:0.3rem; }
+  .slider-group label { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); }
+  .slider-group input[type=range] { width:100%; accent-color:var(--accent); }
+  .legend { display:flex; flex-direction:column; gap:0.35rem; }
+  .legend-item { display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; color:var(--muted); }
+  .legend-line { width:24px; height:3px; border-radius:2px; flex-shrink:0; }
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;} .app-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 3: Sistemas de Ecuaciones</a><span class="sep">›</span>Regresión Lineal
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 3 · Sistemas de Ecuaciones</span>
+    <h1>Regresión Lineal</h1>
+    <p class="demo-lead">La ecuación normal (AᵀA)c = Aᵀy encuentra el polinomio que minimiza el error cuadrático total sobre un conjunto de datos.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>La Ecuación Normal</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Dado un conjunto de m puntos (xᵢ, yᵢ), construimos la <em>matriz de diseño</em> A con columnas de potencias de x y buscamos los coeficientes c que minimizan ∑(yᵢ − p(xᵢ))²:
+        </p>
+        <div class="formula-box">
+A = [ 1  x₁  x₁²  ··· ]<br>
+    [ 1  x₂  x₂²  ··· ]<br>
+    [ ·  ·   ·       ]<br>
+    [ 1  xₘ  xₘ²  ··· ]<br><br>
+(AᵀA) c = Aᵀy<br><br>
+c = (AᵀA)⁻¹ Aᵀy
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Diferencias con Interpolación</h3>
+        <ul class="props-list">
+          <li>Sistema sobredeterminado: m puntos &gt; grado + 1 incógnitas</li>
+          <li>No pasa por todos los puntos — minimiza el error total</li>
+          <li>AᵀA es cuadrada y simétrica (de tamaño (d+1) × (d+1))</li>
+          <li>La solución existe siempre que las xᵢ no sean todas iguales</li>
+          <li>Mayor grado no siempre mejora la predicción (sobreajuste)</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Bondad de Ajuste</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          El coeficiente de determinación R² mide qué fracción de la varianza es explicada por el modelo:
+        </p>
+        <div class="formula-box">
+SS_res = ∑(yᵢ − ŷᵢ)²  (residuos)<br>
+SS_tot = ∑(yᵢ − ȳ)²   (varianza total)<br><br>
+R² = 1 − SS_res / SS_tot<br><br>
+R² = 1 → ajuste perfecto<br>
+R² = 0 → no mejor que la media
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado en tiempo real</h3>
+        <div class="live-panel">
+          <h3>Regresión actual</h3>
+          <div class="live-row">
+            <span class="live-label">Puntos de datos</span>
+            <span class="live-value" id="liveN">0</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Grado del polinomio</span>
+            <span class="live-value" id="liveDegree">1</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">R²</span>
+            <span class="live-value" id="liveR2">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">RSS</span>
+            <span class="live-value" id="liveRSS">—</span>
+          </div>
+          <div class="live-result" id="liveEq">Agrega puntos haciendo clic en el canvas</div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="regCanvas" width="560" height="420" title="Haz clic para agregar puntos"></canvas>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>Grado del polinomio</label>
+          <div class="degree-btns">
+            <button class="btn active" id="deg1" onclick="setDegree(1)">Grado 1</button>
+            <button class="btn" id="deg2" onclick="setDegree(2)">Grado 2</button>
+            <button class="btn" id="deg3" onclick="setDegree(3)">Grado 3</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:flex-end;">
+          <button class="btn danger" onclick="clearPoints()">Limpiar</button>
+          <button class="btn" onclick="addNoise()">Añadir ruido</button>
+        </div>
+      </div>
+      <div style="padding:0 0.25rem;">
+        <div class="eq-display" id="eqDisplay">—</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación: Predicción de Rendimiento en Sistemas de Cómputo</h2>
+    <p class="app-description">
+      En ingeniería de rendimiento, los benchmarks miden el throughput de un sistema a distintos tamaños de problema N. Al ajustar una curva polinómica a esos datos podemos <em>predecir</em> el rendimiento a tamaños no medidos, detectar cuellos de botella y comparar si el comportamiento es lineal O(N) o cuadrático O(N²). Aquí se muestran simultáneamente un ajuste lineal (punteado) y uno cuadrático (sólido) para ilustrar cómo el grado afecta la bondad de ajuste.
+    </p>
+
+    <div class="app-layout">
+      <div>
+        <div class="canvas-wrapper" style="margin-bottom:1rem;">
+          <canvas id="appCanvas" width="680" height="300"></canvas>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap;">
+          <div class="slider-group" style="flex:1;min-width:180px;">
+            <label id="noiseLbl">Nivel de ruido = 20</label>
+            <input type="range" id="noiseSlider" min="0" max="100" step="1" value="20" oninput="updateAppNoise(this.value)">
+          </div>
+          <button class="btn" onclick="regenerateApp()">Regenerar datos</button>
+        </div>
+      </div>
+
+      <div class="app-controls">
+        <div class="app-stat-panel">
+          <h4>Bondad de ajuste</h4>
+          <div class="stat-row">
+            <span class="stat-label">R² lineal</span>
+            <span class="stat-val" id="appR2lin">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">R² cuadrático</span>
+            <span class="stat-val ok" id="appR2quad">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Puntos de datos</span>
+            <span class="stat-val" id="appNpts">6</span>
+          </div>
+        </div>
+
+        <div class="app-stat-panel">
+          <h4>Coeficientes (cuadrático)</h4>
+          <table class="coeff-table">
+            <thead>
+              <tr><th>Término</th><th>Valor</th></tr>
+            </thead>
+            <tbody id="coeffTable">
+              <tr><td>c₀ (constante)</td><td>—</td></tr>
+              <tr><td>c₁ (lineal)</td><td>—</td></tr>
+              <tr><td>c₂ (cuadrático)</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="app-stat-panel">
+          <h4>Leyenda</h4>
+          <div class="legend">
+            <div class="legend-item">
+              <div class="legend-line" style="background:var(--accent);border-top:3px solid var(--accent);"></div>
+              Ajuste cuadrático (sólido)
+            </div>
+            <div class="legend-item">
+              <div class="legend-line" style="background:var(--accent2);border-top:3px dashed var(--accent2);height:0;"></div>
+              Ajuste lineal (punteado)
+            </div>
+            <div class="legend-item">
+              <div style="width:10px;height:10px;border-radius:50%;background:var(--text);flex-shrink:0;"></div>
+              Benchmark medido
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div><!-- /demo-page -->
+
+<script>
+(function () {
+  // ─────────────────────────────────────────────
+  // Matrix utilities (pure JS, no libraries)
+  // ─────────────────────────────────────────────
+
+  /** Transpose an m×n matrix */
+  function transpose(M) {
+    const rows = M.length, cols = M[0].length;
+    const T = [];
+    for (let j = 0; j < cols; j++) {
+      T[j] = [];
+      for (let i = 0; i < rows; i++) T[j][i] = M[i][j];
+    }
+    return T;
+  }
+
+  /** Multiply two matrices A (m×k) · B (k×n) */
+  function matMul(A, B) {
+    const m = A.length, k = A[0].length, n = B[0].length;
+    const C = [];
+    for (let i = 0; i < m; i++) {
+      C[i] = new Array(n).fill(0);
+      for (let j = 0; j < n; j++)
+        for (let p = 0; p < k; p++)
+          C[i][j] += A[i][p] * B[p][j];
+    }
+    return C;
+  }
+
+  /** Multiply matrix A (m×k) by column vector v (k) → vector (m) */
+  function matVec(A, v) {
+    return A.map(row => row.reduce((s, a, j) => s + a * v[j], 0));
+  }
+
+  /** Gaussian elimination with partial pivoting. Solves Ax = b. Returns x or null if singular. */
+  function gaussianElim(A, b) {
+    const n = b.length;
+    const M = A.map((row, i) => [...row, b[i]]);
+
+    for (let col = 0; col < n; col++) {
+      // partial pivot
+      let maxRow = col;
+      for (let row = col + 1; row < n; row++)
+        if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+      [M[col], M[maxRow]] = [M[maxRow], M[col]];
+
+      if (Math.abs(M[col][col]) < 1e-12) return null;
+
+      for (let row = col + 1; row < n; row++) {
+        const f = M[row][col] / M[col][col];
+        for (let j = col; j <= n; j++) M[row][j] -= f * M[col][j];
+      }
+    }
+
+    const x = new Array(n).fill(0);
+    for (let i = n - 1; i >= 0; i--) {
+      x[i] = M[i][n] / M[i][i];
+      for (let j = i + 1; j < n; j++) x[i] -= (M[i][j] / M[i][i]) * x[j];
+    }
+    return x;
+  }
+
+  /** Build the design matrix A for polynomial regression of given degree */
+  function buildDesignMatrix(xs, degree) {
+    return xs.map(x => {
+      const row = [];
+      for (let d = 0; d <= degree; d++) row.push(Math.pow(x, d));
+      return row;
+    });
+  }
+
+  /** Solve normal equations (AᵀA)c = Aᵀy. Returns coefficient array or null. */
+  function normalEquation(xs, ys, degree) {
+    if (xs.length < degree + 1) return null;
+    const A = buildDesignMatrix(xs, degree);
+    const At = transpose(A);
+    const AtA = matMul(At, A);
+    const Aty = matVec(At, ys);
+    return gaussianElim(AtA, Aty);
+  }
+
+  /** Evaluate polynomial using Horner's method. coeffs = [c0, c1, c2, ...] */
+  function evalPoly(coeffs, x) {
+    let result = 0;
+    for (let i = coeffs.length - 1; i >= 0; i--)
+      result = result * x + coeffs[i];
+    return result;
+  }
+
+  /** Compute R² given actual ys and predicted ys */
+  function computeR2(ys, yHat) {
+    const mean = ys.reduce((s, v) => s + v, 0) / ys.length;
+    const ssTot = ys.reduce((s, v) => s + (v - mean) ** 2, 0);
+    const ssRes = ys.reduce((s, v, i) => s + (v - yHat[i]) ** 2, 0);
+    if (ssTot < 1e-12) return 1;
+    return 1 - ssRes / ssTot;
+  }
+
+  /** Compute RSS */
+  function computeRSS(ys, yHat) {
+    return ys.reduce((s, v, i) => s + (v - yHat[i]) ** 2, 0);
+  }
+
+  // ─────────────────────────────────────────────
+  // Main regression canvas
+  // ─────────────────────────────────────────────
+  const canvas = document.getElementById('regCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+
+  // Math domain
+  const XMIN = -5, XMAX = 5, YMIN = -5, YMAX = 5;
+
+  // Data state
+  let points = [];   // [{mx, my}] in math coords
+  let degree = 1;
+
+  function toCanvas(mx, my) {
+    const cx = (mx - XMIN) / (XMAX - XMIN) * W;
+    const cy = H - (my - YMIN) / (YMAX - YMIN) * H;
+    return [cx, cy];
+  }
+
+  function toMath(cx, cy) {
+    const mx = cx / W * (XMAX - XMIN) + XMIN;
+    const my = (H - cy) / H * (YMAX - YMIN) + YMIN;
+    return [mx, my];
+  }
+
+  function drawGrid() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(48,54,61,0.6)';
+    ctx.lineWidth = 1;
+    for (let x = XMIN; x <= XMAX; x++) {
+      const [cx] = toCanvas(x, 0);
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+    }
+    for (let y = YMIN; y <= YMAX; y++) {
+      const [, cy] = toCanvas(0, y);
+      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = 'rgba(139,148,158,0.8)';
+    ctx.lineWidth = 1.5;
+    const [ax0] = toCanvas(0, 0); const [, ay0] = toCanvas(0, 0);
+    ctx.beginPath(); ctx.moveTo(ax0, 0); ctx.lineTo(ax0, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0, ay0); ctx.lineTo(W, ay0); ctx.stroke();
+
+    // Tick labels
+    ctx.fillStyle = 'rgba(139,148,158,0.7)';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let x = XMIN; x <= XMAX; x++) {
+      if (x === 0) continue;
+      const [cx, cy] = toCanvas(x, 0);
+      ctx.fillText(x, cx, cy + 14);
+    }
+    ctx.textAlign = 'right';
+    for (let y = YMIN; y <= YMAX; y++) {
+      if (y === 0) continue;
+      const [cx, cy] = toCanvas(0, y);
+      ctx.fillText(y, cx - 4, cy + 4);
+    }
+  }
+
+  function drawRegression() {
+    drawGrid();
+
+    if (points.length === 0) return;
+
+    const xs = points.map(p => p.mx);
+    const ys = points.map(p => p.my);
+    const coeffs = normalEquation(xs, ys, degree);
+
+    // Draw residual lines
+    if (coeffs) {
+      ctx.strokeStyle = 'rgba(248,81,73,0.55)';
+      ctx.lineWidth = 1;
+      points.forEach(p => {
+        const yHat = evalPoly(coeffs, p.mx);
+        const [cx, cy1] = toCanvas(p.mx, p.my);
+        const [, cy2] = toCanvas(p.mx, yHat);
+        ctx.beginPath(); ctx.moveTo(cx, cy1); ctx.lineTo(cx, cy2); ctx.stroke();
+      });
+    }
+
+    // Draw regression curve
+    if (coeffs) {
+      ctx.strokeStyle = '#58a6ff';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      let first = true;
+      for (let px = 0; px <= W; px++) {
+        const mx = XMIN + px / W * (XMAX - XMIN);
+        const my = evalPoly(coeffs, mx);
+        const [, cy] = toCanvas(mx, my);
+        if (first) { ctx.moveTo(px, cy); first = false; }
+        else ctx.lineTo(px, cy);
+      }
+      ctx.stroke();
+    }
+
+    // Draw data points
+    points.forEach(p => {
+      const [cx, cy] = toCanvas(p.mx, p.my);
+      ctx.fillStyle = '#e6edf3';
+      ctx.strokeStyle = '#58a6ff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+      ctx.fill(); ctx.stroke();
+    });
+
+    // Update live panel
+    if (coeffs) {
+      const yHat = xs.map(x => evalPoly(coeffs, x));
+      const r2 = computeR2(ys, yHat);
+      const rss = computeRSS(ys, yHat);
+      document.getElementById('liveR2').textContent = r2.toFixed(4);
+      document.getElementById('liveRSS').textContent = rss.toFixed(4);
+
+      const names = ['c₀', 'c₁', 'c₂', 'c₃'];
+      const terms = coeffs.map((c, i) => {
+        const s = c >= 0 ? (i === 0 ? '' : ' + ') : ' − ';
+        const v = Math.abs(c).toFixed(3);
+        if (i === 0) return v;
+        if (i === 1) return `${s}${v}x`;
+        return `${s}${v}x^${i}`;
+      });
+      const eqStr = 'p(x) = ' + terms.join('');
+      document.getElementById('liveEq').textContent = eqStr;
+      document.getElementById('eqDisplay').textContent = eqStr;
+      document.getElementById('liveEq').className = 'live-result';
+    } else {
+      document.getElementById('liveR2').textContent = '—';
+      document.getElementById('liveRSS').textContent = '—';
+      const msg = `Necesitas al menos ${degree + 1} puntos para grado ${degree}`;
+      document.getElementById('liveEq').textContent = msg;
+      document.getElementById('liveEq').className = 'live-result error';
+      document.getElementById('eqDisplay').textContent = '—';
+    }
+
+    document.getElementById('liveN').textContent = points.length;
+    document.getElementById('liveDegree').textContent = degree;
+  }
+
+  function setDegree(d) {
+    degree = d;
+    [1, 2, 3].forEach(i => {
+      document.getElementById('deg' + i).classList.toggle('active', i === d);
+    });
+    drawRegression();
+  }
+
+  function clearPoints() {
+    points = [];
+    document.getElementById('liveR2').textContent = '—';
+    document.getElementById('liveRSS').textContent = '—';
+    document.getElementById('liveN').textContent = '0';
+    document.getElementById('liveEq').textContent = 'Agrega puntos haciendo clic en el canvas';
+    document.getElementById('liveEq').className = 'live-result';
+    document.getElementById('eqDisplay').textContent = '—';
+    drawGrid();
+  }
+
+  function addNoise() {
+    // Generate 10 points around a noisy line y = 0.6x + 0.3 + noise
+    for (let i = 0; i < 10; i++) {
+      const mx = (Math.random() * 8) - 4;
+      const my = 0.6 * mx + 0.3 + (Math.random() - 0.5) * 2.5;
+      points.push({ mx: +mx.toFixed(3), my: +my.toFixed(3) });
+    }
+    drawRegression();
+  }
+
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = W / rect.width;
+    const scaleY = H / rect.height;
+    const cx = (e.clientX - rect.left) * scaleX;
+    const cy = (e.clientY - rect.top) * scaleY;
+    const [mx, my] = toMath(cx, cy);
+    // Clamp to domain
+    if (mx < XMIN || mx > XMAX || my < YMIN || my > YMAX) return;
+    points.push({ mx: +mx.toFixed(3), my: +my.toFixed(3) });
+    drawRegression();
+  });
+
+  // Expose to global scope for inline handlers
+  window.setDegree = setDegree;
+  window.clearPoints = clearPoints;
+  window.addNoise = addNoise;
+
+  // Initial draw
+  drawGrid();
+  document.getElementById('liveN').textContent = '0';
+  document.getElementById('liveDegree').textContent = '1';
+
+  // ─────────────────────────────────────────────
+  // Application canvas — benchmark performance
+  // ─────────────────────────────────────────────
+  const appCanvas = document.getElementById('appCanvas');
+  const actx = appCanvas.getContext('2d');
+  const AW = appCanvas.width, AH = appCanvas.height;
+
+  const BASE_SIZES = [100, 200, 500, 1000, 2000, 5000];
+  // True underlying: score = 0.0004 * N^1.7  (roughly quadratic growth with noise)
+  function trueScore(N) { return 0.0004 * Math.pow(N, 1.7); }
+
+  let appNoise = 20;
+  let appData = [];
+
+  function generateAppData() {
+    appData = BASE_SIZES.map(N => {
+      const base = trueScore(N);
+      const jitter = base * (appNoise / 100) * (Math.random() - 0.5) * 2;
+      return { N, score: Math.max(0, base + jitter) };
+    });
+  }
+
+  function appToCanvas(N, score, Nmin, Nmax, Smin, Smax) {
+    const pad = { l: 60, r: 20, t: 20, b: 50 };
+    const x = pad.l + (N - Nmin) / (Nmax - Nmin) * (AW - pad.l - pad.r);
+    const y = AH - pad.b - (score - Smin) / (Smax - Smin) * (AH - pad.t - pad.b);
+    return [x, y];
+  }
+
+  function drawAppCanvas() {
+    actx.clearRect(0, 0, AW, AH);
+    actx.fillStyle = '#0d1117';
+    actx.fillRect(0, 0, AW, AH);
+
+    const pad = { l: 60, r: 20, t: 20, b: 50 };
+    const Nmin = 0, Nmax = 5500;
+    const scores = appData.map(d => d.score);
+    const Smin = 0, Smax = Math.max(...scores) * 1.2 || 1;
+
+    // Grid lines
+    actx.strokeStyle = 'rgba(48,54,61,0.6)';
+    actx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+      const s = Smin + i * (Smax - Smin) / 5;
+      const [, cy] = appToCanvas(Nmin, s, Nmin, Nmax, Smin, Smax);
+      actx.beginPath(); actx.moveTo(pad.l, cy); actx.lineTo(AW - pad.r, cy); actx.stroke();
+    }
+    for (let i = 0; i <= 5; i++) {
+      const N = Nmin + i * (Nmax - Nmin) / 5;
+      const [cx] = appToCanvas(N, Smin, Nmin, Nmax, Smin, Smax);
+      actx.beginPath(); actx.moveTo(cx, pad.t); actx.lineTo(cx, AH - pad.b); actx.stroke();
+    }
+
+    // Axes
+    actx.strokeStyle = 'rgba(139,148,158,0.8)';
+    actx.lineWidth = 1.5;
+    const [ax0, ay0] = appToCanvas(Nmin, Smin, Nmin, Nmax, Smin, Smax);
+    actx.beginPath(); actx.moveTo(ax0, pad.t); actx.lineTo(ax0, ay0); actx.stroke();
+    actx.beginPath(); actx.moveTo(ax0, ay0); actx.lineTo(AW - pad.r, ay0); actx.stroke();
+
+    // Axis labels
+    actx.fillStyle = 'rgba(139,148,158,0.8)';
+    actx.font = '11px JetBrains Mono, monospace';
+    actx.textAlign = 'center';
+    // X ticks
+    [100, 1000, 2000, 3000, 4000, 5000].forEach(N => {
+      const [cx] = appToCanvas(N, Smin, Nmin, Nmax, Smin, Smax);
+      actx.fillText(N >= 1000 ? (N / 1000) + 'k' : N, cx, AH - pad.b + 16);
+    });
+    actx.fillStyle = 'rgba(139,148,158,0.6)';
+    actx.font = '11px Inter, system-ui';
+    actx.fillText('Tamaño de problema N', (pad.l + AW - pad.r) / 2, AH - 6);
+
+    // Y ticks
+    actx.textAlign = 'right';
+    actx.font = '10px JetBrains Mono, monospace';
+    actx.fillStyle = 'rgba(139,148,158,0.8)';
+    for (let i = 0; i <= 5; i++) {
+      const s = Smin + i * (Smax - Smin) / 5;
+      const [, cy] = appToCanvas(Nmin, s, Nmin, Nmax, Smin, Smax);
+      actx.fillText(s.toFixed(1), pad.l - 6, cy + 4);
+    }
+    // Y axis label (rotated)
+    actx.save();
+    actx.translate(14, (pad.t + AH - pad.b) / 2);
+    actx.rotate(-Math.PI / 2);
+    actx.textAlign = 'center';
+    actx.font = '11px Inter, system-ui';
+    actx.fillStyle = 'rgba(139,148,158,0.6)';
+    actx.fillText('Score (Gops/s)', 0, 0);
+    actx.restore();
+
+    const xs = appData.map(d => d.N);
+    const ys = appData.map(d => d.score);
+
+    // Fit curves
+    const cLin = normalEquation(xs, ys, 1);
+    const cQuad = normalEquation(xs, ys, 2);
+
+    // Draw linear fit (dashed, accent2)
+    if (cLin) {
+      actx.strokeStyle = '#bc8cff';
+      actx.lineWidth = 2;
+      actx.setLineDash([8, 5]);
+      actx.beginPath();
+      let first = true;
+      for (let px = pad.l; px <= AW - pad.r; px += 2) {
+        const N = Nmin + (px - pad.l) / (AW - pad.l - pad.r) * (Nmax - Nmin);
+        const s = evalPoly(cLin, N);
+        const [cx, cy] = appToCanvas(N, s, Nmin, Nmax, Smin, Smax);
+        if (first) { actx.moveTo(cx, cy); first = false; } else actx.lineTo(cx, cy);
+      }
+      actx.stroke();
+      actx.setLineDash([]);
+    }
+
+    // Draw quadratic fit (solid, accent)
+    if (cQuad) {
+      actx.strokeStyle = '#58a6ff';
+      actx.lineWidth = 2.5;
+      actx.beginPath();
+      let first = true;
+      for (let px = pad.l; px <= AW - pad.r; px += 2) {
+        const N = Nmin + (px - pad.l) / (AW - pad.l - pad.r) * (Nmax - Nmin);
+        const s = evalPoly(cQuad, N);
+        const [cx, cy] = appToCanvas(N, s, Nmin, Nmax, Smin, Smax);
+        if (first) { actx.moveTo(cx, cy); first = false; } else actx.lineTo(cx, cy);
+      }
+      actx.stroke();
+    }
+
+    // Draw data points
+    appData.forEach(d => {
+      const [cx, cy] = appToCanvas(d.N, d.score, Nmin, Nmax, Smin, Smax);
+      actx.fillStyle = '#e6edf3';
+      actx.strokeStyle = '#58a6ff';
+      actx.lineWidth = 1.5;
+      actx.beginPath(); actx.arc(cx, cy, 5.5, 0, Math.PI * 2);
+      actx.fill(); actx.stroke();
+    });
+
+    // Update stats
+    if (cLin && cQuad) {
+      const yHatLin = xs.map(x => evalPoly(cLin, x));
+      const yHatQuad = xs.map(x => evalPoly(cQuad, x));
+      const r2Lin = computeR2(ys, yHatLin);
+      const r2Quad = computeR2(ys, yHatQuad);
+
+      const el1 = document.getElementById('appR2lin');
+      el1.textContent = r2Lin.toFixed(4);
+      el1.className = 'stat-val ' + (r2Lin >= 0.9 ? 'ok' : r2Lin >= 0.7 ? 'warn' : '');
+
+      const el2 = document.getElementById('appR2quad');
+      el2.textContent = r2Quad.toFixed(4);
+      el2.className = 'stat-val ' + (r2Quad >= 0.9 ? 'ok' : r2Quad >= 0.7 ? 'warn' : '');
+
+      document.getElementById('appNpts').textContent = appData.length;
+
+      const tbody = document.getElementById('coeffTable');
+      const names = ['c₀ (constante)', 'c₁ (lineal)', 'c₂ (cuadrático)'];
+      tbody.innerHTML = cQuad.map((c, i) =>
+        `<tr><td>${names[i]}</td><td>${c.toFixed(6)}</td></tr>`
+      ).join('');
+    }
+  }
+
+  function updateAppNoise(val) {
+    appNoise = +val;
+    document.getElementById('noiseLbl').textContent = `Nivel de ruido = ${val}`;
+    generateAppData();
+    drawAppCanvas();
+  }
+
+  function regenerateApp() {
+    generateAppData();
+    drawAppCanvas();
+  }
+
+  window.updateAppNoise = updateAppNoise;
+  window.regenerateApp = regenerateApp;
+
+  // Init application canvas
+  generateAppData();
+  drawAppCanvas();
+
+})();
+</script>
