@@ -1,0 +1,640 @@
+---
+layout: default
+title: Deformación de Sprites
+prev_url: /modulo-03/regresion-lineal.html
+prev_title: Regresión Lineal
+next_url: /modulo-04/independencia-lineal.html
+next_title: Independencia Lineal
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent2); background:rgba(188,140,255,0.08); border:1px solid rgba(188,140,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent2),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent2); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(188,140,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent2); font-size:0.9rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent2); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.6rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .live-result { font-family:var(--font-mono); font-size:1rem; font-weight:700; color:var(--accent3); text-align:center; padding:0.6rem; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:var(--radius-md); margin-top:0.25rem; }
+  .live-result.warn { color:var(--warn); background:rgba(210,153,34,0.08); border-color:rgba(210,153,34,0.2); }
+  .live-result.danger { color:var(--danger); background:rgba(248,81,73,0.08); border-color:rgba(248,81,73,0.2); }
+  .live-result.flip { color:var(--accent2); background:rgba(188,140,255,0.08); border-color:rgba(188,140,255,0.2); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; align-items:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .matrix-controls { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; }
+  .matrix-controls h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:1rem; }
+  .matrix-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 1.5rem; }
+  .slider-group { display:flex; flex-direction:column; gap:0.3rem; }
+  .slider-group label { font-family:var(--font-mono); font-size:0.8rem; color:var(--muted); }
+  .slider-group input[type=range] { width:100%; accent-color:var(--accent2); }
+  .matrix-display { font-family:var(--font-mono); font-size:1rem; color:var(--text); text-align:center; padding:0.75rem; background:var(--bg); border:1px solid var(--border); border-radius:var(--radius-md); margin-top:0.75rem; letter-spacing:0.04em; }
+
+  .btn-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.75rem; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent2); color:var(--accent2); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+  .app-layout { display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:start; }
+  .app-canvases { display:flex; gap:1rem; flex-wrap:wrap; }
+  .app-canvas-box { display:flex; flex-direction:column; gap:0.4rem; }
+  .app-canvas-label { font-family:var(--font-mono); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); text-align:center; }
+  .app-canvas-box canvas { display:block; border-radius:var(--radius-md); border:1px solid var(--border); }
+  .app-controls { display:flex; flex-direction:column; gap:1rem; min-width:200px; }
+  .app-stat-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; display:flex; flex-direction:column; gap:0.5rem; }
+  .app-stat-panel h4 { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .stat-row { display:flex; justify-content:space-between; font-size:0.82rem; }
+  .stat-label { color:var(--muted); }
+  .stat-val { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .stat-val.ok { color:var(--accent3); }
+  .stat-val.warn { color:var(--warn); }
+  .stat-val.danger { color:var(--danger); }
+  .stat-val.flip { color:var(--accent2); }
+
+  .preset-btns { display:flex; flex-direction:column; gap:0.4rem; }
+  .preset-btns h4 { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+
+  @media(max-width:900px){
+    .demo-layout{grid-template-columns:1fr;}
+    .app-layout{grid-template-columns:1fr;}
+    .app-canvases{justify-content:center;}
+  }
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 4: Determinantes</a><span class="sep">›</span>Deformación de Sprites
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 4 · Determinantes</span>
+    <h1>Deformación de Sprites</h1>
+    <p class="demo-lead">El determinante de una matriz 2×2 cuantifica exactamente cómo una transformación lineal escala las áreas — y si invierte la orientación.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>El Determinante 2×2</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Para la transformación <strong style="color:var(--text)">T(v) = Av</strong>, el determinante mide el factor por el cual se escala cualquier área bajo esa transformación:
+        </p>
+        <div class="formula-box">
+A = [ a  b ]<br>
+    [ c  d ]<br><br>
+det(A) = ad − bc<br><br>
+Área(T(S)) = |det(A)| · Área(S)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Interpretación Geométrica</h3>
+        <ul class="props-list">
+          <li>det(A) &gt; 0 → la transformación <em>preserva</em> la orientación</li>
+          <li>det(A) &lt; 0 → la transformación <em>invierte</em> la orientación (espejo)</li>
+          <li>det(A) = 0 → las columnas son dependientes: la figura colapsa a una línea (o punto)</li>
+          <li>|det(A)| = 1 → transformación isométrica: no cambia el área</li>
+          <li>Las columnas de A son los vectores imagen de la base canónica</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>El Paralelogramo de las Columnas</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Los vectores columna <strong style="color:var(--text)">a₁ = [a, c]ᵀ</strong> y <strong style="color:var(--text)">a₂ = [b, d]ᵀ</strong> son las imágenes de los vectores base e₁ y e₂. El paralelogramo que forman tiene exactamente área = |det(A)|.
+        </p>
+        <div class="formula-box">
+a₁ = A·e₁ = [a, c]ᵀ<br>
+a₂ = A·e₂ = [b, d]ᵀ<br><br>
+Área del paralelogramo<br>
+= |det([a₁ | a₂])|<br>
+= |ad − bc|
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado en tiempo real</h3>
+        <div class="live-panel">
+          <h3>Transformación actual</h3>
+          <div class="live-row">
+            <span class="live-label">det(A)</span>
+            <span class="live-value" id="liveDet">1.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Factor de área |det(A)|</span>
+            <span class="live-value" id="liveAbsDet">1.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Área original</span>
+            <span class="live-value" id="liveAreaOrig">1.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Área transformada</span>
+            <span class="live-value" id="liveAreaTrans">1.00</span>
+          </div>
+          <div class="live-result" id="liveStatus">Orientación preservada</div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="mainCanvas" width="540" height="440"></canvas>
+      </div>
+
+      <div class="matrix-controls">
+        <h3>Matriz de transformación A</h3>
+        <div class="matrix-grid">
+          <div class="slider-group">
+            <label id="lblA">a = 1.00</label>
+            <input type="range" id="slA" min="-3" max="3" step="0.05" value="1" oninput="updateMatrix()">
+          </div>
+          <div class="slider-group">
+            <label id="lblB">b = 0.00</label>
+            <input type="range" id="slB" min="-3" max="3" step="0.05" value="0" oninput="updateMatrix()">
+          </div>
+          <div class="slider-group">
+            <label id="lblC">c = 0.00</label>
+            <input type="range" id="slC" min="-3" max="3" step="0.05" value="0" oninput="updateMatrix()">
+          </div>
+          <div class="slider-group">
+            <label id="lblD">d = 1.00</label>
+            <input type="range" id="slD" min="-3" max="3" step="0.05" value="1" oninput="updateMatrix()">
+          </div>
+        </div>
+        <div class="matrix-display" id="matrixDisplay">
+          A = [ 1.00  0.00 ]\n    [ 0.00  1.00 ]
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="setPreset(1,0,0,1)">Identidad</button>
+          <button class="btn" onclick="setPreset(2,0,0,2)">Escalar ×2</button>
+          <button class="btn" onclick="setPreset(0,-1,1,0)">Rotar 90°</button>
+          <button class="btn" onclick="setPreset(-1,0,0,1)">Espejo X</button>
+          <button class="btn" onclick="setPreset(1,1,0,1)">Shear</button>
+          <button class="btn" onclick="setPreset(1,0,0,0)">Colapso</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación: Transformaciones de Sprites en Videojuegos</h2>
+    <p class="app-description">
+      En motores de videojuegos 2D, cada sprite se almacena como un conjunto de píxeles en coordenadas locales. Para dibujarlo en pantalla se aplica una <em>matriz de transformación 2×2</em> (más traslación). El determinante determina cuántos píxeles ocupa el sprite transformado: si |det| &gt; 1 el sprite se agranda, si |det| &lt; 1 se encoge, si det &lt; 0 aparece invertido (espejo). Cuando det = 0 el sprite colapsa a una línea — un bug clásico de escala incorrecta.
+    </p>
+
+    <div class="app-layout">
+      <div>
+        <div class="app-canvases">
+          <div class="app-canvas-box">
+            <div class="app-canvas-label">Original</div>
+            <canvas id="spriteOrig" width="200" height="200"></canvas>
+          </div>
+          <div class="app-canvas-box">
+            <div class="app-canvas-label">Transformado</div>
+            <canvas id="spriteTrans" width="200" height="200"></canvas>
+          </div>
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.75rem;">
+          Los presets y sliders de arriba controlan también este sprite. El contorno naranja indica el bounding box del sprite transformado.
+        </p>
+      </div>
+
+      <div class="app-controls">
+        <div class="app-stat-panel">
+          <h4>Métricas del sprite</h4>
+          <div class="stat-row">
+            <span class="stat-label">Píxeles originales</span>
+            <span class="stat-val" id="appPixOrig">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Área bounding box orig.</span>
+            <span class="stat-val" id="appBBoxOrig">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Área bounding box transf.</span>
+            <span class="stat-val" id="appBBoxTrans">—</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Factor área |det(A)|</span>
+            <span class="stat-val ok" id="appFactor">—</span>
+          </div>
+        </div>
+
+        <div class="app-stat-panel">
+          <h4>Presets de juego</h4>
+          <div class="preset-btns">
+            <button class="btn" onclick="setPreset(1,0,0,1)">Normal (identidad)</button>
+            <button class="btn" onclick="setPreset(2,0,0,2)">Power-up (×2)</button>
+            <button class="btn" onclick="setPreset(0.5,0,0,0.5)">Miniatura (×0.5)</button>
+            <button class="btn" onclick="setPreset(-1,0,0,1)">Giro horizontal</button>
+            <button class="btn" onclick="setPreset(1,0,0,-1)">Giro vertical</button>
+            <button class="btn" onclick="setPreset(1,0.5,0,1)">Shear (viento)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div><!-- /demo-page -->
+
+<script>
+(function () {
+  // ─────────────────────────────────────────────
+  // State
+  // ─────────────────────────────────────────────
+  let a = 1, b = 0, c = 0, d = 1;
+
+  function det() { return a * d - b * c; }
+
+  // ─────────────────────────────────────────────
+  // Main canvas — geometric demo
+  // ─────────────────────────────────────────────
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const OX = W / 2, OY = H / 2;   // canvas origin
+  const SCALE = 80;                 // pixels per unit
+
+  function toCanvas(mx, my) {
+    return [OX + mx * SCALE, OY - my * SCALE];
+  }
+
+  function transform(mx, my) {
+    return [a * mx + b * my, c * mx + d * my];
+  }
+
+  // The "sprite" shape — a simple arrow / house polygon in math coords
+  const ORIG_SHAPE = [
+    [0, 1.5],   // top
+    [0.6, 0.5],
+    [0.3, 0.5],
+    [0.3, -0.8],
+    [-0.3, -0.8],
+    [-0.3, 0.5],
+    [-0.6, 0.5],
+  ];
+
+  function polygonArea(pts) {
+    let area = 0;
+    const n = pts.length;
+    for (let i = 0; i < n; i++) {
+      const [x1, y1] = pts[i];
+      const [x2, y2] = pts[(i + 1) % n];
+      area += x1 * y2 - x2 * y1;
+    }
+    return Math.abs(area) / 2;
+  }
+
+  function drawArrow(x1, y1, x2, y2, color, lineWidth = 2) {
+    const dx = x2 - x1, dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 2) return;
+    const ux = dx / len, uy = dy / len;
+    const hw = 8, hl = 14;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2 - ux * hl, y2 - uy * hl);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - ux * hl - uy * hw, y2 - uy * hl + ux * hw);
+    ctx.lineTo(x2 - ux * hl + uy * hw, y2 - uy * hl - ux * hw);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  function drawMainCanvas() {
+    ctx.clearRect(0, 0, W, H);
+
+    // Background
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(48,54,61,0.5)';
+    ctx.lineWidth = 1;
+    for (let gx = -3; gx <= 3; gx++) {
+      const [cx] = toCanvas(gx, 0);
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+    }
+    for (let gy = -2.5; gy <= 2.5; gy += 0.5) {
+      const [, cy] = toCanvas(0, gy);
+      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = 'rgba(139,148,158,0.7)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(0, OY); ctx.lineTo(W, OY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(OX, 0); ctx.lineTo(OX, H); ctx.stroke();
+
+    // Axis tick labels
+    ctx.fillStyle = 'rgba(139,148,158,0.6)';
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let gx = -3; gx <= 3; gx++) {
+      if (gx === 0) continue;
+      const [cx] = toCanvas(gx, 0);
+      ctx.fillText(gx, cx, OY + 14);
+    }
+    ctx.textAlign = 'right';
+    for (let gy = -2; gy <= 2; gy++) {
+      if (gy === 0) continue;
+      const [, cy] = toCanvas(0, gy);
+      ctx.fillText(gy, OX - 6, cy + 4);
+    }
+
+    const D = det();
+
+    // ── Parallelogram of the columns ──
+    const [c1x, c1y] = toCanvas(a, c);   // image of e1
+    const [c2x, c2y] = toCanvas(b, d);   // image of e2
+    const [c12x, c12y] = toCanvas(a + b, c + d);
+    const [ox, oy] = toCanvas(0, 0);
+
+    ctx.fillStyle = Math.abs(D) < 0.01
+      ? 'rgba(248,81,73,0.08)'
+      : D < 0
+        ? 'rgba(188,140,255,0.12)'
+        : 'rgba(88,166,255,0.10)';
+    ctx.strokeStyle = Math.abs(D) < 0.01
+      ? 'rgba(248,81,73,0.4)'
+      : D < 0
+        ? 'rgba(188,140,255,0.4)'
+        : 'rgba(88,166,255,0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(ox, oy);
+    ctx.lineTo(c1x, c1y);
+    ctx.lineTo(c12x, c12y);
+    ctx.lineTo(c2x, c2y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Column vectors as arrows
+    drawArrow(ox, oy, c1x, c1y, '#58a6ff', 2.5);
+    drawArrow(ox, oy, c2x, c2y, '#bc8cff', 2.5);
+
+    // Labels for column vectors
+    ctx.font = 'bold 12px JetBrains Mono, monospace';
+    ctx.fillStyle = '#58a6ff';
+    ctx.textAlign = 'left';
+    ctx.fillText('a₁', c1x + 8, c1y - 4);
+    ctx.fillStyle = '#bc8cff';
+    ctx.fillText('a₂', c2x + 8, c2y - 4);
+
+    // ── Original shape (unit square background) ──
+    ctx.strokeStyle = 'rgba(63,185,80,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([5, 4]);
+    ctx.beginPath();
+    ORIG_SHAPE.forEach(([px, py], i) => {
+      const [cx2, cy2] = toCanvas(px, py);
+      if (i === 0) ctx.moveTo(cx2, cy2); else ctx.lineTo(cx2, cy2);
+    });
+    ctx.closePath();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // ── Transformed shape ──
+    const transShape = ORIG_SHAPE.map(([px, py]) => transform(px, py));
+
+    ctx.fillStyle = Math.abs(D) < 0.01
+      ? 'rgba(248,81,73,0.15)'
+      : D < 0
+        ? 'rgba(188,140,255,0.18)'
+        : 'rgba(63,185,80,0.18)';
+    ctx.strokeStyle = Math.abs(D) < 0.01 ? '#f85149' : D < 0 ? '#bc8cff' : '#3fb950';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    transShape.forEach(([px, py], i) => {
+      const [cx2, cy2] = toCanvas(px, py);
+      if (i === 0) ctx.moveTo(cx2, cy2); else ctx.lineTo(cx2, cy2);
+    });
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    // Area label inside parallelogram
+    const midX = (ox + c12x) / 2;
+    const midY = (oy + c12y) / 2;
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = 'bold 11px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`|det|=${Math.abs(D).toFixed(2)}`, midX, midY);
+
+    // Update live panel
+    const origArea = polygonArea(ORIG_SHAPE);
+    const transArea = polygonArea(transShape);
+    document.getElementById('liveDet').textContent = D.toFixed(3);
+    document.getElementById('liveAbsDet').textContent = Math.abs(D).toFixed(3);
+    document.getElementById('liveAreaOrig').textContent = origArea.toFixed(3);
+    document.getElementById('liveAreaTrans').textContent = transArea.toFixed(3);
+
+    const statusEl = document.getElementById('liveStatus');
+    if (Math.abs(D) < 0.01) {
+      statusEl.textContent = 'Singular — la figura colapsa';
+      statusEl.className = 'live-result danger';
+    } else if (D < 0) {
+      statusEl.textContent = 'Orientación invertida (espejo)';
+      statusEl.className = 'live-result flip';
+    } else {
+      statusEl.textContent = 'Orientación preservada';
+      statusEl.className = 'live-result';
+    }
+
+    // Matrix display
+    document.getElementById('matrixDisplay').textContent =
+      `A = [ ${a.toFixed(2).padStart(5)}  ${b.toFixed(2).padStart(5)} ]\n    [ ${c.toFixed(2).padStart(5)}  ${d.toFixed(2).padStart(5)} ]`;
+
+    // Update sprite canvases
+    drawSpriteCanvases();
+  }
+
+  // ─────────────────────────────────────────────
+  // Sprite canvases (application section)
+  // ─────────────────────────────────────────────
+
+  // Pixel sprite definition: list of [col, row] filled cells (0-indexed, 12×16 grid)
+  const SPRITE_COLS = 12, SPRITE_ROWS = 16;
+  const SPRITE_PIXELS = [];
+
+  // Build a simple humanoid character shape in a 12×16 grid
+  // Head (rows 0-3, cols 4-7)
+  for (let r = 0; r < 4; r++) for (let co = 4; co < 8; co++) SPRITE_PIXELS.push([co, r]);
+  // Eyes (row 1, cols 4 and 7)
+  // Body (rows 4-9, cols 3-8)
+  for (let r = 4; r < 10; r++) for (let co = 3; co < 9; co++) SPRITE_PIXELS.push([co, r]);
+  // Arms (rows 4-7, cols 1-2 and 9-10)
+  for (let r = 4; r < 8; r++) { SPRITE_PIXELS.push([1,r]); SPRITE_PIXELS.push([2,r]); SPRITE_PIXELS.push([9,r]); SPRITE_PIXELS.push([10,r]); }
+  // Legs (rows 10-15, cols 3-5 and 6-8)
+  for (let r = 10; r < 16; r++) { for (let co = 3; co < 6; co++) SPRITE_PIXELS.push([co, r]); for (let co = 6; co < 9; co++) SPRITE_PIXELS.push([co, r]); }
+
+  function drawSpriteOrig() {
+    const sc = document.getElementById('spriteOrig');
+    const sctx = sc.getContext('2d');
+    const SW = sc.width, SH = sc.height;
+    sctx.clearRect(0, 0, SW, SH);
+    sctx.fillStyle = '#161b22';
+    sctx.fillRect(0, 0, SW, SH);
+
+    const pw = SW / SPRITE_COLS, ph = SH / SPRITE_ROWS;
+    sctx.fillStyle = '#3fb950';
+    SPRITE_PIXELS.forEach(([col, row]) => {
+      sctx.fillRect(col * pw + 1, row * ph + 1, pw - 2, ph - 2);
+    });
+
+    document.getElementById('appPixOrig').textContent = SPRITE_PIXELS.length;
+    document.getElementById('appBBoxOrig').textContent = `${SPRITE_COLS * SPRITE_ROWS} px²`;
+  }
+
+  function drawSpriteTrans() {
+    const sc = document.getElementById('spriteTrans');
+    const sctx = sc.getContext('2d');
+    const SW = sc.width, SH = sc.height;
+    sctx.clearRect(0, 0, SW, SH);
+    sctx.fillStyle = '#161b22';
+    sctx.fillRect(0, 0, SW, SH);
+
+    const D = det();
+    const pw = SW / SPRITE_COLS, ph = SH / SPRITE_ROWS;
+
+    // Center of original sprite in "math" coords (centered at 0,0)
+    // Each pixel center: x = col + 0.5 - SPRITE_COLS/2, y = -(row + 0.5 - SPRITE_ROWS/2)
+    const cx0 = SW / 2, cy0 = SH / 2;
+    const unitPx = Math.min(pw, ph);
+
+    sctx.fillStyle = Math.abs(D) < 0.01 ? '#f85149' : D < 0 ? '#bc8cff' : '#3fb950';
+
+    let minTX = Infinity, maxTX = -Infinity, minTY = Infinity, maxTY = -Infinity;
+
+    SPRITE_PIXELS.forEach(([col, row]) => {
+      // Local coords centered
+      const lx = (col + 0.5 - SPRITE_COLS / 2);
+      const ly = -(row + 0.5 - SPRITE_ROWS / 2);
+      // Apply matrix
+      const tx = a * lx + b * ly;
+      const ty = c * lx + d * ly;
+      // Canvas coords (y flipped)
+      const scx = cx0 + tx * unitPx;
+      const scy = cy0 - ty * unitPx;
+      const sz = Math.max(unitPx * 0.8, 1);
+      sctx.fillRect(scx - sz / 2, scy - sz / 2, sz, sz);
+      if (scx < minTX) minTX = scx; if (scx > maxTX) maxTX = scx;
+      if (scy < minTY) minTY = scy; if (scy > maxTY) maxTY = scy;
+    });
+
+    // Bounding box
+    if (SPRITE_PIXELS.length > 0) {
+      sctx.strokeStyle = '#d29922';
+      sctx.lineWidth = 1.5;
+      sctx.setLineDash([4, 3]);
+      sctx.strokeRect(minTX - unitPx / 2, minTY - unitPx / 2,
+                       maxTX - minTX + unitPx, maxTY - minTY + unitPx);
+      sctx.setLineDash([]);
+      const bboxArea = Math.round((maxTX - minTX + unitPx) * (maxTY - minTY + unitPx));
+      document.getElementById('appBBoxTrans').textContent = `${bboxArea} px²`;
+    }
+
+    const factorEl = document.getElementById('appFactor');
+    factorEl.textContent = Math.abs(D).toFixed(3);
+    if (Math.abs(D) < 0.01) {
+      factorEl.className = 'stat-val danger';
+    } else if (Math.abs(D) < 0.5 || Math.abs(D) > 4) {
+      factorEl.className = 'stat-val warn';
+    } else {
+      factorEl.className = 'stat-val ok';
+    }
+  }
+
+  function drawSpriteCanvases() {
+    drawSpriteOrig();
+    drawSpriteTrans();
+  }
+
+  // ─────────────────────────────────────────────
+  // Controls
+  // ─────────────────────────────────────────────
+  function updateMatrix() {
+    a = +document.getElementById('slA').value;
+    b = +document.getElementById('slB').value;
+    c = +document.getElementById('slC').value;
+    d = +document.getElementById('slD').value;
+
+    document.getElementById('lblA').textContent = `a = ${a.toFixed(2)}`;
+    document.getElementById('lblB').textContent = `b = ${b.toFixed(2)}`;
+    document.getElementById('lblC').textContent = `c = ${c.toFixed(2)}`;
+    document.getElementById('lblD').textContent = `d = ${d.toFixed(2)}`;
+
+    drawMainCanvas();
+  }
+
+  function setPreset(pa, pb, pc, pd) {
+    a = pa; b = pb; c = pc; d = pd;
+    document.getElementById('slA').value = pa;
+    document.getElementById('slB').value = pb;
+    document.getElementById('slC').value = pc;
+    document.getElementById('slD').value = pd;
+    document.getElementById('lblA').textContent = `a = ${pa.toFixed(2)}`;
+    document.getElementById('lblB').textContent = `b = ${pb.toFixed(2)}`;
+    document.getElementById('lblC').textContent = `c = ${pc.toFixed(2)}`;
+    document.getElementById('lblD').textContent = `d = ${pd.toFixed(2)}`;
+    drawMainCanvas();
+  }
+
+  window.updateMatrix = updateMatrix;
+  window.setPreset = setPreset;
+
+  // Initial draw
+  drawMainCanvas();
+})();
+</script>
