@@ -1,0 +1,471 @@
+---
+layout: default
+title: Cambio de Base
+prev_url: /modulo-04/independencia-lineal.html
+prev_title: Independencia Lineal
+next_url: /modulo-05/pagerank.html
+next_title: PageRank
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent2); background:rgba(188,140,255,0.08); border:1px solid rgba(188,140,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent2),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent2); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(188,140,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent2); font-size:0.9rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent2); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.6rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .live-result { font-family:var(--font-mono); font-size:0.88rem; font-weight:700; color:var(--accent3); text-align:center; padding:0.6rem; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:var(--radius-md); margin-top:0.25rem; }
+  .live-result.danger { color:var(--danger); background:rgba(248,81,73,0.08); border-color:rgba(248,81,73,0.2); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; align-items:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; }
+  .controls-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:1rem; }
+  .slider-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 1.5rem; }
+  .slider-group { display:flex; flex-direction:column; gap:0.3rem; }
+  .slider-group label { font-family:var(--font-mono); font-size:0.8rem; color:var(--muted); }
+  .slider-group input[type=range] { width:100%; accent-color:var(--accent2); }
+  .btn-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.75rem; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent2); color:var(--accent2); }
+
+  .legend { display:flex; gap:1.25rem; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.8rem; color:var(--muted); }
+  .legend-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+  .app-layout { display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:start; }
+  .app-stat-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; display:flex; flex-direction:column; gap:0.6rem; min-width:240px; }
+  .app-stat-panel h4 { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .stat-row { display:flex; justify-content:space-between; font-size:0.82rem; }
+  .stat-label { color:var(--muted); }
+  .stat-val { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .hint { font-size:0.8rem; color:var(--muted); margin-top:0.5rem; font-style:italic; }
+
+  @media(max-width:900px){
+    .demo-layout{grid-template-columns:1fr;}
+    .app-layout{grid-template-columns:1fr;}
+  }
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 4: Determinantes y Espacios</a><span class="sep">›</span>Cambio de Base
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 4 · Determinantes y Espacios</span>
+    <h1>Cambio de Base</h1>
+    <p class="demo-lead">El mismo vector puede describirse con coordenadas distintas dependiendo del sistema de referencia. La matriz de cambio de base traduce entre representaciones.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Base y coordenadas</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Dado un espacio vectorial, una <strong style="color:var(--text)">base</strong> B = {b₁, b₂} permite expresar cualquier vector v de forma única:
+        </p>
+        <div class="formula-box">
+v = α·b₁ + β·b₂<br><br>
+[v]_B = (α, β)   ← coords en base B<br>
+[v]_S = (x, y)   ← coords estándar
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Matriz de cambio de base</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          La matriz P cuyas columnas son los vectores base B convierte de coordenadas B a estándar:
+        </p>
+        <div class="formula-box">
+P = [b₁ | b₂]<br><br>
+v = P · [v]_B     (B → estándar)<br>
+[v]_B = P⁻¹ · v  (estándar → B)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades</h3>
+        <ul class="props-list">
+          <li>P es invertible ⟺ la base es linealmente independiente</li>
+          <li>Base ortonormal: P⁻¹ = Pᵀ (cálculo muy barato)</li>
+          <li>El cambio de base NO cambia el vector — solo su descripción</li>
+          <li>Composición: P₂⁻¹·P₁ lleva de base B₁ a base B₂</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado en tiempo real</h3>
+        <div class="live-panel">
+          <h3>Coordenadas del punto P</h3>
+          <div class="live-row">
+            <span class="live-label">Estándar (x, y)</span>
+            <span class="live-value" id="liveStd">(2.00, 1.00)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">En base B (α, β)</span>
+            <span class="live-value" id="liveBase">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">det(P)</span>
+            <span class="live-value" id="liveDetP">—</span>
+          </div>
+          <div class="live-result" id="liveStatus">Base válida</div>
+        </div>
+        <div class="legend" style="margin-top:0.75rem;">
+          <div class="legend-item"><div class="legend-dot" style="background:#f85149"></div>Punto P</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#58a6ff"></div>Base b₁</div>
+          <div class="legend-item"><div class="legend-dot" style="background:#bc8cff"></div>Base b₂</div>
+          <div class="legend-item"><div class="legend-dot" style="background:rgba(255,200,0,0.6)"></div>Grid base B</div>
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;font-style:italic;">Arrastra los extremos de b₁, b₂ y el punto P.</p>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="mainCanvas" width="540" height="440"></canvas>
+      </div>
+      <div class="controls-panel">
+        <h3>Presets de bases</h3>
+        <div class="btn-row">
+          <button class="btn" onclick="setPreset(1,0,0,1)">Estándar</button>
+          <button class="btn" onclick="setPreset(1,1,-1,1)">Rotación 45°</button>
+          <button class="btn" onclick="setPreset(2,0,0,1)">Escala X</button>
+          <button class="btn" onclick="setPreset(1,0.5,0,1)">Shear</button>
+          <button class="btn" onclick="setPreset(0.707,0.707,-0.707,0.707)">Ortonormal</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación: Espacio local vs espacio mundial en motores de videojuegos</h2>
+    <p class="app-description">
+      En Unity, Unreal o Godot cada objeto tiene un <em>espacio local</em> (local space) definido por su propia base {derecha, arriba, adelante}. Las coordenadas de los vértices de un mesh se guardan en espacio local. Para dibujarlos, el motor multiplica por la <em>matriz de transformación</em> del objeto — que no es otra cosa que la matriz de cambio de base de local a mundial (world space). Esto permite mover, rotar y escalar objetos sin recalcular la geometría del mesh.
+    </p>
+    <div class="app-layout">
+      <div>
+        <canvas id="appCanvas" width="420" height="320" style="border-radius:var(--radius-md);border:1px solid var(--border);"></canvas>
+        <p class="hint" style="margin-top:0.5rem;">El mesh del objeto (triángulo verde) se define en espacio local. La base actual determina cómo aparece en el mundo.</p>
+      </div>
+      <div class="app-stat-panel">
+        <h4>Transformación del objeto</h4>
+        <div class="stat-row">
+          <span class="stat-label">P[0][0] (b₁x)</span>
+          <span class="stat-val" id="pm00">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">P[1][0] (b₁y)</span>
+          <span class="stat-val" id="pm10">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">P[0][1] (b₂x)</span>
+          <span class="stat-val" id="pm01">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">P[1][1] (b₂y)</span>
+          <span class="stat-val" id="pm11">—</span>
+        </div>
+        <div class="stat-row" style="margin-top:0.25rem;border-top:1px solid var(--border);padding-top:0.4rem;">
+          <span class="stat-label">det(P)</span>
+          <span class="stat-val" id="appDet">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Factor de escala</span>
+          <span class="stat-val" id="appScale">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Orientación</span>
+          <span class="stat-val" id="appOrient">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  // ── State ──
+  // New basis vectors (columns of P)
+  let b1 = {x:1, y:0};
+  let b2 = {x:0, y:1};
+  // Point to express in new basis
+  let pt = {x:2, y:1};
+  let dragging = null;
+
+  // ── Main canvas ──
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  const OX=W/2, OY=H/2, SCALE=85, HIT=14;
+
+  function toCanvas(mx,my){return[OX+mx*SCALE,OY-my*SCALE];}
+  function toMath(cx,cy){return[(cx-OX)/SCALE,(OY-cy)/SCALE];}
+
+  function detP(){return b1.x*b2.y-b1.y*b2.x;}
+
+  // Invert 2×2 matrix [[a,b],[c,d]]
+  function inv2x2(a,b,c,d){
+    const det=a*d-b*c;
+    if(Math.abs(det)<1e-9)return null;
+    return {a:d/det, b:-b/det, c:-c/det, d:a/det, det};
+  }
+
+  function drawArrow(x1,y1,x2,y2,color,lw=2){
+    const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+    if(len<3)return;
+    const ux=dx/len,uy=dy/len,hw=7,hl=12;
+    ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-ux*hl,y2-uy*hl);ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-ux*hl-uy*hw,y2-uy*hl+ux*hw);
+    ctx.lineTo(x2-ux*hl+uy*hw,y2-uy*hl-ux*hw);
+    ctx.closePath();ctx.fill();
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+
+    const D=detP();
+    const Pinv=inv2x2(b1.x,b2.x,b1.y,b2.y);
+
+    // Standard grid (faint)
+    ctx.strokeStyle='rgba(48,54,61,0.4)';ctx.lineWidth=1;
+    for(let gx=-3;gx<=3;gx++){const[cx]=toCanvas(gx,0);ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();}
+    for(let gy=-2.5;gy<=2.5;gy+=0.5){const[,cy]=toCanvas(0,gy);ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();}
+
+    // New basis grid (draw parallelogram lattice)
+    if(Pinv){
+      ctx.strokeStyle='rgba(255,200,0,0.15)';ctx.lineWidth=1;
+      for(let i=-5;i<=5;i++){
+        // Lines parallel to b2
+        const[ax,ay]=toCanvas(i*b1.x-5*b2.x, i*b1.y-5*b2.y);
+        const[bx,by]=toCanvas(i*b1.x+5*b2.x, i*b1.y+5*b2.y);
+        ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);ctx.stroke();
+        // Lines parallel to b1
+        const[cx2,cy2]=toCanvas(-5*b1.x+i*b2.x, -5*b1.y+i*b2.y);
+        const[dx2,dy2]=toCanvas(5*b1.x+i*b2.x, 5*b1.y+i*b2.y);
+        ctx.beginPath();ctx.moveTo(cx2,cy2);ctx.lineTo(dx2,dy2);ctx.stroke();
+      }
+    }
+
+    // Standard axes
+    ctx.strokeStyle='rgba(139,148,158,0.5)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,OY);ctx.lineTo(W,OY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(OX,0);ctx.lineTo(OX,H);ctx.stroke();
+
+    // Standard basis (faint)
+    const[ox,oy]=toCanvas(0,0);
+    const[e1x,e1y]=toCanvas(1,0);
+    const[e2x,e2y]=toCanvas(0,1);
+    drawArrow(ox,oy,e1x,e1y,'rgba(139,148,158,0.4)',1.5);
+    drawArrow(ox,oy,e2x,e2y,'rgba(139,148,158,0.4)',1.5);
+    ctx.font='10px JetBrains Mono,monospace';ctx.fillStyle='rgba(139,148,158,0.5)';
+    ctx.textAlign='left';ctx.fillText('e₁',e1x+5,e1y+4);
+    ctx.fillText('e₂',e2x+5,e2y-4);
+
+    // New basis vectors
+    const[b1cx,b1cy]=toCanvas(b1.x,b1.y);
+    const[b2cx,b2cy]=toCanvas(b2.x,b2.y);
+    drawArrow(ox,oy,b1cx,b1cy,'#58a6ff',2.5);
+    drawArrow(ox,oy,b2cx,b2cy,'#bc8cff',2.5);
+
+    ctx.font='bold 13px JetBrains Mono,monospace';
+    ctx.fillStyle='#58a6ff';ctx.textAlign='left';
+    ctx.fillText('b₁',b1cx+8,b1cy-4);
+    ctx.fillStyle='#bc8cff';
+    ctx.fillText('b₂',b2cx+8,b2cy-4);
+
+    // Decompose point in new basis: show projection lines
+    if(Pinv){
+      const alpha=Pinv.a*pt.x+Pinv.b*pt.y;
+      const beta =Pinv.c*pt.x+Pinv.d*pt.y;
+      // Draw alpha*b1 and beta*b2 contributions
+      const[comp1x,comp1y]=toCanvas(alpha*b1.x,alpha*b1.y);
+      const[comp2x,comp2y]=toCanvas(beta*b2.x,beta*b2.y);
+      const[ptcx,ptcy]=toCanvas(pt.x,pt.y);
+
+      ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(88,166,255,0.35)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(ox,oy);ctx.lineTo(comp1x,comp1y);ctx.stroke();
+      ctx.setLineDash([5,4]);ctx.strokeStyle='rgba(188,140,255,0.35)';
+      ctx.beginPath();ctx.moveTo(comp1x,comp1y);ctx.lineTo(ptcx,ptcy);ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Point P
+      ctx.fillStyle='#f85149';ctx.strokeStyle='#0d1117';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(ptcx,ptcy,8,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.font='bold 13px JetBrains Mono,monospace';ctx.fillStyle='#f85149';
+      ctx.textAlign='left';ctx.fillText('P',ptcx+10,ptcy-4);
+
+      // Coordinate label in B
+      ctx.font='11px JetBrains Mono,monospace';ctx.fillStyle='rgba(248,81,73,0.9)';
+      ctx.fillText(`[${alpha.toFixed(2)}, ${beta.toFixed(2)}]_B`,ptcx+10,ptcy+12);
+
+      document.getElementById('liveBase').textContent=`(${alpha.toFixed(3)}, ${beta.toFixed(3)})`;
+    } else {
+      document.getElementById('liveBase').textContent='base singular';
+    }
+
+    // Drag handles
+    [[b1cx,b1cy,'#58a6ff'],[b2cx,b2cy,'#bc8cff'],[...toCanvas(pt.x,pt.y),'#f85149']].forEach(([hx,hy,col])=>{
+      ctx.fillStyle=col;ctx.strokeStyle='#0d1117';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(hx,hy,6,0,Math.PI*2);ctx.fill();ctx.stroke();
+    });
+
+    document.getElementById('liveStd').textContent=`(${pt.x.toFixed(2)}, ${pt.y.toFixed(2)})`;
+    document.getElementById('liveDetP').textContent=D.toFixed(3);
+    const statusEl=document.getElementById('liveStatus');
+    if(Math.abs(D)<0.05){statusEl.textContent='Base SINGULAR — no invertible';statusEl.className='live-result danger';}
+    else{statusEl.textContent='Base válida (invertible)';statusEl.className='live-result';}
+
+    drawAppCanvas(D,Pinv);
+  }
+
+  // ── App canvas ──
+  const acanvas=document.getElementById('appCanvas');
+  const actx=acanvas.getContext('2d');
+  const AW=acanvas.width,AH=acanvas.height;
+  const AOX=AW/2,AOY=AH/2,ASCALE=50;
+
+  function toAppCanvas(mx,my){return[AOX+mx*ASCALE,AOY-my*ASCALE];}
+
+  // Local mesh: simple "arrow" shape
+  const LOCAL_MESH=[
+    [0,2],[0.5,0.5],[0.2,0.5],[0.2,-1.5],[-0.2,-1.5],[-0.2,0.5],[-0.5,0.5]
+  ];
+
+  function drawAppCanvas(D,Pinv){
+    actx.clearRect(0,0,AW,AH);
+    actx.fillStyle='#1c2330';actx.fillRect(0,0,AW,AH);
+    actx.strokeStyle='rgba(48,54,61,0.5)';actx.lineWidth=1;
+    for(let gx=-5;gx<=5;gx++){const[cx]=toAppCanvas(gx,0);actx.beginPath();actx.moveTo(cx,0);actx.lineTo(cx,AH);actx.stroke();}
+    for(let gy=-4;gy<=4;gy++){const[,cy]=toAppCanvas(0,gy);actx.beginPath();actx.moveTo(0,cy);actx.lineTo(AW,cy);actx.stroke();}
+    actx.strokeStyle='rgba(139,148,158,0.4)';actx.lineWidth=1;
+    actx.beginPath();actx.moveTo(0,AOY);actx.lineTo(AW,AOY);actx.stroke();
+    actx.beginPath();actx.moveTo(AOX,0);actx.lineTo(AOX,AH);actx.stroke();
+
+    // Local mesh (dashed)
+    actx.strokeStyle='rgba(63,185,80,0.4)';actx.lineWidth=1.5;actx.setLineDash([4,3]);
+    actx.beginPath();
+    LOCAL_MESH.forEach(([lx,ly],i)=>{
+      const[cx,cy]=toAppCanvas(lx,ly);
+      if(i===0)actx.moveTo(cx,cy);else actx.lineTo(cx,cy);
+    });
+    actx.closePath();actx.stroke();actx.setLineDash([]);
+
+    // World mesh: transform each vertex via P
+    actx.fillStyle='rgba(63,185,80,0.18)';actx.strokeStyle='#3fb950';actx.lineWidth=2;
+    actx.beginPath();
+    LOCAL_MESH.forEach(([lx,ly],i)=>{
+      const wx=b1.x*lx+b2.x*ly;
+      const wy=b1.y*lx+b2.y*ly;
+      const[cx,cy]=toAppCanvas(wx,wy);
+      if(i===0)actx.moveTo(cx,cy);else actx.lineTo(cx,cy);
+    });
+    actx.closePath();actx.fill();actx.stroke();
+
+    // World basis axes
+    const[aox,aoy]=toAppCanvas(0,0);
+    const[ab1x,ab1y]=toAppCanvas(b1.x*0.8,b1.y*0.8);
+    const[ab2x,ab2y]=toAppCanvas(b2.x*0.8,b2.y*0.8);
+    actx.strokeStyle='#58a6ff';actx.lineWidth=2;
+    actx.beginPath();actx.moveTo(aox,aoy);actx.lineTo(ab1x,ab1y);actx.stroke();
+    actx.strokeStyle='#bc8cff';
+    actx.beginPath();actx.moveTo(aox,aoy);actx.lineTo(ab2x,ab2y);actx.stroke();
+
+    // Stat panel update
+    document.getElementById('pm00').textContent=b1.x.toFixed(3);
+    document.getElementById('pm10').textContent=b1.y.toFixed(3);
+    document.getElementById('pm01').textContent=b2.x.toFixed(3);
+    document.getElementById('pm11').textContent=b2.y.toFixed(3);
+    document.getElementById('appDet').textContent=D.toFixed(3);
+    document.getElementById('appScale').textContent=Math.abs(D).toFixed(3)+'×';
+    document.getElementById('appOrient').textContent=D<-0.01?'Invertida':D>0.01?'Normal':'Singular';
+  }
+
+  // ── Drag ──
+  function nearPt(cx,cy,mx,my){return Math.sqrt((cx-mx)**2+(cy-my)**2)<HIT;}
+
+  canvas.addEventListener('mousedown',e=>{
+    const r=canvas.getBoundingClientRect();
+    const cx=e.clientX-r.left,cy=e.clientY-r.top;
+    const[b1cx,b1cy]=toCanvas(b1.x,b1.y);
+    const[b2cx,b2cy]=toCanvas(b2.x,b2.y);
+    const[pcx,pcy]=toCanvas(pt.x,pt.y);
+    if(nearPt(cx,cy,b1cx,b1cy))dragging='b1';
+    else if(nearPt(cx,cy,b2cx,b2cy))dragging='b2';
+    else if(nearPt(cx,cy,pcx,pcy))dragging='pt';
+  });
+
+  canvas.addEventListener('mousemove',e=>{
+    if(!dragging)return;
+    const r=canvas.getBoundingClientRect();
+    const[mx,my]=toMath(e.clientX-r.left,e.clientY-r.top);
+    const s={x:Math.round(mx*4)/4,y:Math.round(my*4)/4};
+    if(dragging==='b1')b1=s;
+    else if(dragging==='b2')b2=s;
+    else pt=s;
+    draw();
+  });
+
+  canvas.addEventListener('mouseup',()=>{dragging=null;});
+  canvas.addEventListener('mouseleave',()=>{dragging=null;});
+
+  function setPreset(b1x,b1y,b2x,b2y){
+    b1={x:b1x,y:b1y};b2={x:b2x,y:b2y};draw();
+  }
+  window.setPreset=setPreset;
+
+  draw();
+})();
+</script>

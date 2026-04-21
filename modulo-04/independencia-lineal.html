@@ -1,0 +1,454 @@
+---
+layout: default
+title: Independencia Lineal
+prev_url: /modulo-04/deformacion-sprites.html
+prev_title: Deformación de Sprites
+next_url: /modulo-04/cambio-de-base.html
+next_title: Cambio de Base
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent2); background:rgba(188,140,255,0.08); border:1px solid rgba(188,140,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent2),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent2); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(188,140,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent2); font-size:0.9rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent2); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.6rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .live-result { font-family:var(--font-mono); font-size:1rem; font-weight:700; color:var(--accent3); text-align:center; padding:0.6rem; background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.2); border-radius:var(--radius-md); margin-top:0.25rem; }
+  .live-result.warn { color:var(--warn); background:rgba(210,153,34,0.08); border-color:rgba(210,153,34,0.2); }
+  .live-result.danger { color:var(--danger); background:rgba(248,81,73,0.08); border-color:rgba(248,81,73,0.2); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; align-items:center; }
+  canvas { display:block; border-radius:var(--radius-md); cursor:crosshair; }
+
+  .btn-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.25rem; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent2); color:var(--accent2); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+  .app-layout { display:grid; grid-template-columns:1fr auto; gap:2rem; align-items:start; }
+  .app-stat-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1rem; display:flex; flex-direction:column; gap:0.5rem; min-width:220px; }
+  .app-stat-panel h4 { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent2); margin-bottom:0.25rem; }
+  .stat-row { display:flex; justify-content:space-between; font-size:0.82rem; }
+  .stat-label { color:var(--muted); }
+  .stat-val { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .stat-val.ok { color:var(--accent3); }
+  .stat-val.danger { color:var(--danger); }
+  .hint { font-size:0.8rem; color:var(--muted); margin-top:0.5rem; font-style:italic; }
+
+  @media(max-width:900px){
+    .demo-layout{grid-template-columns:1fr;}
+    .app-layout{grid-template-columns:1fr;}
+  }
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 4: Determinantes y Espacios</a><span class="sep">›</span>Independencia Lineal
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 4 · Determinantes y Espacios</span>
+    <h1>Independencia Lineal</h1>
+    <p class="demo-lead">Un conjunto de vectores es linealmente independiente si ninguno puede escribirse como combinación lineal de los demás. El determinante lo revela en un solo cálculo.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Definición</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Los vectores <strong style="color:var(--text)">v₁, v₂, …, vₙ</strong> son linealmente independientes si la única solución a:
+        </p>
+        <div class="formula-box">
+c₁·v₁ + c₂·v₂ + ⋯ + cₙ·vₙ = 0<br><br>
+es  c₁ = c₂ = ⋯ = cₙ = 0
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Test del Determinante (2D)</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Para dos vectores en ℝ², son independientes si y solo si:
+        </p>
+        <div class="formula-box">
+det([v₁ | v₂]) ≠ 0<br><br>
+det = v₁ₓ·v₂ᵧ − v₁ᵧ·v₂ₓ<br><br>
+= Área con signo del<br>  paralelogramo
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Consecuencias clave</h3>
+        <ul class="props-list">
+          <li>Si det ≠ 0 → los vectores forman una <em>base</em> de ℝ²</li>
+          <li>Si det = 0 → uno es múltiplo escalar del otro (colindantes)</li>
+          <li>En ℝⁿ: máximo n vectores independientes</li>
+          <li>Dependencia → el rango de la matriz formada por ellos cae</li>
+          <li>Vectores ortogonales siempre son independientes</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado en tiempo real</h3>
+        <div class="live-panel">
+          <h3>Vectores actuales</h3>
+          <div class="live-row">
+            <span class="live-label">v₁</span>
+            <span class="live-value" id="liveV1">(2.00, 1.00)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">v₂</span>
+            <span class="live-value" id="liveV2">(-1.00, 2.00)</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">det([v₁|v₂])</span>
+            <span class="live-value" id="liveDet">5.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Área del paralelogramo</span>
+            <span class="live-value" id="liveArea">5.00</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Ángulo entre vectores</span>
+            <span class="live-value" id="liveAngle">90°</span>
+          </div>
+          <div class="live-result" id="liveStatus">Linealmente independientes</div>
+        </div>
+        <p class="hint">Arrastra los extremos de los vectores en el canvas.</p>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="mainCanvas" width="540" height="440"></canvas>
+      </div>
+      <div class="btn-row">
+        <button class="btn" onclick="setPreset(2,1,-1,2)">Ortogonales</button>
+        <button class="btn" onclick="setPreset(3,0,0,2)">Base canónica</button>
+        <button class="btn" onclick="setPreset(2,1,1,0.5)">Casi dependientes</button>
+        <button class="btn" onclick="setPreset(2,1,2,1)">Dependientes</button>
+        <button class="btn" onclick="setPreset(1,2,-2,1)">Rotación 90°</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación: Vértices de triángulos en gráficos 3D</h2>
+    <p class="app-description">
+      En gráficos 3D, un triángulo se define por tres puntos P₀, P₁, P₂. Los vectores de borde
+      <strong>e₁ = P₁ − P₀</strong> y <strong>e₂ = P₂ − P₀</strong> deben ser linealmente independientes.
+      Si det([e₁|e₂]) = 0, el triángulo es <em>degenerado</em>: sus tres vértices son colineales,
+      tiene área cero, su normal no se puede calcular y la GPU lo desecha silenciosamente.
+      Los engines como Unity y Unreal incluyen validaciones que detectan exactamente este caso.
+    </p>
+    <div class="app-layout">
+      <div>
+        <canvas id="appCanvas" width="420" height="320" style="border-radius:var(--radius-md);border:1px solid var(--border);"></canvas>
+        <p class="hint" style="margin-top:0.5rem;">El triángulo usa los mismos vectores del canvas principal. Cuando se vuelven dependientes, el triángulo colapsa.</p>
+      </div>
+      <div class="app-stat-panel">
+        <h4>Métricas del triángulo</h4>
+        <div class="stat-row">
+          <span class="stat-label">Área</span>
+          <span class="stat-val ok" id="appArea">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Estado</span>
+          <span class="stat-val ok" id="appStatus">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Normal calculable</span>
+          <span class="stat-val ok" id="appNormal">—</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Renderable (GPU)</span>
+          <span class="stat-val ok" id="appRenderable">—</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  // ── State ──
+  let v1 = {x: 2, y: 1};
+  let v2 = {x: -1, y: 2};
+  let dragging = null;
+
+  // ── Main canvas ──
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const OX = W / 2, OY = H / 2;
+  const SCALE = 90;
+  const HIT = 14; // hit radius px
+
+  function toCanvas(mx, my) { return [OX + mx * SCALE, OY - my * SCALE]; }
+  function toMath(cx, cy)   { return [(cx - OX) / SCALE, (OY - cy) / SCALE]; }
+
+  function det() { return v1.x * v2.y - v1.y * v2.x; }
+
+  function drawArrow(x1, y1, x2, y2, color, lw = 2) {
+    const dx = x2-x1, dy = y2-y1;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    if (len < 3) return;
+    const ux=dx/len, uy=dy/len, hw=7, hl=13;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = lw;
+    ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2-ux*hl,y2-uy*hl); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-ux*hl-uy*hw, y2-uy*hl+ux*hw);
+    ctx.lineTo(x2-ux*hl+uy*hw, y2-uy*hl-ux*hw);
+    ctx.closePath(); ctx.fill();
+  }
+
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#0d1117'; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle = 'rgba(48,54,61,0.5)'; ctx.lineWidth = 1;
+    for (let gx=-3;gx<=3;gx++) {
+      const [cx]=toCanvas(gx,0);
+      ctx.beginPath(); ctx.moveTo(cx,0); ctx.lineTo(cx,H); ctx.stroke();
+    }
+    for (let gy=-2.5;gy<=2.5;gy+=0.5) {
+      const [,cy]=toCanvas(0,gy);
+      ctx.beginPath(); ctx.moveTo(0,cy); ctx.lineTo(W,cy); ctx.stroke();
+    }
+    // Axes
+    ctx.strokeStyle='rgba(139,148,158,0.7)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(0,OY); ctx.lineTo(W,OY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(OX,0); ctx.lineTo(OX,H); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle='rgba(139,148,158,0.6)'; ctx.font='10px JetBrains Mono, monospace';
+    ctx.textAlign='center';
+    for (let gx=-2;gx<=2;gx++) {
+      if(!gx) continue;
+      const [cx]=toCanvas(gx,0); ctx.fillText(gx,cx,OY+14);
+    }
+    ctx.textAlign='right';
+    for (let gy=-2;gy<=2;gy++) {
+      if(!gy) continue;
+      const [,cy]=toCanvas(0,gy); ctx.fillText(gy,OX-6,cy+4);
+    }
+
+    const D = det();
+    const [ox,oy]=toCanvas(0,0);
+    const [e1x,e1y]=toCanvas(v1.x,v1.y);
+    const [e2x,e2y]=toCanvas(v2.x,v2.y);
+    const [e12x,e12y]=toCanvas(v1.x+v2.x,v1.y+v2.y);
+
+    // Parallelogram
+    const isDependent = Math.abs(D) < 0.05;
+    ctx.fillStyle = isDependent ? 'rgba(248,81,73,0.10)' : 'rgba(88,166,255,0.09)';
+    ctx.strokeStyle = isDependent ? 'rgba(248,81,73,0.4)' : 'rgba(88,166,255,0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(ox,oy); ctx.lineTo(e1x,e1y); ctx.lineTo(e12x,e12y); ctx.lineTo(e2x,e2y);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // Area label
+    if (!isDependent) {
+      const mx=(ox+e12x)/2, my=(oy+e12y)/2;
+      ctx.fillStyle='rgba(88,166,255,0.8)'; ctx.font='bold 11px JetBrains Mono, monospace';
+      ctx.textAlign='center'; ctx.fillText(`|det|=${Math.abs(D).toFixed(2)}`,mx,my);
+    }
+
+    // Vectors
+    drawArrow(ox,oy,e1x,e1y,'#58a6ff',2.5);
+    drawArrow(ox,oy,e2x,e2y,'#bc8cff',2.5);
+
+    // Vector labels
+    ctx.font='bold 13px JetBrains Mono, monospace';
+    ctx.fillStyle='#58a6ff'; ctx.textAlign='left';
+    ctx.fillText('v₁', e1x+8, e1y-4);
+    ctx.fillStyle='#bc8cff';
+    ctx.fillText('v₂', e2x+8, e2y-4);
+
+    // Drag handles
+    [[e1x,e1y,'#58a6ff'],[e2x,e2y,'#bc8cff']].forEach(([hx,hy,col]) => {
+      ctx.fillStyle=col; ctx.strokeStyle='#0d1117'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(hx,hy,7,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    });
+
+    // Dependency line hint
+    if (isDependent) {
+      const scale = 4;
+      const [la,lb]=toCanvas(-scale*v1.x,-scale*v1.y);
+      const [lc,ld]=toCanvas(scale*v1.x,scale*v1.y);
+      ctx.strokeStyle='rgba(248,81,73,0.3)'; ctx.lineWidth=1; ctx.setLineDash([6,4]);
+      ctx.beginPath(); ctx.moveTo(la,lb); ctx.lineTo(lc,ld); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    updateLivePanel(D);
+    drawAppCanvas(D);
+  }
+
+  function updateLivePanel(D) {
+    document.getElementById('liveV1').textContent = `(${v1.x.toFixed(2)}, ${v1.y.toFixed(2)})`;
+    document.getElementById('liveV2').textContent = `(${v2.x.toFixed(2)}, ${v2.y.toFixed(2)})`;
+    document.getElementById('liveDet').textContent = D.toFixed(3);
+    document.getElementById('liveArea').textContent = Math.abs(D).toFixed(3);
+
+    const dot = v1.x*v2.x + v1.y*v2.y;
+    const n1 = Math.sqrt(v1.x**2+v1.y**2), n2 = Math.sqrt(v2.x**2+v2.y**2);
+    const cosA = (n1>0&&n2>0) ? Math.max(-1,Math.min(1,dot/(n1*n2))) : 1;
+    document.getElementById('liveAngle').textContent = (Math.acos(cosA)*180/Math.PI).toFixed(1)+'°';
+
+    const el = document.getElementById('liveStatus');
+    if (Math.abs(D) < 0.05) {
+      el.textContent = 'Linealmente DEPENDIENTES'; el.className='live-result danger';
+    } else if (Math.abs(D) < 0.5) {
+      el.textContent = 'Casi dependientes'; el.className='live-result warn';
+    } else {
+      el.textContent = 'Linealmente independientes'; el.className='live-result';
+    }
+  }
+
+  // ── App canvas: triangle visualization ──
+  const acanvas = document.getElementById('appCanvas');
+  const actx = acanvas.getContext('2d');
+  const AW=acanvas.width, AH=acanvas.height;
+  const AOX=AW/2, AOY=AH*0.6;
+  const ASCALE=60;
+
+  function toAppCanvas(mx,my) { return [AOX+mx*ASCALE, AOY-my*ASCALE]; }
+
+  function drawAppCanvas(D) {
+    actx.clearRect(0,0,AW,AH);
+    actx.fillStyle='#161b22'; actx.fillRect(0,0,AW,AH);
+
+    // Grid
+    actx.strokeStyle='rgba(48,54,61,0.4)'; actx.lineWidth=1;
+    for(let gx=-4;gx<=4;gx++){const[cx]=toAppCanvas(gx,0);actx.beginPath();actx.moveTo(cx,0);actx.lineTo(cx,AH);actx.stroke();}
+    for(let gy=-3;gy<=3;gy++){const[,cy]=toAppCanvas(0,gy);actx.beginPath();actx.moveTo(0,cy);actx.lineTo(AW,cy);actx.stroke();}
+    actx.strokeStyle='rgba(139,148,158,0.5)'; actx.lineWidth=1;
+    actx.beginPath(); actx.moveTo(0,AOY); actx.lineTo(AW,AOY); actx.stroke();
+    actx.beginPath(); actx.moveTo(AOX,0); actx.lineTo(AOX,AH); actx.stroke();
+
+    // Triangle: P0=(0,0), P1=v1, P2=v2
+    const [p0x,p0y]=toAppCanvas(0,0);
+    const [p1x,p1y]=toAppCanvas(v1.x,v1.y);
+    const [p2x,p2y]=toAppCanvas(v2.x,v2.y);
+    const isDependent = Math.abs(D) < 0.05;
+
+    actx.fillStyle = isDependent ? 'rgba(248,81,73,0.15)' : 'rgba(63,185,80,0.18)';
+    actx.strokeStyle = isDependent ? '#f85149' : '#3fb950';
+    actx.lineWidth=2;
+    actx.beginPath(); actx.moveTo(p0x,p0y); actx.lineTo(p1x,p1y); actx.lineTo(p2x,p2y); actx.closePath();
+    actx.fill(); actx.stroke();
+
+    // Vertices
+    [[p0x,p0y,'P₀'],[p1x,p1y,'P₁'],[p2x,p2y,'P₂']].forEach(([px,py,lbl]) => {
+      actx.fillStyle='#e6edf3'; actx.strokeStyle='#0d1117'; actx.lineWidth=2;
+      actx.beginPath(); actx.arc(px,py,5,0,Math.PI*2); actx.fill(); actx.stroke();
+      actx.font='bold 11px JetBrains Mono, monospace'; actx.fillStyle='#e6edf3';
+      actx.textAlign='center'; actx.fillText(lbl,px,py-9);
+    });
+
+    // Update stat panel
+    const area = Math.abs(D)/2;
+    document.getElementById('appArea').textContent = area.toFixed(3) + ' u²';
+    document.getElementById('appArea').className = 'stat-val ' + (isDependent?'danger':'ok');
+    document.getElementById('appStatus').textContent = isDependent ? 'Degenerado' : 'Válido';
+    document.getElementById('appStatus').className = 'stat-val ' + (isDependent?'danger':'ok');
+    document.getElementById('appNormal').textContent = isDependent ? '✗ Imposible' : '✓ Sí';
+    document.getElementById('appNormal').className = 'stat-val ' + (isDependent?'danger':'ok');
+    document.getElementById('appRenderable').textContent = isDependent ? '✗ Descartado' : '✓ Sí';
+    document.getElementById('appRenderable').className = 'stat-val ' + (isDependent?'danger':'ok');
+  }
+
+  // ── Drag interaction ──
+  function nearPoint(cx,cy,mx,my) {
+    return Math.sqrt((cx-mx)**2+(cy-my)**2) < HIT;
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    const rect = canvas.getBoundingClientRect();
+    const cx = e.clientX-rect.left, cy = e.clientY-rect.top;
+    const [e1x,e1y]=toCanvas(v1.x,v1.y);
+    const [e2x,e2y]=toCanvas(v2.x,v2.y);
+    if (nearPoint(cx,cy,e1x,e1y)) dragging='v1';
+    else if (nearPoint(cx,cy,e2x,e2y)) dragging='v2';
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const rect=canvas.getBoundingClientRect();
+    const [mx,my]=toMath(e.clientX-rect.left, e.clientY-rect.top);
+    const snapped = {x:Math.round(mx*4)/4, y:Math.round(my*4)/4};
+    if (dragging==='v1') { v1.x=snapped.x; v1.y=snapped.y; }
+    else                 { v2.x=snapped.x; v2.y=snapped.y; }
+    draw();
+  });
+
+  canvas.addEventListener('mouseup',   () => { dragging=null; });
+  canvas.addEventListener('mouseleave',() => { dragging=null; });
+
+  canvas.addEventListener('mousemove', e => {
+    if (dragging) return;
+    const rect=canvas.getBoundingClientRect();
+    const cx=e.clientX-rect.left, cy=e.clientY-rect.top;
+    const [e1x,e1y]=toCanvas(v1.x,v1.y);
+    const [e2x,e2y]=toCanvas(v2.x,v2.y);
+    canvas.style.cursor=(nearPoint(cx,cy,e1x,e1y)||nearPoint(cx,cy,e2x,e2y))?'grab':'default';
+  });
+
+  function setPreset(x1,y1,x2,y2) {
+    v1={x:x1,y:y1}; v2={x:x2,y:y2}; draw();
+  }
+  window.setPreset = setPreset;
+
+  draw();
+})();
+</script>
