@@ -1,0 +1,395 @@
+---
+layout: default
+title: PageRank
+prev_url: /modulo-04/cambio-de-base.html
+prev_title: Cambio de Base
+next_url: /modulo-05/pca.html
+next_title: PCA
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent3); background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent3),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent3); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(63,185,80,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent3); font-size:0.9rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent3); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent3); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .graph-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .bar-chart-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; }
+  .bar-chart-wrap h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent3); margin-bottom:0.75rem; }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent3); color:var(--accent3); }
+  .btn.active { border-color:var(--accent3); color:var(--accent3); background:rgba(63,185,80,0.08); }
+  .info-badge { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:0.3rem 0.7rem; }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 5: Eigenvalores</a><span class="sep">›</span>PageRank
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 5 · Valores y Vectores Propios</span>
+    <h1>PageRank</h1>
+    <p class="demo-lead">El algoritmo que convirtió a Google en Google: la distribución estacionaria de una caminata aleatoria en la web es el eigenvector dominante de la matriz de transición.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Idea central</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Un "surfista aleatorio" sigue links con probabilidad α y teletransporta a una página aleatoria con probabilidad (1−α). El ranking es la distribución estacionaria π de esa cadena de Markov:
+        </p>
+        <div class="formula-box">
+π = M · π<br><br>
+M = α·G + (1−α)/n · 11ᵀ<br><br>
+G[j][i] = 1/out(i)  si i→j<br>
+α = 0.85  (factor de amortiguación)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Conexión con eigenvalores</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          La ecuación π = M·π dice que <strong style="color:var(--text)">π es un eigenvector de M con eigenvalor 1</strong>. Por el teorema de Perron-Frobenius, M tiene exactamente un eigenvalor igual a 1 y todos los demás son ≤ α en módulo.
+        </p>
+        <div class="formula-box">
+M·π = 1·π<br><br>
+Iteración de potencia:<br>
+πₜ₊₁ = M·πₜ<br>
+πₜ → eigenvector de λ=1
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades</h3>
+        <ul class="props-list">
+          <li>Converge en ~50–100 iteraciones para la web real</li>
+          <li>La velocidad de convergencia depende de |λ₂| = α</li>
+          <li>Páginas sin links salientes se manejan con teleporting</li>
+          <li>El ranking no depende del vector inicial π₀ (normalizado)</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado de la iteración</h3>
+        <div class="live-panel">
+          <h3>Convergencia</h3>
+          <div class="live-row">
+            <span class="live-label">Iteración</span>
+            <span class="live-value" id="liveIter">0</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Error ‖πₜ₊₁ − πₜ‖</span>
+            <span class="live-value" id="liveError">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Página mejor rankeada</span>
+            <span class="live-value" id="liveBest">—</span>
+          </div>
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;font-style:italic;">Haz clic en los arcos del grafo para activar/desactivar links. Haz clic en "Iterar" para avanzar un paso.</p>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="graph-wrapper">
+        <canvas id="graphCanvas" width="500" height="360"></canvas>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn" onclick="stepIter()">Iterar una vez</button>
+        <button class="btn" onclick="runToConvergence()">Converger</button>
+        <button class="btn" onclick="resetIter()">Reiniciar π</button>
+        <span class="info-badge" id="iterBadge">iter 0</span>
+      </div>
+
+      <div class="bar-chart-wrap">
+        <h3>Ranking PageRank (π)</h3>
+        <canvas id="barCanvas" width="460" height="120"></canvas>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación: Búsqueda web y recomendaciones</h2>
+    <p class="app-description">
+      En 1998, Larry Page y Sergey Brin propusieron que la importancia de una página web puede estimarse por la cantidad y calidad de links que recibe — una idea recursiva que se resuelve exactamente como el eigenvector dominante de la matriz de transición. Hoy, variantes de PageRank se usan en motores de búsqueda, análisis de redes sociales, sistemas de recomendación (Netflix, Spotify) y detección de comunidades en grafos. El mismo principio matemático: encontrar el eigenvector que corresponde al eigenvalor más grande de una matriz estocástica.
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const ALPHA = 0.85;
+  const N = 6;
+  const NAMES = ['A','B','C','D','E','F'];
+  const COLORS = ['#58a6ff','#bc8cff','#3fb950','#f85149','#d29922','#79c0ff'];
+
+  // Node positions (in canvas coords, 500×360)
+  const NODE_POS = [
+    [250, 60],   // A
+    [430, 130],  // B
+    [400, 280],  // C
+    [250, 310],  // D
+    [100, 280],  // E
+    [70,  130],  // F
+  ];
+
+  // Default edges: adjacency list (directed, i→j)
+  let edges = new Set([
+    '0-1','0-2','1-2','1-3','2-4','3-1','3-4','3-5','4-0','4-5','5-0','5-2'
+  ]);
+
+  // PageRank state
+  let pi = Array(N).fill(1/N);
+  let iterCount = 0;
+
+  // Build Google matrix M
+  function buildM() {
+    // Outgoing counts
+    const out = Array(N).fill(0);
+    edges.forEach(e => {
+      const [i] = e.split('-').map(Number); out[i]++;
+    });
+    // Raw transition: G[j][i] = 1/out[i] if i→j
+    const G = Array.from({length:N}, () => Array(N).fill(0));
+    edges.forEach(e => {
+      const [i,j] = e.split('-').map(Number);
+      if(out[i]>0) G[j][i] += 1/out[i];
+    });
+    // Handle dangling nodes (out=0): distribute equally
+    for(let i=0;i<N;i++) if(out[i]===0) for(let j=0;j<N;j++) G[j][i]=1/N;
+    // Google matrix: M = α·G + (1-α)/N · ones
+    const M = Array.from({length:N}, (_,j) => Array(N).fill(0).map((_,i) => ALPHA*G[j][i]+(1-ALPHA)/N));
+    return M;
+  }
+
+  function multiplyMV(M,v) {
+    return M.map(row => row.reduce((s,m,i)=>s+m*v[i],0));
+  }
+
+  function norm(v) { return Math.sqrt(v.reduce((s,x)=>s+x*x,0)); }
+  function normalize(v) { const n=norm(v); return v.map(x=>x/n); }
+
+  function stepIter() {
+    const M=buildM();
+    const piNew=multiplyMV(M,pi);
+    // Normalize (it should already sum to 1, but numerical safety)
+    const s=piNew.reduce((a,b)=>a+b,0);
+    const piNorm=piNew.map(x=>x/s);
+    const err=Math.sqrt(piNorm.reduce((s,v,i)=>(s+(v-pi[i])**2),0));
+    iterCount++;
+    pi=piNorm;
+    updateDisplay(err);
+  }
+
+  function runToConvergence() {
+    const M=buildM();
+    for(let iter=0;iter<200;iter++){
+      const piNew=multiplyMV(M,pi);
+      const s=piNew.reduce((a,b)=>a+b,0);
+      const piNorm=piNew.map(x=>x/s);
+      const err=Math.sqrt(piNorm.reduce((s,v,i)=>(s+(v-pi[i])**2),0));
+      iterCount++;
+      pi=piNorm;
+      if(err<1e-8)break;
+    }
+    updateDisplay(0);
+  }
+
+  function resetIter() {
+    pi=Array(N).fill(1/N);
+    iterCount=0;
+    updateDisplay(null);
+  }
+
+  function updateDisplay(err) {
+    document.getElementById('liveIter').textContent=iterCount;
+    document.getElementById('liveError').textContent=err===null?'—':err<1e-8?'< 1e-8':err.toExponential(2);
+    const best=pi.indexOf(Math.max(...pi));
+    document.getElementById('liveBest').textContent=NAMES[best]+' ('+( pi[best]*100).toFixed(1)+'%)';
+    document.getElementById('iterBadge').textContent='iter '+iterCount;
+    drawGraph();
+    drawBars();
+  }
+
+  // ── Graph canvas ──
+  const gc=document.getElementById('graphCanvas');
+  const gctx=gc.getContext('2d');
+
+  function drawArrowCurved(x1,y1,x2,y2,color,lw,curved=false){
+    const dx=x2-x1,dy=y2-y1,dist=Math.sqrt(dx*dx+dy*dy);
+    if(dist<1)return;
+    const ux=dx/dist,uy=dy/dist;
+    // Shorten endpoints (node radius)
+    const R=20;
+    const sx=x1+ux*R,sy=y1+uy*R;
+    const ex=x2-ux*R,ey=y2-uy*R;
+    const hw=7,hl=12;
+    gctx.strokeStyle=color;gctx.fillStyle=color;gctx.lineWidth=lw;
+
+    if(curved){
+      // Perpendicular offset for bidirectional edges
+      const px=-uy*18,py=ux*18;
+      const mx=(sx+ex)/2+px,my=(sy+ey)/2+py;
+      gctx.beginPath();gctx.moveTo(sx,sy);gctx.quadraticCurveTo(mx,my,ex,ey);gctx.stroke();
+      // Arrow at end
+      const tdx=ex-mx,tdy=ey-my;const tl=Math.sqrt(tdx*tdx+tdy*tdy);
+      const tux=tdx/tl,tuy=tdy/tl;
+      gctx.beginPath();
+      gctx.moveTo(ex,ey);
+      gctx.lineTo(ex-tux*hl-tuy*hw,ey-tuy*hl+tux*hw);
+      gctx.lineTo(ex-tux*hl+tuy*hw,ey-tuy*hl-tux*hw);
+      gctx.closePath();gctx.fill();
+    } else {
+      gctx.beginPath();gctx.moveTo(sx,sy);gctx.lineTo(ex-ux*hl,ey-uy*hl);gctx.stroke();
+      gctx.beginPath();
+      gctx.moveTo(ex,ey);
+      gctx.lineTo(ex-ux*hl-uy*hw,ey-uy*hl+ux*hw);
+      gctx.lineTo(ex-ux*hl+uy*hw,ey-uy*hl-ux*hw);
+      gctx.closePath();gctx.fill();
+    }
+  }
+
+  function drawGraph(){
+    gctx.clearRect(0,0,gc.width,gc.height);
+    gctx.fillStyle='#0d1117';gctx.fillRect(0,0,gc.width,gc.height);
+
+    // Draw edges
+    edges.forEach(e=>{
+      const[i,j]=e.split('-').map(Number);
+      const reverse=edges.has(`${j}-${i}`);
+      const[x1,y1]=NODE_POS[i],[x2,y2]=NODE_POS[j];
+      drawArrowCurved(x1,y1,x2,y2,'rgba(139,148,158,0.7)',1.5,reverse&&i<j);
+    });
+
+    // Draw nodes (size scaled by PageRank)
+    const maxPi=Math.max(...pi);
+    for(let i=0;i<N;i++){
+      const[cx,cy]=NODE_POS[i];
+      const r=14+Math.round((pi[i]/maxPi)*16);
+      gctx.fillStyle=COLORS[i]+'33';
+      gctx.strokeStyle=COLORS[i];
+      gctx.lineWidth=2.5;
+      gctx.beginPath();gctx.arc(cx,cy,r,0,Math.PI*2);gctx.fill();gctx.stroke();
+      gctx.font='bold 13px JetBrains Mono,monospace';
+      gctx.fillStyle=COLORS[i];gctx.textAlign='center';gctx.textBaseline='middle';
+      gctx.fillText(NAMES[i],cx,cy);
+      gctx.font='10px JetBrains Mono,monospace';gctx.fillStyle='rgba(230,237,243,0.7)';
+      gctx.fillText((pi[i]*100).toFixed(1)+'%',cx,cy+r+11);
+    }
+    gctx.textBaseline='alphabetic';
+  }
+
+  // ── Bar chart canvas ──
+  const bc=document.getElementById('barCanvas');
+  const bctx=bc.getContext('2d');
+
+  function drawBars(){
+    bctx.clearRect(0,0,bc.width,bc.height);
+    bctx.fillStyle='#161b22';bctx.fillRect(0,0,bc.width,bc.height);
+    const maxPi=Math.max(...pi);
+    const padL=30,padR=10,padT=10,padB=30;
+    const bw=(bc.width-padL-padR)/N;
+    pi.forEach((p,i)=>{
+      const barH=Math.round((p/maxPi)*(bc.height-padT-padB));
+      const bx=padL+i*bw+bw*0.1;
+      const by=bc.height-padB-barH;
+      bctx.fillStyle=COLORS[i]+'55';
+      bctx.strokeStyle=COLORS[i];
+      bctx.lineWidth=1.5;
+      bctx.fillRect(bx,by,bw*0.8,barH);
+      bctx.strokeRect(bx,by,bw*0.8,barH);
+      bctx.font='bold 11px JetBrains Mono,monospace';
+      bctx.fillStyle=COLORS[i];bctx.textAlign='center';
+      bctx.fillText(NAMES[i],padL+i*bw+bw/2,bc.height-padB+14);
+      bctx.fillStyle='rgba(230,237,243,0.8)';bctx.font='10px JetBrains Mono,monospace';
+      bctx.fillText((p*100).toFixed(1)+'%',padL+i*bw+bw/2,by-4);
+    });
+  }
+
+  // ── Edge toggle: click near edge midpoint ──
+  gc.addEventListener('click',e=>{
+    const r=gc.getBoundingClientRect();
+    const mx=e.clientX-r.left,my=e.clientY-r.top;
+
+    // Check all possible edges (i→j, i≠j)
+    let toggled=false;
+    for(let i=0;i<N&&!toggled;i++){
+      for(let j=0;j<N&&!toggled;j++){
+        if(i===j)continue;
+        const[x1,y1]=NODE_POS[i],[x2,y2]=NODE_POS[j];
+        const emx=(x1+x2)/2,emy=(y1+y2)/2;
+        if(Math.sqrt((mx-emx)**2+(my-emy)**2)<20){
+          const key=`${i}-${j}`;
+          if(edges.has(key))edges.delete(key);else edges.add(key);
+          toggled=true;
+          resetIter();
+        }
+      }
+    }
+  });
+
+  window.stepIter=stepIter;
+  window.runToConvergence=runToConvergence;
+  window.resetIter=resetIter;
+
+  updateDisplay(null);
+})();
+</script>

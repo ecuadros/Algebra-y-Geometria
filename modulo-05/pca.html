@@ -1,0 +1,365 @@
+---
+layout: default
+title: PCA — Análisis de Componentes Principales
+prev_url: /modulo-05/pagerank.html
+prev_title: PageRank
+next_url: /modulo-05/compresion-svd.html
+next_title: Compresión SVD
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent3); background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent3),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent3); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(63,185,80,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent3); font-size:0.9rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent3); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.5rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent3); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .pct-bar { height:6px; border-radius:3px; background:var(--surface2); margin-top:0.15rem; overflow:hidden; }
+  .pct-fill { height:100%; border-radius:3px; transition:width 0.2s; }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrapper { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-panel { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.25rem; }
+  .controls-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent3); margin-bottom:1rem; }
+  .slider-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem 1.5rem; }
+  .slider-group { display:flex; flex-direction:column; gap:0.3rem; }
+  .slider-group label { font-family:var(--font-mono); font-size:0.8rem; color:var(--muted); }
+  .slider-group input[type=range] { width:100%; accent-color:var(--accent3); }
+  .btn-row { display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:0.75rem; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent3); color:var(--accent3); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 5: Eigenvalores</a><span class="sep">›</span>PCA
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 5 · Valores y Vectores Propios</span>
+    <h1>PCA — Análisis de Componentes Principales</h1>
+    <p class="demo-lead">Los eigenvectores de la matriz de covarianza revelan las direcciones de máxima varianza en los datos. PCA es proyectar sobre esas direcciones para reducir dimensionalidad sin perder información esencial.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Matriz de covarianza</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Dados n puntos centrados xᵢ ∈ ℝ², la matriz de covarianza empírica es:
+        </p>
+        <div class="formula-box">
+C = (1/n) · Xᵀ·X<br><br>
+C = [ σ²ₓ    σₓᵧ ]<br>
+    [ σₓᵧ    σ²ᵧ ]<br><br>
+C es simétrica y semidefinida positiva
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Eigenvectores = Componentes Principales</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Los eigenvectores de C son ortogonales y apuntan en las direcciones de mayor varianza:
+        </p>
+        <div class="formula-box">
+C·v₁ = λ₁·v₁   (PC1, mayor varianza)<br>
+C·v₂ = λ₂·v₂   (PC2, ortogonal a PC1)<br><br>
+% varianza PC1 = λ₁/(λ₁+λ₂)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades</h3>
+        <ul class="props-list">
+          <li>Proyección sobre PC1: z = xᵀ·v₁ (score 1D)</li>
+          <li>Los ejes de la elipse de datos = eigenvectores de C</li>
+          <li>PCA generaliza a d dimensiones vía descomposición espectral</li>
+          <li>Equivalente a SVD de la matriz de datos X</li>
+          <li>Whitening: dividir scores por √λ normaliza la varianza</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Covarianza en tiempo real</h3>
+        <div class="live-panel">
+          <h3>Matriz de covarianza C</h3>
+          <div class="live-row"><span class="live-label">σ²ₓ (var X)</span><span class="live-value" id="lvSxx">—</span></div>
+          <div class="live-row"><span class="live-label">σ²ᵧ (var Y)</span><span class="live-value" id="lvSyy">—</span></div>
+          <div class="live-row"><span class="live-label">σₓᵧ (cov)</span><span class="live-value" id="lvSxy">—</span></div>
+          <div class="live-row"><span class="live-label">λ₁ (PC1)</span><span class="live-value" id="lvL1">—</span></div>
+          <div class="live-row"><span class="live-label">λ₂ (PC2)</span><span class="live-value" id="lvL2">—</span></div>
+          <div style="margin-top:0.25rem;">
+            <div class="live-row"><span class="live-label">Varianza en PC1</span><span class="live-value" id="lvPct">—</span></div>
+            <div class="pct-bar"><div class="pct-fill" id="pctFill" style="background:#3fb950;width:50%"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrapper">
+        <canvas id="mainCanvas" width="520" height="420"></canvas>
+      </div>
+
+      <div class="controls-panel">
+        <h3>Distribución de los datos</h3>
+        <div class="slider-grid">
+          <div class="slider-group">
+            <label id="lblSx">Desv. estándar X: 2.0</label>
+            <input type="range" id="slSx" min="0.3" max="3.5" step="0.1" value="2.0" oninput="updateData()">
+          </div>
+          <div class="slider-group">
+            <label id="lblSy">Desv. estándar Y: 0.8</label>
+            <input type="range" id="slSy" min="0.3" max="3.5" step="0.1" value="0.8" oninput="updateData()">
+          </div>
+          <div class="slider-group">
+            <label id="lblAngle">Ángulo de rotación: 30°</label>
+            <input type="range" id="slAngle" min="0" max="180" step="1" value="30" oninput="updateData()">
+          </div>
+          <div class="slider-group">
+            <label id="lblN">Nº de puntos: 80</label>
+            <input type="range" id="slN" min="20" max="200" step="10" value="80" oninput="updateData()">
+          </div>
+        </div>
+        <div class="btn-row">
+          <button class="btn" onclick="generateData();draw()">Regenerar puntos</button>
+          <button class="btn" onclick="setPreset(2,0.5,0)">Alta varianza X</button>
+          <button class="btn" onclick="setPreset(2,2,45)">Correlación 45°</button>
+          <button class="btn" onclick="setPreset(1.5,1.5,0)">Esfera</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application Section -->
+  <section class="demo-application">
+    <h2>Aplicación: Reducción de dimensionalidad en Machine Learning</h2>
+    <p class="app-description">
+      En ML, los datasets tienen cientos o miles de features. Si hay correlación entre ellos (lo que es casi siempre el caso), PCA permite comprimir el dataset a sus componentes más informativas sin perder precisión significativa. Esto acelera el entrenamiento, facilita la visualización y reduce el overfitting. En reconocimiento facial (Eigenfaces), cada imagen de 256×256 píxeles es un punto en ℝ⁶⁵⁵³⁶, pero las caras humanas viven en un subespacio de ~100 dimensiones definido exactamente por los eigenvectores de la matriz de covarianza de imágenes de entrenamiento.
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function(){
+  const canvas=document.getElementById('mainCanvas');
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  const OX=W/2,OY=H/2,SCALE=55;
+
+  let pts=[];
+  let sx=2.0,sy=0.8,angle=30;
+
+  // Seeded PRNG (mulberry32)
+  let seed=42;
+  function rand(){
+    seed=(seed^(seed<<13))>>>0;seed=(seed^(seed>>7))>>>0;seed=(seed^(seed<<17))>>>0;
+    return seed/0xFFFFFFFF;
+  }
+  function randn(){
+    const u=rand(),v=rand();
+    return Math.sqrt(-2*Math.log(u+1e-9))*Math.cos(2*Math.PI*v);
+  }
+  function resetSeed(){seed=42+Math.floor(Date.now()/1000)%1000;}
+
+  function generateData(){
+    resetSeed();
+    const n=+document.getElementById('slN').value;
+    const ang=angle*Math.PI/180;
+    const ca=Math.cos(ang),sa=Math.sin(ang);
+    pts=[];
+    for(let i=0;i<n;i++){
+      const lx=randn()*sx,ly=randn()*sy;
+      pts.push({x:ca*lx-sa*ly,y:sa*lx+ca*ly});
+    }
+  }
+
+  function computeStats(){
+    const n=pts.length;
+    const mx=pts.reduce((s,p)=>s+p.x,0)/n;
+    const my=pts.reduce((s,p)=>s+p.y,0)/n;
+    const cpts=pts.map(p=>({x:p.x-mx,y:p.y-my}));
+    let sxx=0,syy=0,sxy=0;
+    cpts.forEach(p=>{sxx+=p.x*p.x;syy+=p.y*p.y;sxy+=p.x*p.y;});
+    sxx/=n;syy/=n;sxy/=n;
+    // Eigenvalues of [[sxx,sxy],[sxy,syy]]
+    const tr=sxx+syy;
+    const det=sxx*syy-sxy*sxy;
+    const disc=Math.sqrt(Math.max(0,(tr/2)**2-det));
+    const l1=tr/2+disc,l2=tr/2-disc;
+    // Eigenvectors
+    let v1,v2;
+    if(Math.abs(sxy)<1e-10){
+      v1={x:1,y:0};v2={x:0,y:1};
+    } else {
+      const raw1={x:sxy,y:l1-sxx};
+      const n1=Math.sqrt(raw1.x**2+raw1.y**2);
+      v1={x:raw1.x/n1,y:raw1.y/n1};
+      v2={x:-v1.y,y:v1.x};
+    }
+    return{mx,my,cpts,sxx,syy,sxy,l1,l2,v1,v2};
+  }
+
+  function toCanvas(mx,my){return[OX+mx*SCALE,OY-my*SCALE];}
+
+  function drawArrow(x1,y1,x2,y2,color,lw=2){
+    const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+    if(len<3)return;
+    const ux=dx/len,uy=dy/len,hw=7,hl=13;
+    ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-ux*hl,y2-uy*hl);ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2,y2);
+    ctx.lineTo(x2-ux*hl-uy*hw,y2-uy*hl+ux*hw);
+    ctx.lineTo(x2-ux*hl+uy*hw,y2-uy*hl-ux*hw);
+    ctx.closePath();ctx.fill();
+  }
+
+  function draw(){
+    if(!pts.length)return;
+    const{mx,my,cpts,sxx,syy,sxy,l1,l2,v1,v2}=computeStats();
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117';ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='rgba(48,54,61,0.4)';ctx.lineWidth=1;
+    for(let gx=-5;gx<=5;gx++){const[cx]=toCanvas(gx,0);ctx.beginPath();ctx.moveTo(cx,0);ctx.lineTo(cx,H);ctx.stroke();}
+    for(let gy=-4;gy<=4;gy++){const[,cy]=toCanvas(0,gy);ctx.beginPath();ctx.moveTo(0,cy);ctx.lineTo(W,cy);ctx.stroke();}
+    ctx.strokeStyle='rgba(139,148,158,0.4)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(0,OY);ctx.lineTo(W,OY);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(OX,0);ctx.lineTo(OX,H);ctx.stroke();
+
+    // Data points
+    const[cmx,cmy]=toCanvas(mx,my);
+    pts.forEach(p=>{
+      const[cx,cy]=toCanvas(p.x,p.y);
+      ctx.fillStyle='rgba(88,166,255,0.5)';
+      ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fill();
+    });
+
+    // Projections onto PC1 (lines from point to its PC1 projection)
+    const pct=l1/(l1+l2+1e-12);
+    if(pct>0.6){
+      cpts.forEach(p=>{
+        const proj=p.x*v1.x+p.y*v1.y;
+        const[x1,y1]=toCanvas(p.x+mx,p.y+my);
+        const[x2,y2]=toCanvas(proj*v1.x+mx,proj*v1.y+my);
+        ctx.strokeStyle='rgba(63,185,80,0.18)';ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+      });
+    }
+
+    // PC1 and PC2 arrows (from centroid)
+    const sc1=Math.sqrt(l1)*2.5,sc2=Math.sqrt(l2)*2.5;
+    const[p1x,p1y]=toCanvas(mx+v1.x*sc1,my+v1.y*sc1);
+    const[p1nx,p1ny]=toCanvas(mx-v1.x*sc1,my-v1.y*sc1);
+    const[p2x,p2y]=toCanvas(mx+v2.x*sc2,my+v2.y*sc2);
+    const[p2nx,p2ny]=toCanvas(mx-v2.x*sc2,my-v2.y*sc2);
+
+    // PC lines through full canvas
+    ctx.strokeStyle='rgba(63,185,80,0.25)';ctx.lineWidth=1;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(p1nx,p1ny);ctx.lineTo(p1x,p1y);ctx.stroke();
+    ctx.setLineDash([]);
+
+    drawArrow(cmx,cmy,p1x,p1y,'#3fb950',3);
+    drawArrow(cmx,cmy,p2x,p2y,'#bc8cff',2);
+
+    ctx.font='bold 13px JetBrains Mono,monospace';
+    ctx.fillStyle='#3fb950';ctx.textAlign='left';
+    ctx.fillText('PC1',p1x+8,p1y-4);
+    ctx.fillStyle='#bc8cff';
+    ctx.fillText('PC2',p2x+8,p2y-4);
+
+    // Centroid
+    ctx.fillStyle='#f85149';ctx.strokeStyle='#0d1117';ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(cmx,cmy,5,0,Math.PI*2);ctx.fill();ctx.stroke();
+
+    // Update live panel
+    document.getElementById('lvSxx').textContent=sxx.toFixed(3);
+    document.getElementById('lvSyy').textContent=syy.toFixed(3);
+    document.getElementById('lvSxy').textContent=sxy.toFixed(3);
+    document.getElementById('lvL1').textContent=l1.toFixed(3);
+    document.getElementById('lvL2').textContent=l2.toFixed(3);
+    const pctStr=(pct*100).toFixed(1)+'%';
+    document.getElementById('lvPct').textContent=pctStr;
+    document.getElementById('pctFill').style.width=pctStr;
+  }
+
+  function updateData(){
+    sx=+document.getElementById('slSx').value;
+    sy=+document.getElementById('slSy').value;
+    angle=+document.getElementById('slAngle').value;
+    document.getElementById('lblSx').textContent=`Desv. estándar X: ${sx.toFixed(1)}`;
+    document.getElementById('lblSy').textContent=`Desv. estándar Y: ${sy.toFixed(1)}`;
+    document.getElementById('lblAngle').textContent=`Ángulo de rotación: ${angle}°`;
+    document.getElementById('lblN').textContent=`Nº de puntos: ${document.getElementById('slN').value}`;
+    generateData();draw();
+  }
+
+  function setPreset(psx,psy,pang){
+    document.getElementById('slSx').value=psx;
+    document.getElementById('slSy').value=psy;
+    document.getElementById('slAngle').value=pang;
+    sx=psx;sy=psy;angle=pang;
+    document.getElementById('lblSx').textContent=`Desv. estándar X: ${psx}`;
+    document.getElementById('lblSy').textContent=`Desv. estándar Y: ${psy}`;
+    document.getElementById('lblAngle').textContent=`Ángulo de rotación: ${pang}°`;
+    generateData();draw();
+  }
+
+  window.updateData=updateData;
+  window.generateData=generateData;
+  window.setPreset=setPreset;
+
+  generateData();draw();
+})();
+</script>
