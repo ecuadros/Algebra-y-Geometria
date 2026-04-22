@@ -1,0 +1,411 @@
+---
+layout: default
+title: Gimbal Lock
+prev_url: /modulo-06/triangulacion-mallas.html
+prev_title: Triangulación de Mallas
+next_url: /modulo-07/quaterniones-slerp.html
+next_title: Cuaterniones y SLERP
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--warn); background:rgba(210,153,34,0.08); border:1px solid rgba(210,153,34,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--warn),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--warn); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(210,153,34,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--warn); font-size:0.87rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--warn); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--warn); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .live-value.danger { color:var(--danger); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-grid { display:flex; flex-direction:column; gap:0.75rem; }
+  .ctrl-row { display:flex; align-items:center; gap:0.75rem; font-size:0.85rem; }
+  .ctrl-label { min-width:130px; font-family:var(--font-mono); font-size:0.8rem; }
+  .ctrl-val { font-family:var(--font-mono); font-size:0.8rem; min-width:55px; text-align:right; }
+  .ctrl-label.x { color:#f85149; } .ctrl-val.x { color:#f85149; }
+  .ctrl-label.y { color:#3fb950; } .ctrl-val.y { color:#3fb950; }
+  .ctrl-label.z { color:#58a6ff; } .ctrl-val.z { color:#58a6ff; }
+  input[type=range].rx { accent-color:#f85149; }
+  input[type=range].ry { accent-color:#3fb950; }
+  input[type=range].rz { accent-color:#58a6ff; }
+  input[type=range] { flex:1; }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--warn); color:var(--warn); }
+  .btn.active { border-color:var(--warn); color:var(--warn); background:rgba(210,153,34,0.08); }
+
+  .gimbal-alert { display:none; background:rgba(248,81,73,0.12); border:1px solid rgba(248,81,73,0.5); border-radius:var(--radius-md); padding:0.75rem 1rem; font-family:var(--font-mono); font-size:0.85rem; color:var(--danger); font-weight:600; }
+  .gimbal-alert.visible { display:block; }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 7: Rotaciones</a><span class="sep">›</span>Gimbal Lock
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 7 · Rotaciones y Orientación 3D</span>
+    <h1>Gimbal Lock</h1>
+    <p class="demo-lead">Las matrices de rotación de Euler componen tres giros sucesivos alrededor de ejes fijos. Cuando el pitch alcanza ±90°, dos ejes se alinean y se pierde un grado de libertad.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Matrices de rotación de Euler</h3>
+        <div class="formula-box">
+Rₓ(α) = ⎡1    0      0  ⎤<br>
+          ⎢0  cosα  −sinα⎥<br>
+          ⎣0  sinα   cosα⎦<br><br>
+Rᵧ(β) = ⎡ cosβ  0  sinβ⎤<br>
+          ⎢  0   1    0  ⎥<br>
+          ⎣−sinβ  0  cosβ⎦<br><br>
+R = Rᵧ(β)·Rₓ(α)·Rᵤ(γ)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>El problema del bloqueo</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Cuando pitch β = ±90°, la matriz compuesta Rᵧ·Rₓ hace que el eje Z local se alinee con el eje Y global. Los giros de roll y yaw producen la misma rotación:
+        </p>
+        <div class="formula-box">
+Si α = 90°:<br>
+R = Rᵧ(β)·Rₓ(90°)·Rᵤ(γ)<br><br>
+El eje local Z apunta a Y<br>
+→ roll y yaw colapsan<br>
+→ perdemos 1 DOF
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Estado actual</h3>
+        <div class="live-panel">
+          <h3>Rotaciones</h3>
+          <div class="live-row">
+            <span class="live-label">Yaw (Y) β</span>
+            <span class="live-value" id="liveYaw">0°</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Pitch (X) α</span>
+            <span class="live-value" id="livePitch">0°</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Roll (Z) γ</span>
+            <span class="live-value" id="liveRoll">0°</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">DOF disponibles</span>
+            <span class="live-value" id="liveDof">3</span>
+          </div>
+        </div>
+        <div class="gimbal-alert" id="alertGimbal">
+          ¡GIMBAL LOCK!<br>Roll y Yaw son equivalentes.
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Solución: cuaterniones</h3>
+        <ul class="props-list">
+          <li>Los cuaterniones representan cualquier rotación sin singularidades</li>
+          <li>Codifican "eje + ángulo" como un vector unitario 4D</li>
+          <li>La composición es multiplicación de cuaterniones (no hay gimbal)</li>
+          <li>La interpolación SLERP mantiene velocidad angular constante</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrap">
+        <canvas id="gimbalCanvas" width="460" height="380"></canvas>
+      </div>
+
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <span class="ctrl-label y">Yaw  Y (°)</span>
+          <input type="range" class="ry" id="slYaw" min="-180" max="180" step="1" value="0" oninput="render()">
+          <span class="ctrl-val y" id="valYaw">0°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label x">Pitch X (°)</span>
+          <input type="range" class="rx" id="slPitch" min="-90" max="90" step="1" value="0" oninput="render()">
+          <span class="ctrl-val x" id="valPitch">0°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label z">Roll  Z (°)</span>
+          <input type="range" class="rz" id="slRoll" min="-180" max="180" step="1" value="0" oninput="render()">
+          <span class="ctrl-val z" id="valRoll">0°</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn active" id="btnAxes" onclick="toggleLayer('axes')">Ejes locales</button>
+        <button class="btn active" id="btnRings" onclick="toggleLayer('rings')">Anillos gimbal</button>
+        <button class="btn" onclick="setGimbalLock()">→ Bloqueo (pitch=90°)</button>
+        <button class="btn" onclick="resetAll()">Reiniciar</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application -->
+  <section class="demo-application">
+    <h2>Aplicación: Aviación, animación 3D y robótica</h2>
+    <p class="app-description">
+      El gimbal lock no es solo un problema teórico: la misión Apollo 11 estuvo a punto de perder la orientación de su plataforma inercial por un bloqueo gimbal. En animación 3D, los artistas de Maya y 3ds Max lo evitan rotando los keyframes en órdenes cuidadosos o cambiando el orden de Euler. En robótica, los brazos articulados con 6 ejes están diseñados para evitar configuraciones singulares. La solución moderna es usar cuaterniones (o la representación de eje-ángulo) para toda interpolación de orientación, recurriendo a Euler solo para la interfaz con el usuario.
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const cv = document.getElementById('gimbalCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const CX = W/2, CY = H/2;
+
+  let showAxes = true, showRings = true;
+
+  // 3D math
+  function vec3(x,y,z){ return [x,y,z]; }
+  function add(a,b){ return [a[0]+b[0],a[1]+b[1],a[2]+b[2]]; }
+  function scale(v,s){ return v.map(x=>x*s); }
+  function normalize(v){ const l=Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); return l<1e-9?v:v.map(x=>x/l); }
+
+  function rotX(v,a){ const c=Math.cos(a),s=Math.sin(a); return [v[0], c*v[1]-s*v[2], s*v[1]+c*v[2]]; }
+  function rotY(v,a){ const c=Math.cos(a),s=Math.sin(a); return [c*v[0]+s*v[2], v[1], -s*v[0]+c*v[2]]; }
+  function rotZ(v,a){ const c=Math.cos(a),s=Math.sin(a); return [c*v[0]-s*v[1], s*v[0]+c*v[1], v[2]]; }
+
+  // Apply Euler rotation: Ry(yaw) * Rx(pitch) * Rz(roll)
+  function eulerRotate(v, yaw, pitch, roll) {
+    let r = rotZ(v, roll);
+    r = rotX(r, pitch);
+    r = rotY(r, yaw);
+    return r;
+  }
+
+  function project(v){ const z=v[2]+5; return [CX+160*v[0]/z, CY-160*v[1]/z]; }
+
+  function drawArrow(from3, to3, color, lw, label) {
+    const [fx,fy]=project(from3), [tx,ty]=project(to3);
+    const dx=tx-fx, dy=ty-fy, len=Math.sqrt(dx*dx+dy*dy);
+    if(len<2) return;
+    ctx.strokeStyle=color; ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.moveTo(fx,fy); ctx.lineTo(tx,ty); ctx.stroke();
+    // arrowhead
+    const ux=dx/len, uy=dy/len;
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.moveTo(tx,ty);
+    ctx.lineTo(tx-ux*10-uy*5, ty-uy*10+ux*5);
+    ctx.lineTo(tx-ux*10+uy*5, ty-uy*10-ux*5);
+    ctx.closePath(); ctx.fill();
+    if(label){
+      ctx.font='bold 13px JetBrains Mono,monospace';
+      ctx.fillStyle=color;
+      ctx.textAlign='center';
+      ctx.fillText(label, tx+ux*14, ty+uy*14);
+    }
+  }
+
+  function drawEllipse(center3, normal3, r, color, segments=60) {
+    // Find two orthogonal vectors in the plane
+    const n = normalize(normal3);
+    let u = Math.abs(n[0]) < 0.9 ? [1,0,0] : [0,1,0];
+    // Gram-Schmidt
+    const dot = u[0]*n[0]+u[1]*n[1]+u[2]*n[2];
+    u = normalize([u[0]-dot*n[0], u[1]-dot*n[1], u[2]-dot*n[2]]);
+    const v = [n[1]*u[2]-n[2]*u[1], n[2]*u[0]-n[0]*u[2], n[0]*u[1]-n[1]*u[0]];
+
+    const pts = [];
+    for(let i=0;i<=segments;i++){
+      const t = (i/segments)*2*Math.PI;
+      const p3 = [
+        center3[0] + r*(Math.cos(t)*u[0]+Math.sin(t)*v[0]),
+        center3[1] + r*(Math.cos(t)*u[1]+Math.sin(t)*v[1]),
+        center3[2] + r*(Math.cos(t)*u[2]+Math.sin(t)*v[2])
+      ];
+      pts.push(project(p3));
+    }
+    ctx.strokeStyle=color; ctx.lineWidth=1.5;
+    ctx.beginPath();
+    pts.forEach((p,i) => i===0 ? ctx.moveTo(p[0],p[1]) : ctx.lineTo(p[0],p[1]));
+    ctx.stroke();
+  }
+
+  function render() {
+    const yawDeg  = +document.getElementById('slYaw').value;
+    const pitchDeg= +document.getElementById('slPitch').value;
+    const rollDeg = +document.getElementById('slRoll').value;
+
+    document.getElementById('valYaw').textContent   = yawDeg+'°';
+    document.getElementById('valPitch').textContent = pitchDeg+'°';
+    document.getElementById('valRoll').textContent  = rollDeg+'°';
+    document.getElementById('liveYaw').textContent   = yawDeg+'°';
+    document.getElementById('livePitch').textContent = pitchDeg+'°';
+    document.getElementById('liveRoll').textContent  = rollDeg+'°';
+
+    const yaw   = yawDeg   * Math.PI/180;
+    const pitch = pitchDeg * Math.PI/180;
+    const roll  = rollDeg  * Math.PI/180;
+
+    // Check gimbal lock: pitch ≈ ±90°
+    const isLocked = Math.abs(Math.abs(pitchDeg)-90) < 5;
+    document.getElementById('liveDof').textContent = isLocked ? '2  ⚠' : '3';
+    document.getElementById('liveDof').className = 'live-value' + (isLocked?' danger':'');
+    document.getElementById('alertGimbal').classList.toggle('visible', isLocked);
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+    // Faint grid
+    ctx.strokeStyle='rgba(48,54,61,0.35)'; ctx.lineWidth=0.5;
+    for(let gx=0;gx<=W;gx+=40){ ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke(); }
+    for(let gy=0;gy<=H;gy+=40){ ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke(); }
+
+    const O = [0,0,0];
+    const axLen = 0.8;
+
+    // World axes (faint)
+    ctx.globalAlpha=0.25;
+    drawArrow(O, [axLen,0,0], '#f85149', 1);
+    drawArrow(O, [0,axLen,0], '#3fb950', 1);
+    drawArrow(O, [0,0,axLen], '#58a6ff', 1);
+    ctx.globalAlpha=1;
+
+    // Gimbal rings (3 rings, each in the plane of rotation after partial composition)
+    if(showRings) {
+      // Outer ring: Y axis (world Y)
+      drawEllipse(O, [0,1,0], 1.25, isLocked?'rgba(248,81,73,0.5)':'rgba(63,185,80,0.35)');
+
+      // Middle ring: X axis rotated by yaw
+      const xAxisRotated = rotY([1,0,0], yaw);
+      const midNorm = normalize(xAxisRotated);
+      drawEllipse(O, midNorm, 1.05, isLocked?'rgba(248,81,73,0.5)':'rgba(210,153,34,0.45)');
+
+      // Inner ring: Z axis rotated by yaw+pitch
+      let zAxis = [0,0,1];
+      zAxis = rotX(zAxis, pitch);
+      zAxis = rotY(zAxis, yaw);
+      drawEllipse(O, normalize(zAxis), 0.85, isLocked?'rgba(248,81,73,0.6)':'rgba(88,166,255,0.45)');
+    }
+
+    // Local axes after full Euler rotation
+    if(showAxes) {
+      const lx = eulerRotate([axLen,0,0], yaw, pitch, roll);
+      const ly = eulerRotate([0,axLen,0], yaw, pitch, roll);
+      const lz = eulerRotate([0,0,axLen], yaw, pitch, roll);
+      drawArrow(O, lx, '#f85149', 2.5, 'X');
+      drawArrow(O, ly, '#3fb950', 2.5, 'Y');
+      drawArrow(O, lz, '#58a6ff', 2.5, 'Z');
+    }
+
+    // Airplane body (simple shape: fuselage along local Z, wings along local X)
+    const nose = eulerRotate([0,0,0.6], yaw, pitch, roll);
+    const tail = eulerRotate([0,0,-0.5], yaw, pitch, roll);
+    const wingL = eulerRotate([-0.7,0,0], yaw, pitch, roll);
+    const wingR = eulerRotate([ 0.7,0,0], yaw, pitch, roll);
+    const top   = eulerRotate([0, 0.2, 0], yaw, pitch, roll);
+
+    function p2(v){ return project(add(O,v)); }
+    ctx.strokeStyle='rgba(230,237,243,0.8)'; ctx.lineWidth=2.5;
+    ctx.beginPath(); const [nx,ny]=p2(nose); ctx.moveTo(nx,ny);
+    const [tx,ty]=p2(tail); ctx.lineTo(tx,ty); ctx.stroke();
+    ctx.beginPath();
+    const [wlx,wly]=p2(wingL); ctx.moveTo(wlx,wly);
+    const [wrx,wry]=p2(wingR); ctx.lineTo(wrx,wry); ctx.stroke();
+    // Vertical stabilizer
+    const [topx,topy]=p2(top);
+    ctx.beginPath(); ctx.moveTo(tx,ty); ctx.lineTo(topx,topy); ctx.stroke();
+
+    // Warning overlay
+    if(isLocked) {
+      ctx.font='bold 12px JetBrains Mono,monospace';
+      ctx.fillStyle='rgba(248,81,73,0.85)';
+      ctx.textAlign='center';
+      ctx.fillText('⚠ GIMBAL LOCK  pitch='+pitchDeg+'°', W/2, H-14);
+    } else {
+      ctx.font='11px JetBrains Mono,monospace';
+      ctx.fillStyle='rgba(139,148,158,0.5)';
+      ctx.textAlign='center';
+      ctx.fillText('Yaw='+yawDeg+'°  Pitch='+pitchDeg+'°  Roll='+rollDeg+'°', W/2, H-14);
+    }
+  }
+
+  function toggleLayer(l) {
+    if(l==='axes') { showAxes=!showAxes; document.getElementById('btnAxes').classList.toggle('active',showAxes); }
+    if(l==='rings') { showRings=!showRings; document.getElementById('btnRings').classList.toggle('active',showRings); }
+    render();
+  }
+
+  function setGimbalLock() {
+    document.getElementById('slPitch').value=90;
+    document.getElementById('slYaw').value=30;
+    document.getElementById('slRoll').value=0;
+    render();
+  }
+
+  function resetAll() {
+    document.getElementById('slYaw').value=0;
+    document.getElementById('slPitch').value=0;
+    document.getElementById('slRoll').value=0;
+    render();
+  }
+
+  window.render = render;
+  window.toggleLayer = toggleLayer;
+  window.setGimbalLock = setGimbalLock;
+  window.resetAll = resetAll;
+
+  render();
+})();
+</script>

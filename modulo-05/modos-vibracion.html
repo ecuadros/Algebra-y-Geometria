@@ -1,0 +1,430 @@
+---
+layout: default
+title: Modos de Vibración
+prev_url: /modulo-05/compresion-svd.html
+prev_title: Compresión SVD
+next_url: /modulo-06/camara-sintetica.html
+next_title: Cámara Sintética
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent3); background:rgba(63,185,80,0.08); border:1px solid rgba(63,185,80,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent3),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent3); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(63,185,80,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent3); font-size:0.9rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent3); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent3); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-grid { display:flex; flex-direction:column; gap:0.75rem; }
+  .ctrl-row { display:flex; align-items:center; gap:0.75rem; font-size:0.85rem; }
+  .ctrl-label { color:var(--muted); font-family:var(--font-mono); font-size:0.8rem; min-width:80px; }
+  .ctrl-val { font-family:var(--font-mono); font-size:0.8rem; color:var(--accent3); min-width:40px; text-align:right; }
+  input[type=range] { flex:1; accent-color:var(--accent3); }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent3); color:var(--accent3); }
+  .btn.active { border-color:var(--accent3); color:var(--accent3); background:rgba(63,185,80,0.08); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 5: Eigenvalores</a><span class="sep">›</span>Modos de Vibración
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 5 · Valores y Vectores Propios</span>
+    <h1>Modos de Vibración</h1>
+    <p class="demo-lead">Un sistema de masas y resortes vibra naturalmente en sus modos propios: los eigenvectores de K·x = ω²·M·x determinan la forma y la frecuencia de cada modo.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>El problema de eigenvalores generalizado</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Para un sistema de 2 masas y 3 resortes, las ecuaciones de movimiento son M·ẍ + K·x = 0. Buscando soluciones x(t) = φ·cos(ωt):
+        </p>
+        <div class="formula-box">
+K·φ = ω²·M·φ<br><br>
+K = ⎡k₁+k₂  −k₂ ⎤<br>
+    ⎣ −k₂  k₂+k₃⎦<br><br>
+M = ⎡m₁  0 ⎤<br>
+    ⎣ 0  m₂⎦<br><br>
+(M⁻¹K − ω²I)·φ = 0
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Interpretación física</h3>
+        <ul class="props-list">
+          <li><strong style="color:var(--text)">Modo 1 (ω₁ bajo):</strong> masas se mueven en fase — vibración "suave"</li>
+          <li><strong style="color:var(--text)">Modo 2 (ω₂ alto):</strong> masas se mueven en oposición de fase — vibración "rígida"</li>
+          <li>Los eigenvectores (modos) son ortogonales respecto a M</li>
+          <li>Cualquier movimiento es superposición de los modos propios</li>
+        </ul>
+      </div>
+
+      <div class="theory-block">
+        <h3>Frecuencias y formas modales</h3>
+        <div class="live-panel">
+          <h3>Sistema actual</h3>
+          <div class="live-row">
+            <span class="live-label">ω₁ (rad/s)</span>
+            <span class="live-value" id="liveW1">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">ω₂ (rad/s)</span>
+            <span class="live-value" id="liveW2">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">φ₁ (modo 1)</span>
+            <span class="live-value" id="livePhi1">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">φ₂ (modo 2)</span>
+            <span class="live-value" id="livePhi2">—</span>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrap">
+        <canvas id="vibCanvas" width="480" height="280"></canvas>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn active" id="btnMode1" onclick="setMode(1)">Modo 1</button>
+        <button class="btn" id="btnMode2" onclick="setMode(2)">Modo 2</button>
+        <button class="btn" id="btnSuper" onclick="setMode(0)">Superposición</button>
+        <button class="btn" id="btnPause" onclick="togglePause()">⏸ Pausar</button>
+      </div>
+
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <span class="ctrl-label">k₁ (resorte 1)</span>
+          <input type="range" id="slK1" min="0.5" max="10" step="0.5" value="4" oninput="updateSystem()">
+          <span class="ctrl-val" id="valK1">4</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">k₂ (acoplamiento)</span>
+          <input type="range" id="slK2" min="0.5" max="10" step="0.5" value="2" oninput="updateSystem()">
+          <span class="ctrl-val" id="valK2">2</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">k₃ (resorte 3)</span>
+          <input type="range" id="slK3" min="0.5" max="10" step="0.5" value="4" oninput="updateSystem()">
+          <span class="ctrl-val" id="valK3">4</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">m₁</span>
+          <input type="range" id="slM1" min="0.5" max="4" step="0.5" value="1" oninput="updateSystem()">
+          <span class="ctrl-val" id="valM1">1</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">m₂</span>
+          <input type="range" id="slM2" min="0.5" max="4" step="0.5" value="1" oninput="updateSystem()">
+          <span class="ctrl-val" id="valM2">1</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application -->
+  <section class="demo-application">
+    <h2>Aplicación: Ingeniería estructural y física computacional</h2>
+    <p class="app-description">
+      Los modos de vibración son centrales en el diseño de puentes, edificios y aeronaves. Los ingenieros calculan las frecuencias propias de una estructura para asegurarse de que no coincidan con la frecuencia de excitación externa (resonancia). En el contexto de simulación por elementos finitos (FEM), matrices de rigidez K y masa M de miles de nodos se resuelven con métodos iterativos como Lanczos para encontrar solo los primeros eigenvalores, que son los modos más peligrosos. La misma matemática aparece en análisis de redes (vibración de grafos), química cuántica (niveles de energía molecular) y computación gráfica (síntesis de sonido físicamente plausible).
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const cv = document.getElementById('vibCanvas');
+  const ctx = cv.getContext('2d');
+
+  let k1=4, k2=2, k3=4, m1=1, m2=1;
+  let w1=0, w2=0, phi1=[1,1], phi2=[1,-1];
+  let currentMode = 1; // 1, 2, or 0 (superposition)
+  let paused = false;
+  let t = 0;
+  let animId;
+
+  function computeEigen() {
+    // M⁻¹K = [[（k1+k2)/m1, -k2/m1], [-k2/m2, (k2+k3)/m2]]
+    const a = (k1+k2)/m1;
+    const b = -k2/m1;
+    const c = -k2/m2;
+    const d = (k2+k3)/m2;
+
+    // Characteristic polynomial: λ² - (a+d)λ + (ad-bc) = 0
+    const tr = a+d;
+    const det = a*d - b*c;
+    const disc = Math.sqrt(Math.max(0, tr*tr - 4*det));
+
+    const lam1 = (tr - disc)/2;
+    const lam2 = (tr + disc)/2;
+    w1 = Math.sqrt(Math.max(0, lam1));
+    w2 = Math.sqrt(Math.max(0, lam2));
+
+    // Eigenvectors: (M⁻¹K - λI)·φ = 0 → row 1: (a-λ)φ₁ + b·φ₂ = 0
+    // φ₂/φ₁ = -(a-λ)/b if b≠0
+    function eigvec(lam) {
+      if(Math.abs(b) > 1e-9) {
+        const ratio = -(a - lam)/b;
+        const n = Math.sqrt(1 + ratio*ratio);
+        return [1/n, ratio/n];
+      } else {
+        return [1, 0];
+      }
+    }
+    phi1 = eigvec(lam1);
+    phi2 = eigvec(lam2);
+  }
+
+  function updateDisplay() {
+    document.getElementById('liveW1').textContent = w1.toFixed(3);
+    document.getElementById('liveW2').textContent = w2.toFixed(3);
+    document.getElementById('livePhi1').textContent = '['+phi1[0].toFixed(2)+', '+phi1[1].toFixed(2)+']';
+    document.getElementById('livePhi2').textContent = '['+phi2[0].toFixed(2)+', '+phi2[1].toFixed(2)+']';
+  }
+
+  function updateSystem() {
+    k1 = +document.getElementById('slK1').value;
+    k2 = +document.getElementById('slK2').value;
+    k3 = +document.getElementById('slK3').value;
+    m1 = +document.getElementById('slM1').value;
+    m2 = +document.getElementById('slM2').value;
+    document.getElementById('valK1').textContent = k1;
+    document.getElementById('valK2').textContent = k2;
+    document.getElementById('valK3').textContent = k3;
+    document.getElementById('valM1').textContent = m1;
+    document.getElementById('valM2').textContent = m2;
+    computeEigen();
+    updateDisplay();
+    t = 0;
+  }
+
+  function setMode(m) {
+    currentMode = m;
+    t = 0;
+    document.getElementById('btnMode1').classList.toggle('active', m===1);
+    document.getElementById('btnMode2').classList.toggle('active', m===2);
+    document.getElementById('btnSuper').classList.toggle('active', m===0);
+  }
+
+  function togglePause() {
+    paused = !paused;
+    document.getElementById('btnPause').textContent = paused ? '▶ Reanudar' : '⏸ Pausar';
+  }
+
+  // Current displacements
+  function getDisplacements(time) {
+    const A = 0.35; // amplitude
+    if(currentMode === 1) {
+      const x = A * Math.cos(w1 * time);
+      return [phi1[0]*x, phi1[1]*x];
+    } else if(currentMode === 2) {
+      const x = A * Math.cos(w2 * time);
+      return [phi2[0]*x, phi2[1]*x];
+    } else {
+      // superposition: equal amplitudes of both modes
+      const x1 = (A*0.7) * Math.cos(w1 * time);
+      const x2 = (A*0.7) * Math.cos(w2 * time + 0.5);
+      return [
+        phi1[0]*x1 + phi2[0]*x2,
+        phi1[1]*x1 + phi2[1]*x2
+      ];
+    }
+  }
+
+  function drawSpring(x1, y, x2, coils, color) {
+    const dx = x2 - x1;
+    if(Math.abs(dx) < 2) return;
+    const N = coils;
+    const seg = dx / (N * 2 + 2);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x1 + seg, y);
+    for(let i = 0; i < N; i++) {
+      const bx = x1 + seg + i*2*seg;
+      ctx.lineTo(bx + seg*0.5, y - 14);
+      ctx.lineTo(bx + seg*1.5, y + 14);
+    }
+    ctx.lineTo(x2 - seg, y);
+    ctx.lineTo(x2, y);
+    ctx.stroke();
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, cv.width, cv.height);
+
+    const W = cv.width, H = cv.height;
+    const baseY = H * 0.52;
+    const wallX = 30;
+    const wall2X = W - 30;
+    const eqX1 = W * 0.33;  // equilibrium position of m1
+    const eqX2 = W * 0.67;  // equilibrium position of m2
+    const SCALE = 90; // pixels per unit displacement
+
+    const [dx1, dx2] = getDisplacements(t);
+    const x1 = eqX1 + dx1 * SCALE;
+    const x2 = eqX2 + dx2 * SCALE;
+    const massR = 22;
+
+    // Wall hatching
+    function drawWall(wx) {
+      ctx.fillStyle = '#30363d';
+      ctx.fillRect(wx - (wx < W/2 ? 10 : 0), baseY - 60, 10, 120);
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 1;
+      const hdir = wx < W/2 ? -1 : 1;
+      for(let y = baseY - 55; y < baseY + 60; y += 12) {
+        ctx.beginPath();
+        ctx.moveTo(wx, y);
+        ctx.lineTo(wx + hdir * 10, y + 8);
+        ctx.stroke();
+      }
+    }
+    drawWall(wallX);
+    drawWall(wall2X);
+
+    // Equilibrium dotted lines
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = 'rgba(139,148,158,0.25)';
+    ctx.lineWidth = 1;
+    [eqX1, eqX2].forEach(ex => {
+      ctx.beginPath(); ctx.moveTo(ex, baseY - massR - 5); ctx.lineTo(ex, baseY + massR + 5); ctx.stroke();
+    });
+    ctx.setLineDash([]);
+
+    // Springs
+    const springColor = 'rgba(88,166,255,0.7)';
+    drawSpring(wallX + 10, baseY, x1 - massR, 5, springColor);
+    drawSpring(x1 + massR, baseY, x2 - massR, 5, '#bc8cff');
+    drawSpring(x2 + massR, baseY, wall2X - 10, 5, springColor);
+
+    // Masses
+    function drawMass(x, m, label, col) {
+      const r = massR + (m - 1) * 4;
+      ctx.fillStyle = col + '22';
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.roundRect(x - r, baseY - r, r*2, r*2, 6);
+      ctx.fill(); ctx.stroke();
+      ctx.font = 'bold 13px JetBrains Mono, monospace';
+      ctx.fillStyle = col;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(label, x, baseY);
+      // displacement label
+      const dispPx = x - (label === 'm₁' ? eqX1 : eqX2);
+      ctx.font = '10px JetBrains Mono, monospace';
+      ctx.fillStyle = 'rgba(230,237,243,0.6)';
+      ctx.fillText((dispPx/SCALE).toFixed(2), x, baseY + r + 14);
+    }
+    drawMass(x1, m1, 'm₁', '#58a6ff');
+    drawMass(x2, m2, 'm₂', '#3fb950');
+
+    // Mode label
+    const modeNames = ['Superposición', 'Modo 1  ω₁='+w1.toFixed(2), 'Modo 2  ω₂='+w2.toFixed(2)];
+    ctx.font = 'bold 11px JetBrains Mono, monospace';
+    ctx.fillStyle = currentMode === 2 ? '#3fb950' : '#58a6ff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(modeNames[currentMode], W/2, H - 12);
+
+    // Time axis (phase indicator)
+    const tw = 160, th = 28, tx = W/2 - tw/2, ty = H - 55;
+    ctx.fillStyle = 'rgba(22,27,34,0.8)';
+    ctx.strokeStyle = '#30363d';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(tx, ty, tw, th, 4); ctx.fill(); ctx.stroke();
+    const phases = tw * ((t % (2*Math.PI)) / (2*Math.PI));
+    ctx.fillStyle = '#58a6ff44';
+    ctx.beginPath(); ctx.roundRect(tx+1, ty+1, phases, th-2, 3); ctx.fill();
+    ctx.font = '9px JetBrains Mono, monospace';
+    ctx.fillStyle = 'rgba(139,148,158,0.8)';
+    ctx.textAlign = 'center';
+    ctx.fillText('t = '+(t).toFixed(1)+' s', W/2, ty + th/2 + 3.5);
+  }
+
+  let last = null;
+  function loop(ts) {
+    if(!paused) {
+      if(last !== null) t += (ts - last) / 1000;
+      last = ts;
+    } else {
+      last = null;
+    }
+    draw();
+    animId = requestAnimationFrame(loop);
+  }
+
+  window.updateSystem = updateSystem;
+  window.setMode = setMode;
+  window.togglePause = togglePause;
+
+  computeEigen();
+  updateDisplay();
+  requestAnimationFrame(loop);
+})();
+</script>
