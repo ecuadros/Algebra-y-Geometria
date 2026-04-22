@@ -1,0 +1,372 @@
+---
+layout: default
+title: Cámara Sintética
+prev_url: /modulo-05/modos-vibracion.html
+prev_title: Modos de Vibración
+next_url: /modulo-06/ray-casting.html
+next_title: Ray Casting
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(88,166,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent); font-size:0.87rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-grid { display:flex; flex-direction:column; gap:0.75rem; }
+  .ctrl-row { display:flex; align-items:center; gap:0.75rem; font-size:0.85rem; }
+  .ctrl-label { color:var(--muted); font-family:var(--font-mono); font-size:0.8rem; min-width:120px; }
+  .ctrl-val { font-family:var(--font-mono); font-size:0.8rem; color:var(--accent); min-width:50px; text-align:right; }
+  input[type=range] { flex:1; accent-color:var(--accent); }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.active { border-color:var(--accent); color:var(--accent); background:rgba(88,166,255,0.08); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 6: Geometría Analítica</a><span class="sep">›</span>Cámara Sintética
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 6 · Geometría Analítica y Proyectiva</span>
+    <h1>Cámara Sintética</h1>
+    <p class="demo-lead">La proyección perspectiva transforma coordenadas 3D en píxeles 2D mediante una división por Z. El campo de visión (FOV) controla cuánto "ve" la cámara.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Proyección perspectiva</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Un punto 3D (X, Y, Z) se proyecta al plano de imagen dividiendo por la profundidad Z. La distancia focal f determina el "zoom":
+        </p>
+        <div class="formula-box">
+x' = f · X / Z<br>
+y' = f · Y / Z<br><br>
+f = (w/2) / tan(FOV/2)<br><br>
+FOV↑ → f↓ → gran angular<br>
+FOV↓ → f↑ → teleobjetivo
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Matriz de proyección (homogénea)</h3>
+        <div class="formula-box">
+P = ⎡f  0  cx  0⎤<br>
+    ⎢0  f  cy  0⎥<br>
+    ⎢0  0   1  0⎥<br>
+    ⎣0  0   1  0⎦<br><br>
+[x', y', w]ᵀ = P · [X,Y,Z,1]ᵀ<br>
+píxel = (x'/w, y'/w)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Parámetros actuales</h3>
+        <div class="live-panel">
+          <h3>Cámara</h3>
+          <div class="live-row">
+            <span class="live-label">FOV</span>
+            <span class="live-value" id="liveFov">60°</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Distancia focal f</span>
+            <span class="live-value" id="liveF">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Dist. cámara</span>
+            <span class="live-value" id="liveDist">5</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Rotación Y</span>
+            <span class="live-value" id="liveRot">0°</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades de la perspectiva</h3>
+        <ul class="props-list">
+          <li>Líneas paralelas convergen en puntos de fuga</li>
+          <li>Objetos más lejanos aparecen más pequeños (proporcionalmente a 1/Z)</li>
+          <li>No preserva ángulos ni longitudes (no es transformación afín)</li>
+          <li>La proyección ortográfica es el límite cuando Z → ∞</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrap">
+        <canvas id="camCanvas" width="460" height="360"></canvas>
+      </div>
+
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <span class="ctrl-label">FOV (grados)</span>
+          <input type="range" id="slFov" min="15" max="120" step="1" value="60" oninput="render()">
+          <span class="ctrl-val" id="valFov">60°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Distancia cámara</span>
+          <input type="range" id="slDist" min="2" max="12" step="0.5" value="5" oninput="render()">
+          <span class="ctrl-val" id="valDist">5</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Rotación Y (°)</span>
+          <input type="range" id="slRot" min="0" max="360" step="1" value="25" oninput="render()">
+          <span class="ctrl-val" id="valRot">25°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Elevación (°)</span>
+          <input type="range" id="slElev" min="-60" max="60" step="1" value="15" oninput="render()">
+          <span class="ctrl-val" id="valElev">15°</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn active" id="btnCubo" onclick="setScene('cube')">Cubo</button>
+        <button class="btn" id="btnPiramide" onclick="setScene('pyramid')">Pirámide</button>
+        <button class="btn" id="btnGrid" onclick="setScene('grid')">Cuadrícula</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application -->
+  <section class="demo-application">
+    <h2>Aplicación: Motores de renderizado y realidad virtual</h2>
+    <p class="app-description">
+      La cámara sintética es el núcleo de todo motor gráfico 3D: OpenGL, Vulkan, Unity y Unreal usan exactamente esta matriz de proyección perspectiva para transformar la geometría 3D en una imagen 2D. El FOV bajo (~30°) imita un teleobjetivo y "aplana" la escena; el FOV alto (~100°) produce el efecto ojo de pez usado en cámaras de acción y VR. Los juegos ajustan el FOV para equilibrar inmersión y desorientación. En visión por computadora, calibrar los parámetros intrínsecos de una cámara real (f, cx, cy) es el primer paso para algoritmos de estructura-desde-movimiento y realidad aumentada.
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const cv = document.getElementById('camCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const CX = W/2, CY = H/2;
+
+  // Scene definitions
+  const SCENES = {
+    cube: {
+      verts: [
+        [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+        [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1]
+      ],
+      edges: [
+        [0,1],[1,2],[2,3],[3,0],
+        [4,5],[5,6],[6,7],[7,4],
+        [0,4],[1,5],[2,6],[3,7]
+      ],
+      faceColors: ['#58a6ff','#bc8cff','#3fb950','#f85149','#d29922','#56d364']
+    },
+    pyramid: {
+      verts: [
+        [0,1.5,0],
+        [-1,-1,-1],[1,-1,-1],[1,-1,1],[-1,-1,1]
+      ],
+      edges: [
+        [0,1],[0,2],[0,3],[0,4],
+        [1,2],[2,3],[3,4],[4,1]
+      ]
+    },
+    grid: {
+      verts: (function(){
+        const v=[];
+        for(let i=-2;i<=2;i++) for(let j=-2;j<=2;j++) v.push([i*0.8, 0, j*0.8]);
+        return v;
+      })(),
+      edges: (function(){
+        const e=[];
+        const n=5;
+        for(let r=0;r<n;r++) {
+          for(let c=0;c<n-1;c++) { e.push([r*n+c, r*n+c+1]); }
+        }
+        for(let c=0;c<n;c++) {
+          for(let r=0;r<n-1;r++) { e.push([r*n+c, (r+1)*n+c]); }
+        }
+        return e;
+      })()
+    }
+  };
+
+  let scene = 'cube';
+  let autoRotate = false;
+  let rotY = 25 * Math.PI/180;
+
+  function setScene(s) {
+    scene = s;
+    ['cube','pyramid','grid'].forEach(n => {
+      document.getElementById('btn'+({cube:'Cubo',pyramid:'Piramide',grid:'Grid'}[n])).classList.toggle('active', n===s);
+    });
+    render();
+  }
+
+  function rotateY(v, a) {
+    const c=Math.cos(a), s=Math.sin(a);
+    return [c*v[0]+s*v[2], v[1], -s*v[0]+c*v[2]];
+  }
+  function rotateX(v, a) {
+    const c=Math.cos(a), s=Math.sin(a);
+    return [v[0], c*v[1]-s*v[2], s*v[1]+c*v[2]];
+  }
+
+  function project(v, f, camZ) {
+    const z = v[2] + camZ;
+    if(z <= 0.01) return null;
+    return [CX + f * v[0] / z, CY - f * v[1] / z, z];
+  }
+
+  function render() {
+    const fov = +document.getElementById('slFov').value;
+    const dist = +document.getElementById('slDist').value;
+    const rotDeg = +document.getElementById('slRot').value;
+    const elevDeg = +document.getElementById('slElev').value;
+
+    document.getElementById('valFov').textContent = fov+'°';
+    document.getElementById('valDist').textContent = dist;
+    document.getElementById('valRot').textContent = rotDeg+'°';
+    document.getElementById('valElev').textContent = elevDeg+'°';
+
+    const f = (W/2) / Math.tan(fov * Math.PI / 360);
+    document.getElementById('liveFov').textContent = fov+'°';
+    document.getElementById('liveF').textContent = f.toFixed(1)+'px';
+    document.getElementById('liveDist').textContent = dist;
+    document.getElementById('liveRot').textContent = rotDeg+'°';
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0,0,W,H);
+
+    // Draw horizon grid
+    ctx.strokeStyle = 'rgba(48,54,61,0.5)';
+    ctx.lineWidth = 0.5;
+    for(let gx=0; gx<=W; gx+=40){ ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke(); }
+    for(let gy=0; gy<=H; gy+=40){ ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke(); }
+
+    const sc = SCENES[scene];
+    const rotRad = rotDeg * Math.PI / 180;
+    const elevRad = elevDeg * Math.PI / 180;
+
+    // Transform vertices
+    const projected = sc.verts.map(v => {
+      let r = rotateY(v, rotRad);
+      r = rotateX(r, elevRad);
+      return project(r, f, dist);
+    });
+
+    // Draw edges sorted by average depth
+    const edges = sc.edges.map(([a,b]) => {
+      const pa = projected[a], pb = projected[b];
+      if(!pa || !pb) return null;
+      const avgZ = (pa[2] + pb[2]) / 2;
+      return {a, b, avgZ};
+    }).filter(Boolean).sort((a,b) => b.avgZ - a.avgZ);
+
+    edges.forEach(({a, b, avgZ}) => {
+      const pa = projected[a], pb = projected[b];
+      const alpha = Math.max(0.2, Math.min(1, 2/avgZ));
+      ctx.strokeStyle = `rgba(88,166,255,${alpha})`;
+      ctx.lineWidth = Math.max(0.5, 2.5 / (avgZ * 0.5));
+      ctx.beginPath();
+      ctx.moveTo(pa[0], pa[1]);
+      ctx.lineTo(pb[0], pb[1]);
+      ctx.stroke();
+    });
+
+    // Draw vertices
+    projected.forEach((p, i) => {
+      if(!p) return;
+      const r = Math.max(1.5, 4 / (p[2] * 0.4));
+      ctx.fillStyle = '#58a6ff';
+      ctx.beginPath();
+      ctx.arc(p[0], p[1], r, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // FOV wedge overlay (top-right corner)
+    const wx=W-90, wy=40, wl=60;
+    const halfFovRad = fov * Math.PI / 360;
+    ctx.strokeStyle = 'rgba(88,166,255,0.4)';
+    ctx.fillStyle = 'rgba(88,166,255,0.06)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(wx, wy);
+    ctx.lineTo(wx - wl*Math.sin(halfFovRad), wy + wl*Math.cos(halfFovRad));
+    ctx.arc(wx, wy, wl, Math.PI/2 - halfFovRad, Math.PI/2 + halfFovRad);
+    ctx.closePath();
+    ctx.fill(); ctx.stroke();
+    ctx.font = '10px JetBrains Mono, monospace';
+    ctx.fillStyle = 'rgba(88,166,255,0.8)';
+    ctx.textAlign = 'center';
+    ctx.fillText('FOV='+fov+'°', wx, wy+wl+14);
+
+    // Axis labels
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.fillStyle = 'rgba(139,148,158,0.7)';
+    ctx.textAlign = 'left';
+    ctx.fillText('f='+f.toFixed(0)+'px   Z='+dist, 12, H-12);
+  }
+
+  window.render = render;
+  window.setScene = setScene;
+  render();
+})();
+</script>

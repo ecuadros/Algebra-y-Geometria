@@ -1,0 +1,428 @@
+---
+layout: default
+title: Triangulación de Mallas
+prev_url: /modulo-06/curvas-bezier.html
+prev_title: Curvas de Bézier
+next_url: /modulo-07/gimbal-lock.html
+next_title: Gimbal Lock
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(88,166,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent); font-size:0.87rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-grid { display:flex; flex-direction:column; gap:0.75rem; }
+  .ctrl-row { display:flex; align-items:center; gap:0.75rem; font-size:0.85rem; }
+  .ctrl-label { color:var(--muted); font-family:var(--font-mono); font-size:0.8rem; min-width:120px; }
+  .ctrl-val { font-family:var(--font-mono); font-size:0.8rem; color:var(--accent); min-width:45px; text-align:right; }
+  input[type=range] { flex:1; accent-color:var(--accent); }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.active { border-color:var(--accent); color:var(--accent); background:rgba(88,166,255,0.08); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 6: Geometría Analítica</a><span class="sep">›</span>Triangulación de Mallas
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 6 · Geometría Analítica y Proyectiva</span>
+    <h1>Triangulación de Mallas</h1>
+    <p class="demo-lead">El producto vectorial determina la normal de cada cara triangular. Con estas normales se calcula la iluminación de toda malla 3D en gráficos por computadora.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Normal de cara por producto cruz</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Dado un triángulo con vértices A, B, C, los vectores arista u = B−A y v = C−A definen el plano. Su producto cruz da la normal:
+        </p>
+        <div class="formula-box">
+u = B − A<br>
+v = C − A<br><br>
+n = u × v =<br>
+  (uᵧvᵤ − uᵤvᵧ,<br>
+   uᵤvₓ − uₓvᵤ,<br>
+   uₓvᵧ − uᵧvₓ)<br><br>
+n̂ = n / |n|
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Área del triángulo</h3>
+        <div class="formula-box">
+Área = |u × v| / 2<br><br>
+|n| = |u||v| sin θ<br><br>
+El signo de n indica la<br>
+orientación (CCW vs CW)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Cara seleccionada</h3>
+        <div class="live-panel">
+          <h3>Normal de cara</h3>
+          <div class="live-row">
+            <span class="live-label">Cara #</span>
+            <span class="live-value" id="liveFaceIdx">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">n̂ = (x, y, z)</span>
+            <span class="live-value" id="liveNormal">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Área</span>
+            <span class="live-value" id="liveArea">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">cos(θ luz)</span>
+            <span class="live-value" id="liveCos">—</span>
+          </div>
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;font-style:italic;">Haz clic en una cara para inspeccionarla.</p>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades</h3>
+        <ul class="props-list">
+          <li>La normal es perpendicular al plano del triángulo</li>
+          <li>La orientación de los vértices (CCW/CW) determina el frente de la cara</li>
+          <li>Las normales de vértices (promedio de caras) dan sombreado Gouraud</li>
+          <li>Normales de vértices + interpolación baricéntrica → sombreado Phong</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrap">
+        <canvas id="meshCanvas" width="460" height="400"></canvas>
+      </div>
+
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <span class="ctrl-label">Rotación Y (°)</span>
+          <input type="range" id="slRotY" min="0" max="360" step="1" value="30" oninput="render()">
+          <span class="ctrl-val" id="valRotY">30°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Elevación (°)</span>
+          <input type="range" id="slElev" min="-60" max="60" step="1" value="20" oninput="render()">
+          <span class="ctrl-val" id="valElev">20°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Luz azimut (°)</span>
+          <input type="range" id="slLightAz" min="0" max="360" step="1" value="45" oninput="render()">
+          <span class="ctrl-val" id="valLightAz">45°</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn active" id="btnNormals" onclick="toggleLayer('normals')">Normales</button>
+        <button class="btn active" id="btnShading" onclick="toggleLayer('shading')">Sombreado</button>
+        <button class="btn active" id="btnWire" onclick="toggleLayer('wire')">Wireframe</button>
+        <button class="btn" id="btnMesh" onclick="cycleMesh()">Cambiar malla</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application -->
+  <section class="demo-application">
+    <h2>Aplicación: Motores gráficos y simulación física</h2>
+    <p class="app-description">
+      Toda malla poligonal en videojuegos, cine y simulación médica es una colección de triángulos con normales calculadas exactamente así. La GPU evalúa el producto vectorial implícitamente en el pipeline de rasterización para el modelo de iluminación de Phong. En simulación de fluidos y elementos finitos, las normales de cara determinan la dirección de las fuerzas de presión sobre la superficie. En impresión 3D (STL, OBJ), la correcta orientación de normales es crítica para determinar el interior y exterior del sólido. El mismo producto cruz también se usa para el test de intersección triángulo-rayo en trazado de rayos (Möller–Trumbore algorithm).
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const cv = document.getElementById('meshCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const CX = W/2, CY = H/2;
+
+  let showNormals = true, showShading = true, showWire = true;
+  let selectedFace = -1;
+  let meshIdx = 0;
+
+  // ---- Mesh definitions ----
+  function cubeVerts() {
+    return [
+      [-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],
+      [-1,-1, 1],[1,-1, 1],[1,1, 1],[-1,1, 1]
+    ];
+  }
+  function cubeFaces() {
+    return [
+      [0,1,2],[0,2,3], // back
+      [4,6,5],[4,7,6], // front
+      [0,4,5],[0,5,1], // bottom
+      [2,6,7],[2,7,3], // top
+      [0,3,7],[0,7,4], // left
+      [1,5,6],[1,6,2], // right
+    ];
+  }
+
+  function octaVerts() {
+    const s=1.3;
+    return [
+      [0,s,0],[s,0,0],[0,0,s],[-s,0,0],[0,0,-s],[0,-s,0]
+    ];
+  }
+  function octaFaces() {
+    return [
+      [0,1,2],[0,2,3],[0,3,4],[0,4,1],
+      [5,2,1],[5,3,2],[5,4,3],[5,1,4]
+    ];
+  }
+
+  function icoVerts() {
+    const t=(1+Math.sqrt(5))/2, s=1/Math.sqrt(1+t*t);
+    const p = [
+      [-1,t,0],[1,t,0],[-1,-t,0],[1,-t,0],
+      [0,-1,t],[0,1,t],[0,-1,-t],[0,1,-t],
+      [t,0,-1],[t,0,1],[-t,0,-1],[-t,0,1]
+    ].map(v=>v.map(x=>x*s));
+    return p;
+  }
+  function icoFaces() {
+    return [
+      [0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],
+      [1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+      [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],
+      [4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]
+    ];
+  }
+
+  const MESHES = [
+    {name:'Cubo', verts:cubeVerts, faces:cubeFaces},
+    {name:'Octaedro', verts:octaVerts, faces:octaFaces},
+    {name:'Icosaedro', verts:icoVerts, faces:icoFaces}
+  ];
+
+  function cross(u, v) {
+    return [
+      u[1]*v[2]-u[2]*v[1],
+      u[2]*v[0]-u[0]*v[2],
+      u[0]*v[1]-u[1]*v[0]
+    ];
+  }
+  function sub(a,b){ return [a[0]-b[0],a[1]-b[1],a[2]-b[2]]; }
+  function normalize(v){ const l=Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); return l<1e-9?v:v.map(x=>x/l); }
+  function dot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]; }
+  function len(v){ return Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); }
+
+  function rotY(v, a){ const c=Math.cos(a),s=Math.sin(a); return [c*v[0]+s*v[2],v[1],-s*v[0]+c*v[2]]; }
+  function rotX(v, a){ const c=Math.cos(a),s=Math.sin(a); return [v[0],c*v[1]-s*v[2],s*v[1]+c*v[2]]; }
+
+  function project(v, f=200){ return [CX + f*v[0]/(v[2]+5), CY - f*v[1]/(v[2]+5), v[2]]; }
+
+  function render() {
+    const rotYDeg = +document.getElementById('slRotY').value;
+    const elevDeg = +document.getElementById('slElev').value;
+    const lightAzDeg = +document.getElementById('slLightAz').value;
+
+    document.getElementById('valRotY').textContent = rotYDeg+'°';
+    document.getElementById('valElev').textContent = elevDeg+'°';
+    document.getElementById('valLightAz').textContent = lightAzDeg+'°';
+
+    const ryRad = rotYDeg * Math.PI/180;
+    const rxRad = elevDeg * Math.PI/180;
+    const lazRad = lightAzDeg * Math.PI/180;
+    const lightDir = normalize([Math.sin(lazRad), 0.6, Math.cos(lazRad)]);
+
+    const {verts:vertsF, faces:facesF} = MESHES[meshIdx];
+    const rawVerts = vertsF();
+    const faces = facesF();
+
+    // Transform verts
+    const tverts = rawVerts.map(v => {
+      let r = rotY(v, ryRad);
+      r = rotX(r, rxRad);
+      return r;
+    });
+    const pverts = tverts.map(v => project(v));
+
+    // Compute face data
+    const faceData = faces.map((f, fi) => {
+      const [A,B,C] = f.map(i => tverts[i]);
+      const u = sub(B,A), v = sub(C,A);
+      const n = cross(u,v);
+      const area = len(n)/2;
+      const nhat = normalize(n);
+      const cosL = Math.max(0, dot(nhat, lightDir));
+      const centerZ = (A[2]+B[2]+C[2])/3;
+      return {f, nhat, area, cosL, centerZ};
+    });
+
+    // Sort back-to-front
+    faceData.sort((a,b) => a.centerZ - b.centerZ);
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+    // Draw faces
+    faceData.forEach(({f, nhat, cosL, centerZ}, sortedIdx) => {
+      const fi = faces.indexOf(f);
+      const [pA,pB,pC] = f.map(i=>pverts[i]);
+
+      if(showShading) {
+        const shade = 0.05 + 0.85 * cosL;
+        if(fi === selectedFace) {
+          ctx.fillStyle = `rgba(248,81,73,${shade})`;
+        } else {
+          const r=Math.round(40 + 60*cosL);
+          const g=Math.round(100 + 80*cosL);
+          const b=Math.round(200 + 55*cosL);
+          ctx.fillStyle = `rgba(${r},${g},${b},${shade + 0.1})`;
+        }
+      } else {
+        ctx.fillStyle = fi===selectedFace ? 'rgba(248,81,73,0.15)' : 'rgba(88,166,255,0.05)';
+      }
+      ctx.beginPath();
+      ctx.moveTo(pA[0],pA[1]); ctx.lineTo(pB[0],pB[1]); ctx.lineTo(pC[0],pC[1]);
+      ctx.closePath(); ctx.fill();
+
+      if(showWire) {
+        ctx.strokeStyle = fi===selectedFace ? 'rgba(248,81,73,0.9)' : 'rgba(88,166,255,0.4)';
+        ctx.lineWidth = fi===selectedFace ? 2 : 1;
+        ctx.stroke();
+      }
+
+      // Face normal arrow
+      if(showNormals) {
+        const [pA3,pB3,pC3] = f.map(i=>tverts[i]);
+        const cx3 = [(pA3[0]+pB3[0]+pC3[0])/3, (pA3[1]+pB3[1]+pC3[1])/3, (pA3[2]+pB3[2]+pC3[2])/3];
+        const cx3p = project(cx3);
+        const tip3 = [cx3[0]+nhat[0]*0.35, cx3[1]+nhat[1]*0.35, cx3[2]+nhat[2]*0.35];
+        const tip3p = project(tip3);
+
+        ctx.strokeStyle = fi===selectedFace ? 'rgba(248,81,73,0.9)' : `rgba(88,166,255,${0.2+cosL*0.6})`;
+        ctx.lineWidth = fi===selectedFace ? 2 : 1;
+        ctx.beginPath(); ctx.moveTo(cx3p[0],cx3p[1]); ctx.lineTo(tip3p[0],tip3p[1]); ctx.stroke();
+        ctx.fillStyle = fi===selectedFace ? 'rgba(248,81,73,0.9)' : `rgba(88,166,255,${0.2+cosL*0.6})`;
+        ctx.beginPath(); ctx.arc(tip3p[0],tip3p[1],2.5,0,Math.PI*2); ctx.fill();
+      }
+    });
+
+    // Update selected face display
+    if(selectedFace >= 0 && selectedFace < faceData.length) {
+      const fd = faceData.find(x=>x.f===faces[selectedFace]);
+      if(fd) {
+        document.getElementById('liveFaceIdx').textContent = '#'+selectedFace;
+        document.getElementById('liveNormal').textContent = '('+fd.nhat.map(x=>x.toFixed(2)).join(', ')+')';
+        document.getElementById('liveArea').textContent = fd.area.toFixed(3);
+        document.getElementById('liveCos').textContent = fd.cosL.toFixed(3);
+      }
+    }
+
+    // Mesh name label
+    ctx.font='11px JetBrains Mono,monospace';
+    ctx.fillStyle='rgba(88,166,255,0.6)';
+    ctx.textAlign='left';
+    ctx.fillText(MESHES[meshIdx].name + '  · '+faces.length+' caras', 12, H-12);
+  }
+
+  // Click to select face
+  cv.addEventListener('click', e => {
+    const r=cv.getBoundingClientRect();
+    const mx=e.clientX-r.left, my=e.clientY-r.top;
+
+    const rotYDeg = +document.getElementById('slRotY').value;
+    const elevDeg = +document.getElementById('slElev').value;
+    const ryRad = rotYDeg*Math.PI/180, rxRad = elevDeg*Math.PI/180;
+
+    const {verts:vertsF, faces:facesF} = MESHES[meshIdx];
+    const tverts = vertsF().map(v=>{ let r=rotY(v,ryRad); return rotX(r,rxRad); });
+    const pverts = tverts.map(v=>project(v));
+    const faces = facesF();
+
+    let hit=-1;
+    for(let fi=0; fi<faces.length; fi++){
+      const [pA,pB,pC]=faces[fi].map(i=>pverts[i]);
+      // Point-in-triangle test
+      function sign(p1,p2,p3){ return (p1[0]-p3[0])*(p2[1]-p3[1])-(p2[0]-p3[0])*(p1[1]-p3[1]); }
+      const d1=sign([mx,my],pA,pB), d2=sign([mx,my],pB,pC), d3=sign([mx,my],pC,pA);
+      const hasNeg=(d1<0)||(d2<0)||(d3<0), hasPos=(d1>0)||(d2>0)||(d3>0);
+      if(!(hasNeg&&hasPos)){ hit=fi; }
+    }
+    selectedFace = (hit===selectedFace) ? -1 : hit;
+    if(selectedFace<0){ document.getElementById('liveFaceIdx').textContent='—'; document.getElementById('liveNormal').textContent='—'; document.getElementById('liveArea').textContent='—'; document.getElementById('liveCos').textContent='—'; }
+    render();
+  });
+
+  function toggleLayer(l) {
+    if(l==='normals') { showNormals=!showNormals; document.getElementById('btnNormals').classList.toggle('active',showNormals); }
+    if(l==='shading') { showShading=!showShading; document.getElementById('btnShading').classList.toggle('active',showShading); }
+    if(l==='wire') { showWire=!showWire; document.getElementById('btnWire').classList.toggle('active',showWire); }
+    render();
+  }
+
+  function cycleMesh() { meshIdx=(meshIdx+1)%MESHES.length; selectedFace=-1; render(); }
+
+  window.render = render;
+  window.toggleLayer = toggleLayer;
+  window.cycleMesh = cycleMesh;
+
+  render();
+})();
+</script>

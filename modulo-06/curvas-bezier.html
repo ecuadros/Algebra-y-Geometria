@@ -1,0 +1,366 @@
+---
+layout: default
+title: Curvas de Bézier
+prev_url: /modulo-06/ray-casting.html
+prev_title: Ray Casting
+next_url: /modulo-06/triangulacion-mallas.html
+next_title: Triangulación de Mallas
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(88,166,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent); font-size:0.87rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; position:relative; }
+  canvas { display:block; border-radius:var(--radius-md); cursor:crosshair; }
+
+  .controls-grid { display:flex; flex-direction:column; gap:0.75rem; }
+  .ctrl-row { display:flex; align-items:center; gap:0.75rem; font-size:0.85rem; }
+  .ctrl-label { color:var(--muted); font-family:var(--font-mono); font-size:0.8rem; min-width:100px; }
+  .ctrl-val { font-family:var(--font-mono); font-size:0.8rem; color:var(--accent); min-width:45px; text-align:right; }
+  input[type=range] { flex:1; accent-color:var(--accent); }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.active { border-color:var(--accent); color:var(--accent); background:rgba(88,166,255,0.08); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 6: Geometría Analítica</a><span class="sep">›</span>Curvas de Bézier
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 6 · Geometría Analítica y Proyectiva</span>
+    <h1>Curvas de Bézier</h1>
+    <p class="demo-lead">Las curvas de Bézier parametrizan trayectorias suaves mediante interpolación lineal recursiva (algoritmo de De Casteljau). Son el estándar en tipografía, animación y diseño CAD.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Definición polinomial</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          La curva cúbica de Bézier combina 4 puntos de control con los polinomios de Bernstein:
+        </p>
+        <div class="formula-box">
+B(t) = Σᵢ C(3,i)·(1−t)³⁻ⁱ·tⁱ·Pᵢ<br><br>
+B(t) = (1−t)³P₀ + 3(1−t)²tP₁<br>
+       + 3(1−t)t²P₂ + t³P₃<br><br>
+t ∈ [0, 1]
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Algoritmo de De Casteljau</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          La construcción geométrica: interpolar linealmente los puntos, nivel a nivel, hasta llegar a un único punto que pertenece a la curva:
+        </p>
+        <div class="formula-box">
+P₀₁ = (1−t)P₀ + t·P₁<br>
+P₁₂ = (1−t)P₁ + t·P₂<br>
+P₂₃ = (1−t)P₂ + t·P₃<br><br>
+P₀₁₂ = (1−t)P₀₁ + t·P₁₂<br>
+P₁₂₃ = (1−t)P₁₂ + t·P₂₃<br><br>
+B(t) = (1−t)P₀₁₂ + t·P₁₂₃
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Punto actual B(t)</h3>
+        <div class="live-panel">
+          <h3>Parámetro t</h3>
+          <div class="live-row">
+            <span class="live-label">t</span>
+            <span class="live-value" id="liveT">0.50</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">B(t).x</span>
+            <span class="live-value" id="liveBx">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">B(t).y</span>
+            <span class="live-value" id="liveBy">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">B'(t) (tangente)</span>
+            <span class="live-value" id="liveDeriv">—</span>
+          </div>
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;font-style:italic;">Arrastra los puntos de control (círculos) en el canvas.</p>
+      </div>
+
+      <div class="theory-block">
+        <h3>Propiedades</h3>
+        <ul class="props-list">
+          <li>La curva siempre pasa por P₀ y P₃ (no por P₁, P₂)</li>
+          <li>La tangente en P₀ es paralela a P₀P₁; en P₃, a P₂P₃</li>
+          <li>La curva está contenida en el casco convexo de los Pᵢ</li>
+          <li>Variación disminuida: cruza cualquier línea ≤ veces que el polígono</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrap">
+        <canvas id="bezCanvas" width="460" height="380"></canvas>
+      </div>
+
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <span class="ctrl-label">Parámetro t</span>
+          <input type="range" id="slT" min="0" max="1" step="0.01" value="0.5" oninput="render()">
+          <span class="ctrl-val" id="valT">0.50</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn active" id="btnConstruct" onclick="toggleLayer('construct')">De Casteljau</button>
+        <button class="btn active" id="btnPoly" onclick="toggleLayer('poly')">Polígono de control</button>
+        <button class="btn" id="btnAnim" onclick="toggleAnim()">▶ Animar t</button>
+        <button class="btn" onclick="resetPoints()">Reiniciar puntos</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application -->
+  <section class="demo-application">
+    <h2>Aplicación: Tipografía, animación y diseño vectorial</h2>
+    <p class="app-description">
+      Las curvas de Bézier cúbicas son el estándar de la industria: SVG, PostScript (PDF), TrueType y OpenType las usan para definir cada contorno de cada carácter. En animación, los keyframes de After Effects y Blender se conectan con Béziers para controlar la aceleración y desaceleración (easing). En diseño CAD (Fusion 360, SolidWorks), las curvas NURBS son una generalización de Bézier con pesos no uniformes que permiten representar cónicas exactas (círculos, elipses) y superficies complejas. El concepto clave es la misma interpolación lineal recursiva: geometría controlada por álgebra.
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const cv = document.getElementById('bezCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let showConstruct = true, showPoly = true;
+  let animRunning = false;
+  let animT = 0, animDir = 1;
+  let animId = null;
+
+  // Default control points
+  let pts = [
+    {x:60,  y:300},
+    {x:140, y:80},
+    {x:320, y:80},
+    {x:400, y:300}
+  ];
+  const PT_COLORS = ['#58a6ff','#bc8cff','#3fb950','#f85149'];
+  const PT_LABELS = ['P₀','P₁','P₂','P₃'];
+
+  let dragging = -1;
+
+  function lerp(a, b, t) { return {x: a.x*(1-t)+b.x*t, y: a.y*(1-t)+b.y*t}; }
+
+  function casteljau(t) {
+    const L0 = pts;
+    const L1 = [lerp(L0[0],L0[1],t), lerp(L0[1],L0[2],t), lerp(L0[2],L0[3],t)];
+    const L2 = [lerp(L1[0],L1[1],t), lerp(L1[1],L1[2],t)];
+    const L3 = lerp(L2[0],L2[1],t);
+    return {L0,L1,L2,L3};
+  }
+
+  function render() {
+    const tVal = animRunning ? animT : +document.getElementById('slT').value;
+    if(!animRunning) { animT = tVal; }
+
+    document.getElementById('valT').textContent = tVal.toFixed(2);
+    document.getElementById('liveT').textContent = tVal.toFixed(3);
+
+    const {L0,L1,L2,L3} = casteljau(tVal);
+
+    document.getElementById('liveBx').textContent = L3.x.toFixed(1)+'px';
+    document.getElementById('liveBy').textContent = L3.y.toFixed(1)+'px';
+
+    // Tangent via L2
+    const tx = L2[1].x - L2[0].x, ty = L2[1].y - L2[0].y;
+    const tn = Math.sqrt(tx*tx+ty*ty);
+    document.getElementById('liveDeriv').textContent = tn>0.01 ? '('+( tx/tn).toFixed(2)+', '+(ty/tn).toFixed(2)+')' : '—';
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+    // Faint grid
+    ctx.strokeStyle='rgba(48,54,61,0.35)'; ctx.lineWidth=0.5;
+    for(let gx=0;gx<=W;gx+=40){ ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke(); }
+    for(let gy=0;gy<=H;gy+=40){ ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke(); }
+
+    // Full Bezier curve (many steps)
+    ctx.strokeStyle='rgba(88,166,255,0.9)'; ctx.lineWidth=2.5;
+    ctx.beginPath();
+    for(let i=0;i<=200;i++){
+      const {L3:p} = casteljau(i/200);
+      if(i===0) ctx.moveTo(p.x,p.y); else ctx.lineTo(p.x,p.y);
+    }
+    ctx.stroke();
+
+    // Control polygon
+    if(showPoly) {
+      ctx.strokeStyle='rgba(139,148,158,0.3)'; ctx.lineWidth=1; ctx.setLineDash([4,4]);
+      ctx.beginPath();
+      pts.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+
+    // De Casteljau construction
+    if(showConstruct) {
+      // Level 1 lines
+      function drawLevel(level, color, lw) {
+        ctx.strokeStyle=color; ctx.lineWidth=lw;
+        ctx.beginPath();
+        level.forEach((p,i) => i===0 ? ctx.moveTo(p.x,p.y) : ctx.lineTo(p.x,p.y));
+        ctx.stroke();
+        level.forEach(p => {
+          ctx.fillStyle=color;
+          ctx.beginPath(); ctx.arc(p.x,p.y,4,0,Math.PI*2); ctx.fill();
+        });
+      }
+      drawLevel(L1, 'rgba(188,140,255,0.7)', 1.5);
+      drawLevel(L2, 'rgba(63,185,80,0.8)', 1.5);
+      // Final point
+      ctx.fillStyle='#f85149';
+      ctx.beginPath(); ctx.arc(L3.x,L3.y,7,0,Math.PI*2); ctx.fill();
+    }
+
+    // Tangent line at B(t)
+    const tang = {x: L2[1].x-L2[0].x, y: L2[1].y-L2[0].y};
+    const tlen = Math.sqrt(tang.x*tang.x+tang.y*tang.y);
+    if(tlen > 0.5) {
+      const tnorm = {x:tang.x/tlen*40, y:tang.y/tlen*40};
+      ctx.strokeStyle='rgba(248,81,73,0.6)'; ctx.lineWidth=1.5;
+      ctx.beginPath();
+      ctx.moveTo(L3.x-tnorm.x, L3.y-tnorm.y);
+      ctx.lineTo(L3.x+tnorm.x, L3.y+tnorm.y);
+      ctx.stroke();
+    }
+
+    // Control points
+    pts.forEach((p,i) => {
+      ctx.fillStyle=PT_COLORS[i]+'33';
+      ctx.strokeStyle=PT_COLORS[i];
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(p.x,p.y,10,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.font='bold 11px JetBrains Mono,monospace';
+      ctx.fillStyle=PT_COLORS[i];
+      ctx.textAlign='center';
+      ctx.fillText(PT_LABELS[i], p.x, p.y - 15);
+    });
+
+    // t label
+    ctx.font='11px JetBrains Mono,monospace';
+    ctx.fillStyle='rgba(248,81,73,0.8)';
+    ctx.textAlign='left';
+    ctx.fillText('t = '+tVal.toFixed(2), 12, H-12);
+  }
+
+  // Drag control
+  cv.addEventListener('mousedown', e => {
+    const r=cv.getBoundingClientRect();
+    const mx=e.clientX-r.left, my=e.clientY-r.top;
+    pts.forEach((p,i) => {
+      if(Math.sqrt((mx-p.x)**2+(my-p.y)**2) < 14) dragging=i;
+    });
+  });
+  cv.addEventListener('mousemove', e => {
+    if(dragging<0) return;
+    const r=cv.getBoundingClientRect();
+    pts[dragging].x = Math.max(5,Math.min(W-5, e.clientX-r.left));
+    pts[dragging].y = Math.max(5,Math.min(H-5, e.clientY-r.top));
+    render();
+  });
+  cv.addEventListener('mouseup', () => dragging=-1);
+  cv.addEventListener('mouseleave', () => dragging=-1);
+
+  function toggleLayer(l) {
+    if(l==='construct') { showConstruct=!showConstruct; document.getElementById('btnConstruct').classList.toggle('active', showConstruct); }
+    if(l==='poly') { showPoly=!showPoly; document.getElementById('btnPoly').classList.toggle('active', showPoly); }
+    render();
+  }
+
+  function toggleAnim() {
+    animRunning = !animRunning;
+    document.getElementById('btnAnim').textContent = animRunning ? '⏸ Pausar' : '▶ Animar t';
+    if(animRunning) requestAnimationFrame(animLoop);
+  }
+
+  function animLoop() {
+    if(!animRunning) return;
+    animT += animDir * 0.008;
+    if(animT >= 1) { animT=1; animDir=-1; }
+    if(animT <= 0) { animT=0; animDir=1; }
+    document.getElementById('slT').value = animT;
+    render();
+    requestAnimationFrame(animLoop);
+  }
+
+  function resetPoints() {
+    pts = [{x:60,y:300},{x:140,y:80},{x:320,y:80},{x:400,y:300}];
+    render();
+  }
+
+  window.render = render;
+  window.toggleLayer = toggleLayer;
+  window.toggleAnim = toggleAnim;
+  window.resetPoints = resetPoints;
+
+  render();
+})();
+</script>

@@ -1,0 +1,405 @@
+---
+layout: default
+title: Ray Casting
+prev_url: /modulo-06/camara-sintetica.html
+prev_title: Cámara Sintética
+next_url: /modulo-06/curvas-bezier.html
+next_title: Curvas de Bézier
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--accent); background:rgba(88,166,255,0.08); border:1px solid rgba(88,166,255,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--accent); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(88,166,255,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--accent); font-size:0.87rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--accent); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+  .live-value.hit { color:var(--accent3); }
+  .live-value.miss { color:var(--danger); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-grid { display:flex; flex-direction:column; gap:0.75rem; }
+  .ctrl-row { display:flex; align-items:center; gap:0.75rem; font-size:0.85rem; }
+  .ctrl-label { color:var(--muted); font-family:var(--font-mono); font-size:0.8rem; min-width:130px; }
+  .ctrl-val { font-family:var(--font-mono); font-size:0.8rem; color:var(--accent); min-width:55px; text-align:right; }
+  input[type=range] { flex:1; accent-color:var(--accent); }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--accent); color:var(--accent); }
+  .btn.active { border-color:var(--accent); color:var(--accent); background:rgba(88,166,255,0.08); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; margin-bottom:1.5rem; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 6: Geometría Analítica</a><span class="sep">›</span>Ray Casting
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 6 · Geometría Analítica y Proyectiva</span>
+    <h1>Ray Casting</h1>
+    <p class="demo-lead">Un rayo P(t) = O + t·D intersecta esferas y planos con álgebra lineal pura. Es la base de los motores de trazado de rayos y los detectores de colisión en videojuegos.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>El rayo</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Un rayo parte del origen O en dirección D normalizada. El parámetro t ≥ 0 recorre todos los puntos del rayo:
+        </p>
+        <div class="formula-box">
+P(t) = O + t·D,   t ≥ 0<br><br>
+D = (cos θ, sin θ)   (2D)<br>
+</div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Intersección rayo–esfera</h3>
+        <div class="formula-box">
+|P(t) − C|² = r²<br>
+|O+tD−C|² = r²<br><br>
+Sea L = O − C:<br>
+t²(D·D) + 2t(D·L) + (L·L−r²) = 0<br><br>
+Δ = (D·L)² − (D·D)(L·L−r²)<br>
+Δ &lt; 0 → sin intersección<br>
+t = (−D·L ± √Δ) / (D·D)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Intersección rayo–plano</h3>
+        <div class="formula-box">
+Plano: P·n = d<br>
+(O + t·D)·n = d<br><br>
+t = (d − O·n) / (D·n)<br><br>
+D·n ≈ 0 → rayo paralelo<br>
+t &lt; 0 → detrás del origen
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Resultados</h3>
+        <div class="live-panel">
+          <h3>Intersecciones</h3>
+          <div class="live-row">
+            <span class="live-label">Esfera</span>
+            <span class="live-value" id="liveSphere">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">t (entrada)</span>
+            <span class="live-value" id="liveTin">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Plano</span>
+            <span class="live-value" id="livePlane">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">t (plano)</span>
+            <span class="live-value" id="liveTplane">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Δ (discriminante)</span>
+            <span class="live-value" id="liveDelta">—</span>
+          </div>
+        </div>
+        <p style="font-size:0.8rem;color:var(--muted);margin-top:0.5rem;font-style:italic;">Arrastra el slider de ángulo para rotar el rayo.</p>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrap">
+        <canvas id="rayCanvas" width="460" height="380"></canvas>
+      </div>
+
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <span class="ctrl-label">Ángulo del rayo (°)</span>
+          <input type="range" id="slAngle" min="-80" max="80" step="1" value="10" oninput="render()">
+          <span class="ctrl-val" id="valAngle">10°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Radio de esfera</span>
+          <input type="range" id="slRadius" min="20" max="80" step="5" value="50" oninput="render()">
+          <span class="ctrl-val" id="valRadius">50px</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">Pos. esfera X</span>
+          <input type="range" id="slSphX" min="-100" max="100" step="5" value="0" oninput="render()">
+          <span class="ctrl-val" id="valSphX">0</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn active" id="btnSphere" onclick="toggleObj('sphere')">Esfera</button>
+        <button class="btn active" id="btnPlane" onclick="toggleObj('plane')">Plano</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application -->
+  <section class="demo-application">
+    <h2>Aplicación: Path tracing y motores de renderizado</h2>
+    <p class="app-description">
+      El ray casting es el fundamento de todos los motores de renderizado fotorrealista: OptiX de NVIDIA, Cycles de Blender y el motor de Pixar. Para cada píxel se lanza uno o más rayos desde la cámara virtual; cada intersección determina el color por las propiedades del material y las fuentes de luz. En tiempo real (DLSS 4, ray tracing en GPUs modernas) se lanzan millones de rayos por fotograma. La misma intersección rayo–esfera también aparece en física de colisiones en videojuegos y en algoritmos de selección (picking) en editores 3D.
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const cv = document.getElementById('rayCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+
+  let showSphere = true, showPlane = true;
+
+  function toggleObj(o) {
+    if(o==='sphere') { showSphere=!showSphere; document.getElementById('btnSphere').classList.toggle('active', showSphere); }
+    if(o==='plane') { showPlane=!showPlane; document.getElementById('btnPlane').classList.toggle('active', showPlane); }
+    render();
+  }
+
+  // World is 2D top-down view. Origin of ray at bottom-center.
+  // World coords: center = (W/2, H*0.8), 1 world unit = 1px
+
+  function worldToScreen(x, y) {
+    return [W/2 + x, H*0.8 - y];
+  }
+
+  function render() {
+    const angleDeg = +document.getElementById('slAngle').value;
+    const radius = +document.getElementById('slRadius').value;
+    const sphXOff = +document.getElementById('slSphX').value;
+
+    document.getElementById('valAngle').textContent = angleDeg+'°';
+    document.getElementById('valRadius').textContent = radius+'px';
+    document.getElementById('valSphX').textContent = sphXOff;
+
+    const angleRad = angleDeg * Math.PI / 180;
+    // Ray: O=(0,0), D=(sin θ, cos θ)  (pointing upward)
+    const Ox=0, Oy=0;
+    const Dx=Math.sin(angleRad), Dy=Math.cos(angleRad);
+
+    // Sphere: center = (sphXOff, 200), radius
+    const Cx=sphXOff, Cy=200, R=radius;
+
+    // Plane: horizontal at y=280, normal = (0,1), d=280
+    const planeY = 280;
+
+    // --- Sphere intersection ---
+    const Lx=Ox-Cx, Ly=Oy-Cy;
+    const a = Dx*Dx + Dy*Dy; // = 1
+    const b = 2*(Dx*Lx + Dy*Ly);
+    const c = Lx*Lx + Ly*Ly - R*R;
+    const disc = b*b - 4*a*c;
+
+    let sphHit = false, tIn = null, hitPt = null, hitNorm = null;
+    if(disc >= 0 && showSphere) {
+      const t1 = (-b - Math.sqrt(disc))/(2*a);
+      const t2 = (-b + Math.sqrt(disc))/(2*a);
+      if(t1 > 0.001) { tIn = t1; sphHit = true; }
+      else if(t2 > 0.001) { tIn = t2; sphHit = true; }
+      if(sphHit) {
+        hitPt = [Ox + tIn*Dx, Oy + tIn*Dy];
+        const nx=(hitPt[0]-Cx)/R, ny=(hitPt[1]-Cy)/R;
+        hitNorm = [nx, ny];
+      }
+    }
+
+    // --- Plane intersection ---
+    // Plane: y = planeY → normal n=(0,1), d=planeY
+    // t = (planeY - Oy) / Dy
+    let planeHit = false, tPlane = null, planeHitPt = null;
+    if(showPlane && Math.abs(Dy) > 0.001) {
+      tPlane = (planeY - Oy) / Dy;
+      if(tPlane > 0.001) {
+        planeHit = true;
+        planeHitPt = [Ox + tPlane*Dx, planeY];
+      }
+    }
+
+    // Update live values
+    const sphereEl = document.getElementById('liveSphere');
+    const tinEl = document.getElementById('liveTin');
+    const planeEl = document.getElementById('livePlane');
+    const tplaneEl = document.getElementById('liveTplane');
+    const deltaEl = document.getElementById('liveDelta');
+
+    sphereEl.textContent = sphHit ? 'IMPACTO' : (showSphere ? 'sin impacto' : '—');
+    sphereEl.className = 'live-value ' + (sphHit ? 'hit' : (showSphere ? 'miss' : ''));
+    tinEl.textContent = sphHit ? tIn.toFixed(1)+'px' : '—';
+    planeEl.textContent = planeHit ? 'IMPACTO' : (showPlane ? 'sin impacto' : '—');
+    planeEl.className = 'live-value ' + (planeHit ? 'hit' : (showPlane ? 'miss' : ''));
+    tplaneEl.textContent = planeHit ? tPlane.toFixed(1)+'px' : '—';
+    deltaEl.textContent = showSphere ? disc.toFixed(1) : '—';
+    deltaEl.className = 'live-value ' + (showSphere ? (disc>=0?'hit':'miss') : '');
+
+    // === DRAW ===
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='rgba(48,54,61,0.4)'; ctx.lineWidth=0.5;
+    for(let gx=0;gx<W;gx+=40){ ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke(); }
+    for(let gy=0;gy<H;gy+=40){ ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke(); }
+
+    // Plane
+    if(showPlane) {
+      const [px0,py0] = worldToScreen(-W/2, planeY);
+      const [px1,py1] = worldToScreen(W/2, planeY);
+      ctx.strokeStyle='rgba(210,153,34,0.5)'; ctx.lineWidth=2;
+      ctx.setLineDash([8,4]);
+      ctx.beginPath(); ctx.moveTo(px0,py0); ctx.lineTo(px1,py1); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font='11px JetBrains Mono,monospace';
+      ctx.fillStyle='rgba(210,153,34,0.7)';
+      ctx.textAlign='right';
+      ctx.fillText('plano  n=(0,1)', W-12, py0-6);
+    }
+
+    // Sphere
+    if(showSphere) {
+      const [scx, scy] = worldToScreen(Cx, Cy);
+      ctx.fillStyle='rgba(88,166,255,0.08)';
+      ctx.strokeStyle='rgba(88,166,255,0.6)'; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(scx,scy,R,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.font='11px JetBrains Mono,monospace';
+      ctx.fillStyle='rgba(88,166,255,0.7)';
+      ctx.textAlign='center';
+      ctx.fillText('esfera  r='+R, scx, scy+R+16);
+    }
+
+    // Ray
+    const rayLen = 380;
+    const [rx0,ry0] = worldToScreen(Ox,Oy);
+    const [rxE,ryE] = worldToScreen(Ox+Dx*rayLen, Oy+Dy*rayLen);
+
+    // Draw ray (dashed after first hit)
+    let firstT = Infinity;
+    if(sphHit) firstT = Math.min(firstT, tIn);
+    if(planeHit) firstT = Math.min(firstT, tPlane);
+    const [rxH,ryH] = worldToScreen(Ox+Dx*Math.min(firstT,rayLen), Oy+Dy*Math.min(firstT,rayLen));
+
+    // Solid ray up to first hit
+    ctx.strokeStyle='rgba(88,166,255,0.9)'; ctx.lineWidth=2; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(rx0,ry0); ctx.lineTo(rxH,ryH); ctx.stroke();
+    // Dashed ray after
+    if(firstT < rayLen) {
+      ctx.strokeStyle='rgba(88,166,255,0.2)'; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
+      ctx.beginPath(); ctx.moveTo(rxH,ryH); ctx.lineTo(rxE,ryE); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    // Arrow
+    const aw=6, al=12;
+    const [arx,ary]=[rxH,ryH];
+    const adx=(rxH-rx0), ady=(ryH-ry0);
+    const al2=Math.sqrt(adx*adx+ady*ady); if(al2>0){
+      const aux=adx/al2, auy=ady/al2;
+      ctx.fillStyle='rgba(88,166,255,0.9)'; ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.moveTo(arx,ary);
+      ctx.lineTo(arx-aux*al-auy*aw, ary-auy*al+aux*aw);
+      ctx.lineTo(arx-aux*al+auy*aw, ary-auy*al-aux*aw);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // Origin
+    ctx.fillStyle='#58a6ff';
+    ctx.beginPath(); ctx.arc(rx0,ry0,6,0,Math.PI*2); ctx.fill();
+    ctx.font='11px JetBrains Mono,monospace';
+    ctx.fillStyle='rgba(230,237,243,0.7)';
+    ctx.textAlign='center';
+    ctx.fillText('O', rx0, ry0+18);
+
+    // Sphere hit point + normal
+    if(sphHit && hitPt) {
+      const [hx,hy] = worldToScreen(hitPt[0], hitPt[1]);
+      ctx.fillStyle='#3fb950';
+      ctx.beginPath(); ctx.arc(hx,hy,6,0,Math.PI*2); ctx.fill();
+      // Normal arrow
+      ctx.strokeStyle='rgba(63,185,80,0.8)'; ctx.lineWidth=2;
+      const nlen=40;
+      ctx.beginPath();
+      ctx.moveTo(hx, hy);
+      ctx.lineTo(hx + hitNorm[0]*nlen, hy - hitNorm[1]*nlen);
+      ctx.stroke();
+      ctx.font='10px JetBrains Mono,monospace';
+      ctx.fillStyle='rgba(63,185,80,0.8)';
+      ctx.textAlign='left';
+      ctx.fillText('t='+tIn.toFixed(0), hx+8, hy-8);
+    }
+
+    // Plane hit point
+    if(planeHit && planeHitPt) {
+      const [hx,hy] = worldToScreen(planeHitPt[0], planeHitPt[1]);
+      ctx.fillStyle='#d29922';
+      ctx.beginPath(); ctx.arc(hx,hy,6,0,Math.PI*2); ctx.fill();
+      ctx.font='10px JetBrains Mono,monospace';
+      ctx.fillStyle='rgba(210,153,34,0.8)';
+      ctx.textAlign='left';
+      ctx.fillText('t='+tPlane.toFixed(0), hx+8, hy-8);
+    }
+
+    // D label
+    ctx.font='11px JetBrains Mono,monospace';
+    ctx.fillStyle='rgba(88,166,255,0.6)';
+    ctx.textAlign='left';
+    ctx.fillText('D=('+Dx.toFixed(2)+', '+Dy.toFixed(2)+')', 12, H-12);
+  }
+
+  window.render = render;
+  window.toggleObj = toggleObj;
+  render();
+})();
+</script>

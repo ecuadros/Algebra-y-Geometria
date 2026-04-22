@@ -1,0 +1,435 @@
+---
+layout: default
+title: Cuaterniones y SLERP
+prev_url: /modulo-07/gimbal-lock.html
+prev_title: Gimbal Lock
+---
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent2: #bc8cff;
+    --accent3: #3fb950;
+    --danger: #f85149;
+    --warn: #d29922;
+    --font-sans: 'Inter', system-ui;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-md: 10px;
+    --radius-lg: 16px;
+    --transition: 200ms ease;
+  }
+
+  .demo-page { max-width:1200px; margin:0 auto; padding:2rem 1.5rem 5rem; }
+  .breadcrumb { font-family:var(--font-mono); font-size:0.78rem; color:var(--muted); margin-bottom:2rem; }
+  .breadcrumb a { color:var(--accent); text-decoration:none; }
+  .breadcrumb .sep { color:var(--accent); margin:0 0.4rem; }
+  .demo-header { margin-bottom:2.5rem; }
+  .module-eyebrow { display:inline-block; font-family:var(--font-mono); font-size:0.78rem; font-weight:700; color:var(--warn); background:rgba(210,153,34,0.08); border:1px solid rgba(210,153,34,0.25); border-radius:20px; padding:0.2rem 0.75rem; margin-bottom:1rem; letter-spacing:0.05em; text-transform:uppercase; }
+  .demo-header h1 { font-size:2.5rem; font-weight:700; letter-spacing:-0.03em; background:linear-gradient(120deg,var(--warn),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:0.5rem; }
+  .demo-lead { font-size:1.05rem; color:var(--muted); max-width:640px; }
+
+  .demo-layout { display:grid; grid-template-columns:1fr 1fr; gap:2.5rem; align-items:start; margin-bottom:3rem; }
+  .demo-theory { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1.75rem; display:flex; flex-direction:column; gap:1.5rem; }
+  .theory-block h3 { font-size:0.78rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; color:var(--warn); margin-bottom:0.75rem; }
+  .formula-box { background:var(--bg); border:1px solid rgba(210,153,34,0.25); border-radius:var(--radius-md); padding:1rem 1.25rem; font-family:var(--font-mono); color:var(--warn); font-size:0.87rem; line-height:1.8; }
+  .props-list { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+  .props-list li { display:flex; align-items:flex-start; gap:0.5rem; font-size:0.88rem; color:var(--muted); line-height:1.5; }
+  .props-list li::before { content:'›'; color:var(--warn); font-weight:700; flex-shrink:0; }
+  .live-panel { background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius-md); padding:1.25rem; display:flex; flex-direction:column; gap:0.4rem; }
+  .live-panel h3 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--warn); margin-bottom:0.25rem; }
+  .live-row { display:flex; justify-content:space-between; align-items:center; font-size:0.85rem; }
+  .live-label { color:var(--muted); }
+  .live-value { font-family:var(--font-mono); font-weight:600; color:var(--text); }
+
+  .demo-interactive { display:flex; flex-direction:column; gap:1.25rem; }
+  .canvas-wrap { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:1rem; display:flex; justify-content:center; }
+  canvas { display:block; border-radius:var(--radius-md); }
+
+  .controls-grid { display:flex; flex-direction:column; gap:0.75rem; }
+  .ctrl-row { display:flex; align-items:center; gap:0.75rem; font-size:0.85rem; }
+  .ctrl-label { color:var(--muted); font-family:var(--font-mono); font-size:0.8rem; min-width:150px; }
+  .ctrl-val { font-family:var(--font-mono); font-size:0.8rem; color:var(--warn); min-width:50px; text-align:right; }
+  input[type=range] { flex:1; accent-color:var(--warn); }
+
+  .controls-row { display:flex; gap:0.75rem; flex-wrap:wrap; align-items:center; }
+  .btn { font-family:var(--font-mono); font-size:0.8rem; font-weight:600; padding:0.4rem 0.9rem; border-radius:var(--radius-md); border:1px solid var(--border); background:var(--surface2); color:var(--text); cursor:pointer; transition:all var(--transition); }
+  .btn:hover { border-color:var(--warn); color:var(--warn); }
+  .btn.active { border-color:var(--warn); color:var(--warn); background:rgba(210,153,34,0.08); }
+
+  .demo-application { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:2rem; margin-top:1rem; }
+  .demo-application h2 { font-size:1.3rem; font-weight:700; color:var(--text); margin-bottom:0.5rem; }
+  .app-description { color:var(--muted); font-size:0.95rem; line-height:1.7; max-width:700px; }
+
+  @media(max-width:900px){.demo-layout{grid-template-columns:1fr;}}
+</style>
+
+<div class="demo-page">
+  {% include demo-nav.html %}
+
+  <nav class="breadcrumb">
+    <a href="/">Inicio</a><span class="sep">›</span><a href="#">Módulo 7: Rotaciones</a><span class="sep">›</span>Cuaterniones y SLERP
+  </nav>
+
+  <header class="demo-header">
+    <span class="module-eyebrow">Módulo 7 · Rotaciones y Orientación 3D</span>
+    <h1>Cuaterniones y SLERP</h1>
+    <p class="demo-lead">Un cuaternión unitario representa una rotación 3D sin gimbal lock. SLERP (interpolación esférica lineal) traza el arco mínimo entre dos orientaciones a velocidad angular constante.</p>
+  </header>
+
+  <div class="demo-layout">
+    <!-- LEFT: Theory -->
+    <aside class="demo-theory">
+
+      <div class="theory-block">
+        <h3>Cuaternión de rotación</h3>
+        <p style="font-size:0.88rem;color:var(--muted);line-height:1.6;margin-bottom:0.75rem;">
+          Una rotación de ángulo θ alrededor del eje unitario n̂ se codifica como:
+        </p>
+        <div class="formula-box">
+q = (w, x, y, z)<br>
+  = (cos θ/2,  sin θ/2 · n̂)<br><br>
+|q|² = w²+x²+y²+z² = 1<br><br>
+q⁻¹ = (w, −x, −y, −z)<br>
+(conjugado = inverso para |q|=1)
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Interpolación SLERP</h3>
+        <div class="formula-box">
+Ω = arccos(q₁·q₂)<br><br>
+slerp(q₁,q₂,t) =<br>
+  sin((1−t)Ω)/sinΩ · q₁<br>
++ sin(t·Ω)/sinΩ  · q₂<br><br>
+vs. LERP (lineal):<br>
+lerp(q₁,q₂,t) = norm(<br>
+  (1−t)q₁ + t·q₂ )<br><br>
+LERP: velocidad variable<br>
+SLERP: velocidad constante
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Interpolación actual</h3>
+        <div class="live-panel">
+          <h3>t = <span id="liveTval">0.50</span></h3>
+          <div class="live-row">
+            <span class="live-label">q SLERP (w,x,y,z)</span>
+            <span class="live-value" id="liveQslerp">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Ángulo SLERP</span>
+            <span class="live-value" id="liveAngSlerp">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Ángulo LERP</span>
+            <span class="live-value" id="liveAngLerp">—</span>
+          </div>
+          <div class="live-row">
+            <span class="live-label">Ω (ángulo entre q₁,q₂)</span>
+            <span class="live-value" id="liveOmega">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="theory-block">
+        <h3>Ventajas de cuaterniones</h3>
+        <ul class="props-list">
+          <li>Sin gimbal lock — representación continua para todas las orientaciones</li>
+          <li>SLERP da la trayectoria más corta a velocidad constante</li>
+          <li>Multiplicar 2 cuaterniones compone rotaciones (4 mults vs 27 de matrices)</li>
+          <li>Normalizar periódicamente corrige el drift numérico</li>
+        </ul>
+      </div>
+
+    </aside>
+
+    <!-- RIGHT: Interactive -->
+    <main class="demo-interactive">
+      <div class="canvas-wrap">
+        <canvas id="slerpCanvas" width="460" height="400"></canvas>
+      </div>
+
+      <div class="controls-grid">
+        <div class="ctrl-row">
+          <span class="ctrl-label">Parámetro t</span>
+          <input type="range" id="slT" min="0" max="1" step="0.01" value="0.5" oninput="render()">
+          <span class="ctrl-val" id="valT">0.50</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">q₁ eje Y (°)</span>
+          <input type="range" id="slQ1Y" min="-180" max="180" step="5" value="-60" oninput="render()">
+          <span class="ctrl-val" id="valQ1Y">-60°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">q₁ eje X (°)</span>
+          <input type="range" id="slQ1X" min="-90" max="90" step="5" value="-20" oninput="render()">
+          <span class="ctrl-val" id="valQ1X">-20°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">q₂ eje Y (°)</span>
+          <input type="range" id="slQ2Y" min="-180" max="180" step="5" value="60" oninput="render()">
+          <span class="ctrl-val" id="valQ2Y">60°</span>
+        </div>
+        <div class="ctrl-row">
+          <span class="ctrl-label">q₂ eje X (°)</span>
+          <input type="range" id="slQ2X" min="-90" max="90" step="5" value="30" oninput="render()">
+          <span class="ctrl-val" id="valQ2X">30°</span>
+        </div>
+      </div>
+
+      <div class="controls-row">
+        <button class="btn active" id="btnSlerp" onclick="toggleMode('slerp')">SLERP</button>
+        <button class="btn active" id="btnLerp" onclick="toggleMode('lerp')">LERP</button>
+        <button class="btn active" id="btnPath" onclick="toggleLayer('path')">Trayectorias</button>
+        <button class="btn" id="btnAnim" onclick="toggleAnim()">▶ Animar</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- Application -->
+  <section class="demo-application">
+    <h2>Aplicación: Animación 3D, control de drones y realidad virtual</h2>
+    <p class="app-description">
+      SLERP es el estándar de facto para animar huesos en skeletal animation (motores como Unity, Unreal, Godot). En VR y rastreo de cabeza (Oculus, PlayStation VR), los cuaterniones minimizan el jitter al interpolar las lecturas del sensor IMU. Los drones y satélites usan cuaterniones en sus sistemas de control de actitud: la multiplicación de cuaterniones propaga la orientación en cada tick del loop de control sin acumular errores de gimbal. En computación gráfica, la ecuación de Hamilton q·v·q⁻¹ rota un vector v por el cuaternión q en 15 operaciones de punto flotante, significativamente más rápido que la composición de matrices de Euler para animaciones en tiempo real.
+    </p>
+  </section>
+
+  {% include demo-nav.html %}
+</div>
+
+<script>
+(function () {
+  const cv = document.getElementById('slerpCanvas');
+  const ctx = cv.getContext('2d');
+  const W = cv.width, H = cv.height;
+  const CX = W/2, CY = H/2;
+
+  let showSlerp = true, showLerp = true, showPath = true;
+  let animRunning = false, animT = 0, animDir = 1;
+
+  // Quaternion math
+  function qFromEuler(yawDeg, pitchDeg) {
+    const y = yawDeg * Math.PI/180, p = pitchDeg * Math.PI/180;
+    // q = Ry(y) * Rx(p)
+    const cy=Math.cos(y/2),sy=Math.sin(y/2);
+    const cp=Math.cos(p/2),sp=Math.sin(p/2);
+    return [cy*cp, -sy*sp, sy*cp, cy*sp]; // w,x,y,z  (Ry*Rx order)
+  }
+
+  function qDot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3]; }
+  function qNorm(q){ const l=Math.sqrt(q.reduce((s,x)=>s+x*x,0)); return q.map(x=>x/l); }
+  function qScale(q,s){ return q.map(x=>x*s); }
+  function qAdd(a,b){ return a.map((x,i)=>x+b[i]); }
+
+  function slerp(q1, q2, t) {
+    let d = qDot(q1, q2);
+    // Choose shorter path
+    let q2_ = d < 0 ? q2.map(x=>-x) : q2;
+    d = Math.abs(d);
+    if(d > 0.9995) {
+      // Very close: linear fallback
+      return qNorm(qAdd(qScale(q1,1-t), qScale(q2_,t)));
+    }
+    const omega = Math.acos(Math.min(d,1));
+    const sinO = Math.sin(omega);
+    return qAdd(qScale(q1, Math.sin((1-t)*omega)/sinO), qScale(q2_, Math.sin(t*omega)/sinO));
+  }
+
+  function lerpQ(q1, q2, t) {
+    let d = qDot(q1,q2);
+    let q2_ = d<0 ? q2.map(x=>-x) : q2;
+    return qNorm(qAdd(qScale(q1,1-t), qScale(q2_,t)));
+  }
+
+  // Rotate 3D vector by quaternion q·v·q*
+  function qRotate(q, v) {
+    const [w,qx,qy,qz] = q;
+    const [vx,vy,vz] = v;
+    // t = 2 * cross(q.xyz, v)
+    const tx = 2*(qy*vz-qz*vy);
+    const ty = 2*(qz*vx-qx*vz);
+    const tz = 2*(qx*vy-qy*vx);
+    return [
+      vx + w*tx + qy*tz - qz*ty,
+      vy + w*ty + qz*tx - qx*tz,
+      vz + w*tz + qx*ty - qy*tx
+    ];
+  }
+
+  // Simple orthographic + tiny perspective
+  function project(v){ const z=v[2]+4; return [CX+140*v[0]/z, CY-140*v[1]/z]; }
+
+  function drawAxis(q, color, label, lw=2.5) {
+    const O=[0,0,0];
+    const tip = qRotate(q,[0,0,0.9]);
+    const [ox,oy]=project(O), [tx,ty]=project(tip);
+    const dx=tx-ox,dy=ty-oy,len=Math.sqrt(dx*dx+dy*dy);
+    if(len<2) return;
+    ctx.strokeStyle=color; ctx.lineWidth=lw;
+    ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(tx,ty); ctx.stroke();
+    // Arrow
+    const ux=dx/len,uy=dy/len;
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.moveTo(tx,ty);
+    ctx.lineTo(tx-ux*10-uy*5,ty-uy*10+ux*5);
+    ctx.lineTo(tx-ux*10+uy*5,ty-uy*10-ux*5);
+    ctx.closePath(); ctx.fill();
+    // Side axes (x and y)
+    const lx=qRotate(q,[0.6,0,0]);
+    const ly=qRotate(q,[0,0.6,0]);
+    const [lxx,lxy]=project(lx), [lyx,lyy]=project(ly);
+    ctx.strokeStyle=color+'88'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(lxx,lxy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(lyx,lyy); ctx.stroke();
+    if(label){
+      ctx.font='bold 12px JetBrains Mono,monospace';
+      ctx.fillStyle=color;
+      ctx.textAlign='center';
+      ctx.fillText(label, tx+ux*16, ty+uy*16);
+    }
+  }
+
+  function qToAngleDeg(q) {
+    const angle = 2 * Math.acos(Math.min(1, Math.abs(q[0])));
+    return (angle * 180/Math.PI).toFixed(1);
+  }
+
+  function render() {
+    const tVal = animRunning ? animT : +document.getElementById('slT').value;
+    if(!animRunning) animT = tVal;
+
+    const q1yDeg = +document.getElementById('slQ1Y').value;
+    const q1xDeg = +document.getElementById('slQ1X').value;
+    const q2yDeg = +document.getElementById('slQ2Y').value;
+    const q2xDeg = +document.getElementById('slQ2X').value;
+
+    document.getElementById('valT').textContent = tVal.toFixed(2);
+    document.getElementById('valQ1Y').textContent = q1yDeg+'°';
+    document.getElementById('valQ1X').textContent = q1xDeg+'°';
+    document.getElementById('valQ2Y').textContent = q2yDeg+'°';
+    document.getElementById('valQ2X').textContent = q2xDeg+'°';
+
+    const q1 = qFromEuler(q1yDeg, q1xDeg);
+    const q2 = qFromEuler(q2yDeg, q2xDeg);
+    const qs = slerp(q1, q2, tVal);
+    const ql = lerpQ(q1, q2, tVal);
+
+    const omega = Math.acos(Math.min(1, Math.abs(qDot(q1,q2))));
+    document.getElementById('liveTval').textContent = tVal.toFixed(2);
+    document.getElementById('liveQslerp').textContent = '('+qs.map(x=>x.toFixed(2)).join(', ')+')';
+    document.getElementById('liveAngSlerp').textContent = qToAngleDeg(qs)+'°';
+    document.getElementById('liveAngLerp').textContent = qToAngleDeg(ql)+'°';
+    document.getElementById('liveOmega').textContent = (omega*180/Math.PI).toFixed(1)+'°';
+
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle='#0d1117'; ctx.fillRect(0,0,W,H);
+
+    // Grid
+    ctx.strokeStyle='rgba(48,54,61,0.35)'; ctx.lineWidth=0.5;
+    for(let gx=0;gx<=W;gx+=40){ ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke(); }
+    for(let gy=0;gy<=H;gy+=40){ ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke(); }
+
+    // Reference sphere outline
+    ctx.strokeStyle='rgba(48,54,61,0.6)'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(CX,CY,140,0,Math.PI*2); ctx.stroke();
+
+    // SLERP path (orange arc on unit sphere)
+    if(showPath) {
+      // SLERP path
+      if(showSlerp) {
+        ctx.strokeStyle='rgba(210,153,34,0.4)'; ctx.lineWidth=1.5;
+        ctx.beginPath();
+        for(let i=0;i<=60;i++){
+          const qi = slerp(q1,q2,i/60);
+          const tip = qRotate(qi,[0,0,0.95]);
+          const [px,py]=project(tip);
+          i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+        }
+        ctx.stroke();
+      }
+      // LERP path
+      if(showLerp) {
+        ctx.strokeStyle='rgba(188,140,255,0.35)'; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+        ctx.beginPath();
+        for(let i=0;i<=60;i++){
+          const qi = lerpQ(q1,q2,i/60);
+          const tip = qRotate(qi,[0,0,0.95]);
+          const [px,py]=project(tip);
+          i===0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+        }
+        ctx.stroke(); ctx.setLineDash([]);
+      }
+    }
+
+    // q1 orientation
+    drawAxis(q1, '#3fb950', 'q₁', 2);
+    // q2 orientation
+    drawAxis(q2, '#f85149', 'q₂', 2);
+    // SLERP current
+    if(showSlerp) drawAxis(qs, '#d29922', 'S(t)', 3);
+    // LERP current
+    if(showLerp) {
+      const O=[0,0,0];
+      const ltip = qRotate(ql,[0,0,0.9]);
+      const [ox,oy]=project(O), [tx,ty]=project(ltip);
+      ctx.strokeStyle='rgba(188,140,255,0.7)'; ctx.lineWidth=2; ctx.setLineDash([5,3]);
+      ctx.beginPath(); ctx.moveTo(ox,oy); ctx.lineTo(tx,ty); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle='rgba(188,140,255,0.9)';
+      ctx.beginPath(); ctx.arc(tx,ty,4,0,Math.PI*2); ctx.fill();
+      ctx.font='11px JetBrains Mono,monospace';
+      ctx.fillStyle='rgba(188,140,255,0.8)';
+      ctx.textAlign='center';
+      ctx.fillText('L(t)', tx, ty-12);
+    }
+
+    // t progress bar
+    const bw=200, bh=8, bx=CX-100, by=H-30;
+    ctx.fillStyle='rgba(48,54,61,0.8)'; ctx.beginPath(); ctx.roundRect(bx,by,bw,bh,4); ctx.fill();
+    ctx.fillStyle='rgba(210,153,34,0.8)'; ctx.beginPath(); ctx.roundRect(bx,by,bw*tVal,bh,4); ctx.fill();
+    ctx.font='10px JetBrains Mono,monospace'; ctx.fillStyle='rgba(230,237,243,0.6)';
+    ctx.textAlign='center'; ctx.fillText('t = '+tVal.toFixed(2), CX, by-5);
+  }
+
+  function toggleMode(m) {
+    if(m==='slerp'){ showSlerp=!showSlerp; document.getElementById('btnSlerp').classList.toggle('active',showSlerp); }
+    if(m==='lerp') { showLerp=!showLerp;  document.getElementById('btnLerp').classList.toggle('active',showLerp); }
+    render();
+  }
+
+  function toggleLayer(l) {
+    if(l==='path'){ showPath=!showPath; document.getElementById('btnPath').classList.toggle('active',showPath); }
+    render();
+  }
+
+  function toggleAnim() {
+    animRunning=!animRunning;
+    document.getElementById('btnAnim').textContent=animRunning?'⏸ Pausar':'▶ Animar';
+    if(animRunning) requestAnimationFrame(animLoop);
+  }
+
+  function animLoop() {
+    if(!animRunning) return;
+    animT += animDir*0.007;
+    if(animT>=1){animT=1;animDir=-1;}
+    if(animT<=0){animT=0;animDir=1;}
+    document.getElementById('slT').value=animT;
+    render();
+    requestAnimationFrame(animLoop);
+  }
+
+  window.render = render;
+  window.toggleMode = toggleMode;
+  window.toggleLayer = toggleLayer;
+  window.toggleAnim = toggleAnim;
+
+  render();
+})();
+</script>
