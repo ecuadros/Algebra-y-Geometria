@@ -1360,7 +1360,11 @@ next_title: Pipeline Gráfico 3D
 
   // ---- Canvas drawing ----
   function drawGrid() {
-    ctx.strokeStyle = '#21262d';
+    // White background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, W, H);
+    // Grid lines
+    ctx.strokeStyle = '#e0e0e0';
     ctx.lineWidth = 1;
     for (let x = -4; x <= 4; x++) {
       const px = CX + x*SCALE;
@@ -1370,10 +1374,12 @@ next_title: Pipeline Gráfico 3D
       const py = CY - y*SCALE;
       ctx.beginPath(); ctx.moveTo(0,py); ctx.lineTo(W,py); ctx.stroke();
     }
-    ctx.strokeStyle = '#30363d'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
+    // Axes
+    ctx.strokeStyle = '#999999'; ctx.lineWidth = 1.5; ctx.setLineDash([]);
     ctx.beginPath(); ctx.moveTo(0,CY); ctx.lineTo(W,CY); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(CX,0); ctx.lineTo(CX,H); ctx.stroke();
-    ctx.fillStyle = '#484f58';
+    // Labels
+    ctx.fillStyle = '#999999';
     ctx.font = '11px JetBrains Mono, monospace';
     ctx.textAlign = 'center';
     for (let x = -4; x <= 4; x++) if (x!==0) ctx.fillText(x, CX+x*SCALE, CY+14);
@@ -1420,10 +1426,10 @@ next_title: Pipeline Gráfico 3D
     ctx.clearRect(0, 0, W, H);
     drawGrid();
 
-    // Original (dashed white)
+    // Original (dashed gray)
     drawTri(TRI, {
-      color: 'rgba(255,255,255,0.3)',
-      fillColor: 'rgba(255,255,255,0.04)',
+      color: '#bbbbbb',
+      fillColor: 'rgba(0,0,0,0.04)',
       dash: true, lineWidth: 1.5,
       labels: VTX_LABELS
     });
@@ -1431,8 +1437,8 @@ next_title: Pipeline Gráfico 3D
     if (steps.length === 0) {
       // Show original clearly in blue if no steps
       drawTri(TRI, {
-        color: '#58a6ff',
-        fillColor: 'rgba(88,166,255,0.1)',
+        color: '#2563eb',
+        fillColor: 'rgba(37,99,235,0.08)',
         labels: VTX_LABELS
       });
       return;
@@ -1444,7 +1450,7 @@ next_title: Pipeline Gráfico 3D
       const tv = TRI.map(v => applyH(M, v));
       drawTri(tv, {
         color: steps[i-1].color,
-        fillColor: steps[i-1].color + '12',
+        fillColor: steps[i-1].color + '28',
         dash: true,
         alpha: 0.4 + 0.2*(i/steps.length),
         lineWidth: 1.5
